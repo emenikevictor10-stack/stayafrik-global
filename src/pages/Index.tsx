@@ -1,25 +1,10 @@
-import { Header } from "@/components/layout/Header";
-import { Footer } from "@/components/layout/Footer";
-import { Hero } from "@/components/home/Hero";
-import { Destinations } from "@/components/home/Destinations";
-import { FeaturedStays } from "@/components/home/FeaturedStays";
-import { ValueProps } from "@/components/home/ValueProps";
-import { HostCta } from "@/components/home/HostCta";
+import { useRole } from "@/contexts/RoleContext";
+import { ClientHome } from "./client/ClientHome";
+import { AgentDashboard } from "./agent/AgentDashboard";
 
 const Index = () => {
-  return (
-    <div className="min-h-screen bg-background">
-      <Header />
-      <main>
-        <Hero />
-        <Destinations />
-        <FeaturedStays />
-        <ValueProps />
-        <HostCta />
-      </main>
-      <Footer />
-    </div>
-  );
+  const { role } = useRole();
+  return role === "client" ? <ClientHome /> : <AgentDashboard />;
 };
 
 export default Index;

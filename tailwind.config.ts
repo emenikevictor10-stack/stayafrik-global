@@ -14,8 +14,8 @@ export default {
     },
     extend: {
       fontFamily: {
-        display: ['Fraunces', 'Georgia', 'serif'],
         sans: ['Inter', 'system-ui', 'sans-serif'],
+        display: ['Inter', 'system-ui', 'sans-serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -26,8 +26,11 @@ export default {
         primary: {
           DEFAULT: "hsl(var(--primary))",
           foreground: "hsl(var(--primary-foreground))",
-          glow: "hsl(var(--primary-glow))",
+          dim: "hsl(var(--primary-dim))",
         },
+        success: "hsl(var(--success))",
+        info: "hsl(var(--info))",
+        warn: "hsl(var(--warn))",
         secondary: {
           DEFAULT: "hsl(var(--secondary))",
           foreground: "hsl(var(--secondary-foreground))",
@@ -52,13 +55,6 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        sunset: "hsl(var(--sunset))",
-        terracotta: "hsl(var(--terracotta))",
-        clay: "hsl(var(--clay))",
-        savanna: "hsl(var(--savanna))",
-        gold: "hsl(var(--gold))",
-        sand: "hsl(var(--sand))",
-        ink: "hsl(var(--ink))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

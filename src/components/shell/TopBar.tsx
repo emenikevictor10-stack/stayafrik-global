@@ -1,5 +1,6 @@
 import { useRole } from "@/contexts/RoleContext";
 import { Bell } from "lucide-react";
+import logo from "@/assets/stayafrik-logo.png";
 
 export const TopBar = ({ title, subtitle }: { title: string; subtitle?: string }) => {
   const { user, role, setRole } = useRole();
@@ -7,9 +8,7 @@ export const TopBar = ({ title, subtitle }: { title: string; subtitle?: string }
     <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl border-b border-border">
       <div className="px-5 pt-4 pb-3 flex items-center gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <div className="w-9 h-9 rounded-lg bg-primary text-primary-foreground flex items-center justify-center font-extrabold text-sm shrink-0">
-            S
-          </div>
+          <img src={logo} alt="Stayafrik" className="h-6 w-auto shrink-0" width={120} height={24} />
           <div className="min-w-0">
             <h1 className="text-[15px] font-bold leading-tight truncate">{title}</h1>
             {subtitle && (

@@ -12,7 +12,7 @@ export const ClientHome = () => {
 
   return (
     <>
-      <TopBar title="Stayafrik" subtitle="Verified stays across Africa" />
+      <TopBar title="​" subtitle="\n" />
       <main className="px-5 pt-5 pb-8">
         {/* Search */}
         <Link

@@ -10,8 +10,13 @@ import PropertyDetail from "./pages/client/PropertyDetail";
 import Bookings from "./pages/client/Bookings";
 import Listings from "./pages/agent/Listings";
 import Escrow from "./pages/agent/Escrow";
+import AgentProfile from "./pages/agent/AgentProfile";
+import Verification from "./pages/agent/Verification";
+import Commission from "./pages/agent/Commission";
+import Performance from "./pages/agent/Performance";
 import Messages from "./pages/shared/Messages";
 import Profile from "./pages/shared/Profile";
+import Help from "./pages/shared/Help";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -43,6 +48,11 @@ const App = () => (
               <Route path="/escrow" element={<ThirdTab />} />
               <Route path="/messages" element={<Messages />} />
               <Route path="/profile" element={<Profile />} />
+              <Route path="/profile/agent" element={<AgentProfile />} />
+              <Route path="/profile/verification" element={<Verification />} />
+              <Route path="/profile/commission" element={<Commission />} />
+              <Route path="/profile/performance" element={<Performance />} />
+              <Route path="/profile/help" element={<Help />} />
               <Route path="/property/:id" element={<PropertyDetail />} />
             </Route>
             <Route path="*" element={<NotFound />} />

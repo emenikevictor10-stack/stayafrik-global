@@ -1,23 +1,24 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { useRole } from "@/contexts/RoleContext";
 import { ChevronRight } from "lucide-react";
+import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 const clientItems = [
-  { e: "🪪", l: "Personal info" },
-  { e: "💳", l: "Payment methods" },
-  { e: "🔐", l: "Escrow history" },
-  { e: "❤️", l: "Saved properties" },
-  { e: "🌍", l: "Language & currency" },
-  { e: "🛟", l: "Help & support" },
+  { e: "🪪", l: "Personal info", to: "/profile/agent" },
+  { e: "💳", l: "Payment methods", to: "/profile/commission" },
+  { e: "🔐", l: "Escrow history", to: "/profile/verification" },
+  { e: "❤️", l: "Saved properties", to: "/profile/performance" },
+  { e: "🌍", l: "Language & currency", to: null },
+  { e: "🛟", l: "Help & support", to: "/profile/help" },
 ];
 
 const agentItems = [
-  { e: "🪪", l: "Agent profile" },
-  { e: "📜", l: "Verification status" },
-  { e: "💼", l: "Commission & payouts" },
-  { e: "📈", l: "Performance" },
-  { e: "🛟", l: "Help & support" },
+  { e: "🪪", l: "Agent profile", to: "/profile/agent" },
+  { e: "📜", l: "Verification status", to: "/profile/verification" },
+  { e: "💼", l: "Commission & payouts", to: "/profile/commission" },
+  { e: "📈", l: "Performance", to: "/profile/performance" },
+  { e: "🛟", l: "Help & support", to: "/profile/help" },
 ];
 
 const Profile = () => {
@@ -50,16 +51,32 @@ const Profile = () => {
         </button>
 
         <section className="mt-5 rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
-          {items.map((i) => (
-            <button
-              key={i.l}
-              className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary text-left"
-            >
-              <span className="text-lg">{i.e}</span>
-              <span className="text-sm flex-1">{i.l}</span>
-              <ChevronRight className="w-4 h-4 text-muted-foreground" />
-            </button>
-          ))}
+          {items.map((i) => {
+            const content = (
+              <>
+                <span className="text-lg">{i.e}</span>
+                <span className="text-sm flex-1">{i.l}</span>
+                <ChevronRight className="w-4 h-4 text-muted-foreground" />
+              </>
+            );
+            return i.to ? (
+              <Link
+                key={i.l}
+                to={i.to}
+                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary text-left"
+              >
+                {content}
+              </Link>
+            ) : (
+              <button
+                key={i.l}
+                onClick={() => toast.success(`${i.l} coming soon`)}
+                className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary text-left"
+              >
+                {content}
+              </button>
+            );
+          })}
         </section>
 
         <p className="text-center text-[10px] text-muted-foreground mt-6">Stayafrik · v0.1 · Africa 🌍</p>

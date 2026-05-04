@@ -3,10 +3,12 @@ import { PROPERTIES } from "@/data/properties";
 import { ChevronLeft, Heart, Share2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
+import { useRole } from "@/contexts/RoleContext";
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { role } = useRole();
   const p = PROPERTIES.find((x) => x.id === id);
 
   if (!p) {
@@ -107,7 +109,7 @@ const PropertyDetail = () => {
             <div className="text-[11px] text-success font-medium">✓ {p.agentTag}</div>
           </div>
           <Link
-            to="/messages"
+            to={`/messages/${p.agent.toLowerCase().replace(/\s+/g, "-")}?prop=${p.id}`}
             className="text-xs font-semibold text-primary px-3 py-2 rounded-full bg-primary/10 border border-primary/30"
           >
             💬 Chat
@@ -154,12 +156,28 @@ const PropertyDetail = () => {
               {p.type === "Shortlet" ? "per night · taxes incl." : "Escrow protected"}
             </div>
           </div>
-          <Button
-            onClick={() => toast.success(p.type === "Shortlet" ? "✓ Booking request sent" : "✓ Inspection request sent")}
-            className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 h-12 font-bold"
-          >
-            {p.type === "Shortlet" ? "Book stay" : "Request inspection"}
-          </Button>
+          {role === "agent" ? (
+            <Button
+              onClick={() => navigate(`/listings/${p.id}/edit`)}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 h-12 font-bold"
+            >
+              ✏️ Edit listing
+            </Button>
+          ) : p.type === "Shortlet" ? (
+            <Button
+              onClick={() => navigate(`/property/${p.id}/book`)}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 h-12 font-bold"
+            >
+              Book stay
+            </Button>
+          ) : (
+            <Button
+              onClick={() => toast.success("✓ Inspection request sent")}
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 h-12 font-bold"
+            >
+              Request inspection
+            </Button>
+          )}
         </div>
       </div>
     </main>

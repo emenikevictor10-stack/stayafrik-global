@@ -88,7 +88,7 @@ const Commission = () => {
             <div className="text-[11px] text-muted-foreground">Payout account</div>
             <div className="text-sm font-semibold">GTBank · •••• 4419</div>
           </div>
-          <button className="text-[11px] text-primary font-semibold">Change</button>
+          <Link to="/profile/payout" className="text-[11px] text-primary font-semibold">Change</Link>
         </section>
 
         {/* History */}

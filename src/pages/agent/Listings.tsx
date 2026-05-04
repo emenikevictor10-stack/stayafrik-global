@@ -2,20 +2,19 @@ import { TopBar } from "@/components/shell/TopBar";
 import { PROPERTIES } from "@/data/properties";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
-import { toast } from "sonner";
 
 const Listings = () => {
   return (
     <>
       <TopBar title="My listings" subtitle={`${PROPERTIES.length} properties · all verified`} />
       <main className="px-5 pt-5 pb-8">
-        <button
-          onClick={() => toast.success("New listing flow coming next")}
+        <Link
+          to="/listings/new"
           className="w-full flex items-center justify-center gap-2 rounded-2xl bg-primary text-primary-foreground py-3.5 font-bold text-sm shadow-glow active:scale-[0.99]"
         >
           <Plus className="w-4 h-4" />
           List a new property
-        </button>
+        </Link>
 
         <div className="mt-4 grid grid-cols-3 gap-2 text-center">
           {[
@@ -34,7 +33,7 @@ const Listings = () => {
           {PROPERTIES.map((p, i) => (
             <Link
               key={p.id}
-              to={`/property/${p.id}`}
+              to={`/listings/${p.id}/edit`}
               className="flex gap-3 rounded-2xl bg-card border border-border p-3 hover:border-primary/50"
             >
               <img

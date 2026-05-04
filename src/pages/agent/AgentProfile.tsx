@@ -48,12 +48,12 @@ const AgentProfile = () => {
                   ✓ Verified · Tier 2
                 </span>
               </div>
-              <button
-                onClick={() => toast.success("Edit mode coming soon")}
+              <Link
+                to="/profile/edit"
                 className="mb-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center gap-1"
               >
                 <Pencil className="w-3 h-3" /> Edit
-              </button>
+              </Link>
             </div>
             <h2 className="mt-3 text-lg font-extrabold">{user.name}</h2>
             <p className="text-xs text-muted-foreground">Senior Agent · Stayafrik Pro</p>
@@ -79,7 +79,7 @@ const AgentProfile = () => {
         <section className="mt-5 rounded-2xl bg-card border border-border p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-bold">About</h3>
-            <button className="text-[11px] text-primary font-semibold">Edit</button>
+            <Link to="/profile/edit" className="text-[11px] text-primary font-semibold">Edit</Link>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
             Lagos-based real-estate specialist focused on Lekki, Ikoyi & VI. I help diaspora buyers secure

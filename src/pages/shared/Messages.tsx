@@ -1,5 +1,6 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { useRole } from "@/contexts/RoleContext";
+import { Link } from "react-router-dom";
 
 const clientThreads = [
   { id: 1, name: "Amaka Osei", role: "Verified Agent", emoji: "👩🏾‍💼", last: "Yes, the apartment is available those dates ✓", time: "2m", unread: 1 },

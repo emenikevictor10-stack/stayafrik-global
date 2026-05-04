@@ -23,8 +23,9 @@ const Messages = () => {
       <TopBar title="Inbox" subtitle={`${threads.length} conversations`} />
       <main className="px-2 pt-2 pb-8">
         {threads.map((t) => (
-          <button
+          <Link
             key={t.id}
+            to={`/messages/${t.name.toLowerCase().replace(/\s+/g, "-")}`}
             className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-card transition-colors text-left"
           >
             <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-xl shrink-0">
@@ -45,7 +46,7 @@ const Messages = () => {
                 )}
               </div>
             </div>
-          </button>
+          </Link>
         ))}
       </main>
     </>

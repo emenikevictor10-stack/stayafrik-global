@@ -1,8 +1,9 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import type { Property } from "@/data/properties";
 import { Star } from "lucide-react";
 
 export const PropertyCard = ({ p }: { p: Property }) => {
+  const navigate = useNavigate();
   return (
     <Link
       to={`/property/${p.id}`}

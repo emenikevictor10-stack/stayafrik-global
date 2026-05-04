@@ -1,12 +1,36 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { ChevronLeft, TrendingUp, TrendingDown, Eye, MessageSquare, CheckCircle2, DollarSign } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useState } from "react";
 
-const kpis = [
-  { i: Eye, l: "Views", v: "12.4k", d: "+18%", up: true },
-  { i: MessageSquare, l: "Leads", v: "284", d: "+12%", up: true },
-  { i: CheckCircle2, l: "Closed", v: "9", d: "+3", up: true },
-  { i: DollarSign, l: "Avg deal", v: "₦92M", d: "−4%", up: false },
+type Period = "7d" | "30d" | "90d";
+
+const KPI_BY_PERIOD: Record<Period, { v: string; d: string; up: boolean }[]> = {
+  "7d": [
+    { v: "2.1k", d: "+9%", up: true },
+    { v: "62", d: "+4%", up: true },
+    { v: "2", d: "+1", up: true },
+    { v: "₦88M", d: "−2%", up: false },
+  ],
+  "30d": [
+    { v: "12.4k", d: "+18%", up: true },
+    { v: "284", d: "+12%", up: true },
+    { v: "9", d: "+3", up: true },
+    { v: "₦92M", d: "−4%", up: false },
+  ],
+  "90d": [
+    { v: "38.6k", d: "+24%", up: true },
+    { v: "812", d: "+19%", up: true },
+    { v: "27", d: "+8", up: true },
+    { v: "₦96M", d: "+6%", up: true },
+  ],
+};
+
+const KPI_META = [
+  { i: Eye, l: "Views" },
+  { i: MessageSquare, l: "Leads" },
+  { i: CheckCircle2, l: "Closed" },
+  { i: DollarSign, l: "Avg deal" },
 ];
 
 const funnel = [
@@ -23,12 +47,16 @@ const topListings = [
   { t: "GRA plot 900sqm", v: "1.8k views", c: "₦825K" },
 ];
 
+const PERIOD_LABEL: Record<Period, string> = { "7d": "Last 7 days", "30d": "Last 30 days", "90d": "Last 90 days" };
+
 const Performance = () => {
   const maxFunnel = funnel[0].v;
+  const [period, setPeriod] = useState<Period>("30d");
+  const kpis = KPI_META.map((m, i) => ({ ...m, ...KPI_BY_PERIOD[period][i] }));
 
   return (
     <>
-      <TopBar title="Performance" subtitle="Last 30 days" />
+      <TopBar title="Performance" subtitle={PERIOD_LABEL[period]} />
       <main className="px-5 pt-4 pb-8">
         <Link
           to="/profile"
@@ -39,11 +67,12 @@ const Performance = () => {
 
         {/* Period switch */}
         <div className="flex gap-2 mb-4">
-          {["7d", "30d", "90d", "1y"].map((p, i) => (
+          {(["7d", "30d", "90d"] as Period[]).map((p) => (
             <button
               key={p}
+              onClick={() => setPeriod(p)}
               className={`flex-1 py-2 rounded-xl text-[11px] font-bold border ${
-                i === 1
+                period === p
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-card border-border text-muted-foreground"
               }`}

@@ -1,4 +1,5 @@
 import { TopBar } from "@/components/shell/TopBar";
+import { Link } from "react-router-dom";
 
 const escrows = [
   {
@@ -100,7 +101,7 @@ const Escrow = () => {
               >
                 {e.status}
               </span>
-              <button className="text-[11px] font-semibold text-primary">View details →</button>
+              <Link to={`/escrow/${e.code}`} className="text-[11px] font-semibold text-primary">View details →</Link>
             </div>
           </article>
         ))}

@@ -14,7 +14,6 @@ export const AgentDashboard = () => {
     { e: "✓", t: "Verification approved", s: "SA-PROP-0421 · Lekki Phase 1", c: "success" },
     { e: "🔐", t: "Escrow funded", s: "₦95M held · V.I apartment", c: "info" },
     { e: "📩", t: "New inspection request", s: "Adaeze O. · GRA Phase 2 plot", c: "warn" },
-    { e: "⏳", t: "Document review pending", s: "SA-PROP-0511 · Maitama suite", c: "muted" },
   ];
 
   const colorMap: Record<string, string> = {
@@ -75,6 +74,9 @@ export const AgentDashboard = () => {
               </div>
             ))}
           </div>
+          <Link to="/escrow" className="mt-3 block w-full text-center rounded-xl border border-border bg-card py-2.5 text-xs font-bold text-primary">
+            View more activity →
+          </Link>
         </section>
 
         <section className="mt-6">

@@ -26,6 +26,7 @@ const agentItems = [
 const Profile = () => {
   const { role, user, setRole } = useRole();
   const navigate = useNavigate();
+  const { signOut, user: authUser } = useAuth();
   const items = role === "client" ? clientItems : agentItems;
 
   return (
@@ -37,8 +38,8 @@ const Profile = () => {
             {user.emoji}
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-bold">{user.name}</h2>
-            <p className="text-xs text-success font-medium">✓ ID verified</p>
+            <h2 className="font-bold">{authUser?.user_metadata?.full_name || user.name}</h2>
+            <p className="text-[11px] text-muted-foreground truncate">{authUser?.email}</p>
             <p className="text-[11px] text-muted-foreground capitalize mt-0.5">{role} account</p>
           </div>
           <Link to="/profile/edit" className="w-9 h-9 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
@@ -67,9 +68,10 @@ const Profile = () => {
         </section>
 
         <button
-          onClick={() => {
+          onClick={async () => {
+            await signOut();
             toast.success("Signed out");
-            setTimeout(() => navigate("/"), 600);
+            navigate("/auth", { replace: true });
           }}
           className="mt-5 w-full flex items-center justify-center gap-2 rounded-2xl border border-destructive/40 bg-destructive/10 text-destructive py-3.5 text-sm font-bold"
         >

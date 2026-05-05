@@ -39,9 +39,19 @@ const Profile = () => {
             {user.emoji}
           </div>
           <div className="flex-1 min-w-0">
-            <h2 className="font-bold">{authUser?.user_metadata?.full_name || user.name}</h2>
+            <h2 className="font-bold flex items-center gap-1.5">
+              {authUser?.user_metadata?.full_name || user.name}
+              {authUser?.email_confirmed_at && (
+                <span className="text-[10px] text-primary font-bold">✓ Verified</span>
+              )}
+            </h2>
             <p className="text-[11px] text-muted-foreground truncate">{authUser?.email}</p>
-            <p className="text-[11px] text-muted-foreground capitalize mt-0.5">{role} account</p>
+            <p className="text-[11px] text-muted-foreground capitalize mt-0.5">
+              {role} account ·{" "}
+              {authUser && localStorage.getItem(`stay:onboarded:${authUser.id}`) === "1"
+                ? "Onboarding complete"
+                : "Onboarding pending"}
+            </p>
           </div>
           <Link to="/profile/edit" className="w-9 h-9 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-primary">
             <Pencil className="w-4 h-4" />

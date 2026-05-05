@@ -157,7 +157,7 @@ const Help = () => {
         </div>
 
         <p className="text-center text-[10px] text-muted-foreground mt-6">
-          Stayafrik Support · Lagos, Accra, Nairobi 🌍
+          Stay Support · Lagos, Accra, Nairobi 🌍
         </p>
       </main>
     </>

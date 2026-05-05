@@ -76,7 +76,7 @@ const Profile = () => {
           <LogOut className="w-4 h-4" /> Log out
         </button>
 
-        <p className="text-center text-[10px] text-muted-foreground mt-6">Stayafrik · v0.1 · Africa 🌍</p>
+        <p className="text-center text-[10px] text-muted-foreground mt-6">Stay · v0.1 · Africa 🌍</p>
       </main>
     </>
   );

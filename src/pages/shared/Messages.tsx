@@ -5,13 +5,13 @@ import { Link } from "react-router-dom";
 const clientThreads = [
   { id: 1, name: "Amaka Osei", role: "Verified Agent", emoji: "👩🏾‍💼", last: "Yes, the apartment is available those dates ✓", time: "2m", unread: 1 },
   { id: 2, name: "Kofi Mensah", role: "Verified Agent", emoji: "👨🏾‍💼", last: "I'll send the inspection slot tomorrow.", time: "1h", unread: 0 },
-  { id: 3, name: "Stayafrik Support", role: "Concierge", emoji: "🎧", last: "How was your stay in Maitama?", time: "2d", unread: 0 },
+  { id: 3, name: "Stay Support", role: "Concierge", emoji: "🎧", last: "How was your stay in Maitama?", time: "2d", unread: 0 },
 ];
 
 const agentThreads = [
   { id: 1, name: "Adaeze O.", role: "Client · V.I apt", emoji: "🙋🏾‍♀️", last: "What time can I check in?", time: "5m", unread: 2 },
   { id: 2, name: "Tobi A.", role: "Client · Lekki house", emoji: "🧑🏾", last: "Document received, releasing escrow.", time: "1h", unread: 0 },
-  { id: 3, name: "Stayafrik Verify Team", role: "Internal", emoji: "🛡️", last: "Title check complete on SA-PROP-0421.", time: "1d", unread: 1 },
+  { id: 3, name: "Stay Verify Team", role: "Internal", emoji: "🛡️", last: "Title check complete on SA-PROP-0421.", time: "1d", unread: 1 },
 ];
 
 const Messages = () => {

@@ -12,7 +12,7 @@ const ChatThread = () => {
   const navigate = useNavigate();
   const prop = propId ? PROPERTIES.find((p) => p.id === propId) : undefined;
   const agent = prop || PROPERTIES.find((p) => p.agent.toLowerCase().replace(/\s+/g, "-") === agentId);
-  const name = agent?.agent || "Stayafrik Agent";
+  const name = agent?.agent || "Stay Agent";
   const emoji = agent?.agentEmoji || "👤";
   const tag = agent?.agentTag || "Verified Agent";
 

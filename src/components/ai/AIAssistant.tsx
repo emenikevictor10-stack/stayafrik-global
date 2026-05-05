@@ -16,7 +16,7 @@ export const AIAssistant = () => {
       role: "assistant",
       content:
         role === "client"
-          ? "Hi 👋 I'm Aria, your Stayafrik assistant. Ask me to find a verified shortlet, explain how escrow works, or compare neighbourhoods."
+          ? "Hi 👋 I'm Aria, your Stay assistant. Ask me to find a verified shortlet, explain how escrow works, or compare neighbourhoods."
           : "Hi 👋 I'm Aria, your agent assistant. I can help you draft listing descriptions, explain verification steps, and answer client questions.",
     },
   ]);
@@ -76,7 +76,7 @@ export const AIAssistant = () => {
               </div>
               <div>
                 <h2 className="font-bold text-sm">Aria</h2>
-                <p className="text-[11px] text-muted-foreground">Your Stayafrik AI · {role}</p>
+                <p className="text-[11px] text-muted-foreground">Your Stay AI · {role}</p>
               </div>
             </div>
             <button

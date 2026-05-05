@@ -175,7 +175,7 @@ const NewListing = () => {
             </label>
             <div className="rounded-2xl bg-card border border-border p-4 space-y-2 text-xs">
               <div className="flex justify-between"><span className="text-muted-foreground">Your price</span><span className="font-semibold">₦{price || "—"}</span></div>
-              <div className="flex justify-between"><span className="text-muted-foreground">Stayafrik commission (3%)</span><span className="font-semibold">−₦{Math.round(Number(price || 0) * 0.03).toLocaleString()}</span></div>
+              <div className="flex justify-between"><span className="text-muted-foreground">Stay commission (3%)</span><span className="font-semibold">−₦{Math.round(Number(price || 0) * 0.03).toLocaleString()}</span></div>
               <div className="border-t border-border pt-2 flex justify-between font-extrabold"><span>You earn</span><span className="text-primary">₦{Math.round(Number(price || 0) * 0.97).toLocaleString()}</span></div>
             </div>
           </div>

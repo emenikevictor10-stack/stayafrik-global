@@ -56,7 +56,7 @@ const AgentProfile = () => {
               </Link>
             </div>
             <h2 className="mt-3 text-lg font-extrabold">{user.name}</h2>
-            <p className="text-xs text-muted-foreground">Senior Agent · Stayafrik Pro</p>
+            <p className="text-xs text-muted-foreground">Senior Agent · Stay Pro</p>
             <div className="flex items-center gap-1 mt-1.5">
               <Star className="w-3.5 h-3.5 fill-primary text-primary" />
               <span className="text-xs font-bold">4.9</span>
@@ -112,9 +112,9 @@ const AgentProfile = () => {
         <section className="mt-4 rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden">
           {[
             { i: Phone, l: "+234 803 555 0123", s: "Mobile" },
-            { i: Mail, l: "emeka@stayafrik.com", s: "Email" },
+            { i: Mail, l: "emeka@stay.com", s: "Email" },
             { i: MapPin, l: "Lekki Phase 1, Lagos", s: "Office" },
-            { i: Globe, l: "stayafrik.com/emeka", s: "Public page" },
+            { i: Globe, l: "stay.com/emeka", s: "Public page" },
           ].map((c, i) => (
             <div key={i} className="flex items-center gap-3 px-4 py-3">
               <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center">

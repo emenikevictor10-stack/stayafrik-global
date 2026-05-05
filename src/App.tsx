@@ -3,6 +3,10 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { RoleProvider, useRole } from "@/contexts/RoleContext";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import Auth from "./pages/auth/Auth";
+import Welcome from "./pages/auth/Welcome";
 import { MobileShell } from "@/components/shell/MobileShell";
 import Index from "./pages/Index";
 import Explore from "./pages/client/Explore";
@@ -44,34 +48,40 @@ const App = () => (
     <TooltipProvider>
       <Sonner position="top-center" />
       <RoleProvider>
-        <BrowserRouter>
-          <Routes>
-            <Route element={<MobileShell />}>
-              <Route path="/" element={<Index />} />
-              <Route path="/explore" element={<SecondTab />} />
-              <Route path="/listings" element={<SecondTab />} />
-              <Route path="/listings/new" element={<NewListing />} />
-              <Route path="/listings/:id/edit" element={<EditListing />} />
-              <Route path="/bookings" element={<ThirdTab />} />
-              <Route path="/escrow" element={<ThirdTab />} />
-              <Route path="/escrow/:code" element={<EscrowDetail />} />
-              <Route path="/messages" element={<Messages />} />
-              <Route path="/messages/:agentId" element={<ChatThread />} />
-              <Route path="/profile" element={<Profile />} />
-              <Route path="/profile/edit" element={<EditProfile />} />
-              <Route path="/profile/agent" element={<AgentProfile />} />
-              <Route path="/profile/verification" element={<Verification />} />
-              <Route path="/profile/commission" element={<Commission />} />
-              <Route path="/profile/payout" element={<PayoutAccount />} />
-              <Route path="/profile/performance" element={<Performance />} />
-              <Route path="/profile/language" element={<LanguageCurrency />} />
-              <Route path="/profile/help" element={<Help />} />
-              <Route path="/property/:id" element={<PropertyDetail />} />
-              <Route path="/property/:id/book" element={<BookProperty />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
+        <AuthProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/auth" element={<Auth />} />
+              <Route path="/welcome" element={<Welcome />} />
+              <Route element={<ProtectedRoute />}>
+                <Route element={<MobileShell />}>
+                  <Route path="/" element={<Index />} />
+                  <Route path="/explore" element={<SecondTab />} />
+                  <Route path="/listings" element={<SecondTab />} />
+                  <Route path="/listings/new" element={<NewListing />} />
+                  <Route path="/listings/:id/edit" element={<EditListing />} />
+                  <Route path="/bookings" element={<ThirdTab />} />
+                  <Route path="/escrow" element={<ThirdTab />} />
+                  <Route path="/escrow/:code" element={<EscrowDetail />} />
+                  <Route path="/messages" element={<Messages />} />
+                  <Route path="/messages/:agentId" element={<ChatThread />} />
+                  <Route path="/profile" element={<Profile />} />
+                  <Route path="/profile/edit" element={<EditProfile />} />
+                  <Route path="/profile/agent" element={<AgentProfile />} />
+                  <Route path="/profile/verification" element={<Verification />} />
+                  <Route path="/profile/commission" element={<Commission />} />
+                  <Route path="/profile/payout" element={<PayoutAccount />} />
+                  <Route path="/profile/performance" element={<Performance />} />
+                  <Route path="/profile/language" element={<LanguageCurrency />} />
+                  <Route path="/profile/help" element={<Help />} />
+                  <Route path="/property/:id" element={<PropertyDetail />} />
+                  <Route path="/property/:id/book" element={<BookProperty />} />
+                </Route>
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </BrowserRouter>
+        </AuthProvider>
       </RoleProvider>
     </TooltipProvider>
   </QueryClientProvider>

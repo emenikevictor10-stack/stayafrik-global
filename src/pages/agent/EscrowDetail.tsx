@@ -102,7 +102,7 @@ const EscrowDetail = () => {
           <h3 className="text-sm font-bold mb-3">Payment breakdown</h3>
           <div className="space-y-2 text-sm">
             <div className="flex justify-between"><span className="text-muted-foreground">Property amount</span><span className="font-semibold">{fmt(e.amount)}</span></div>
-            <div className="flex justify-between"><span className="text-muted-foreground">Stayafrik fee (2.5%)</span><span className="font-semibold">−{fmt(fee)}</span></div>
+            <div className="flex justify-between"><span className="text-muted-foreground">Stay fee (2.5%)</span><span className="font-semibold">−{fmt(fee)}</span></div>
             <div className="border-t border-border pt-2 flex justify-between font-extrabold">
               <span>Net to you</span><span className="text-primary">{fmt(net)}</span>
             </div>

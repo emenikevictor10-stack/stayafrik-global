@@ -9,7 +9,7 @@ const EditProfile = () => {
   const { user, role } = useRole();
   const navigate = useNavigate();
   const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(role === "agent" ? "emeka@stayafrik.com" : "adaeze@example.com");
+  const [email, setEmail] = useState(role === "agent" ? "emeka@stay.com" : "adaeze@example.com");
   const [phone, setPhone] = useState("+234 803 555 0123");
   const [bio, setBio] = useState(role === "agent" ? "Lagos-based agent · Lekki, Ikoyi, VI." : "Diaspora traveller — love verified shortlets in Lagos.");
   const [city, setCity] = useState("Lagos");

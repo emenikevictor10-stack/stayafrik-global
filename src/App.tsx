@@ -7,6 +7,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Auth from "./pages/auth/Auth";
 import Welcome from "./pages/auth/Welcome";
+import ResetPassword from "./pages/auth/ResetPassword";
 import { MobileShell } from "@/components/shell/MobileShell";
 import Index from "./pages/Index";
 import Explore from "./pages/client/Explore";
@@ -52,6 +53,7 @@ const App = () => (
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
+              <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/welcome" element={<Welcome />} />
               <Route element={<ProtectedRoute />}>
                 <Route element={<MobileShell />}>

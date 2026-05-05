@@ -36,12 +36,13 @@ const Welcome = () => {
   const [step, setStep] = useState(0);
   const navigate = useNavigate();
   const { role } = useRole();
-  const { setIsNewUser } = useAuth();
+  const { setIsNewUser, user } = useAuth();
   const s = slides[step];
 
   const finish = () => {
     setIsNewUser(false);
-    navigate("/");
+    if (user) localStorage.setItem(`stay:onboarded:${user.id}`, "1");
+    navigate(role === "agent" ? "/listings" : "/explore", { replace: true });
   };
 
   return (

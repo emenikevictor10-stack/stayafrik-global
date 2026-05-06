@@ -27,6 +27,8 @@ export type Property = {
   reviews: number;
   desc: string;
   amenities: { emoji: string; label: string }[];
+  lat: number;
+  lng: number;
 };
 
 const baseAmenities = [
@@ -41,6 +43,7 @@ const baseAmenities = [
 export const PROPERTIES: Property[] = [
   {
     id: "p1",
+    lat: 9.0876, lng: 7.4951,
     title: "Maitama Serviced Suite",
     location: "Maitama, Abuja",
     type: "Shortlet",
@@ -56,6 +59,7 @@ export const PROPERTIES: Property[] = [
   },
   {
     id: "p2",
+    lat: 6.4541, lng: 3.4316,
     title: "Ikoyi Luxury Penthouse",
     location: "Ikoyi, Lagos",
     type: "Shortlet",
@@ -71,6 +75,7 @@ export const PROPERTIES: Property[] = [
   },
   {
     id: "p3",
+    lat: 6.4474, lng: 3.4553,
     title: "5-Bed Detached, Lekki Phase 1",
     location: "Lekki Phase 1, Lagos",
     type: "For Sale",
@@ -91,6 +96,7 @@ export const PROPERTIES: Property[] = [
   },
   {
     id: "p4",
+    lat: 6.4281, lng: 3.4219,
     title: "3-Bed Apartment, V.I",
     location: "Victoria Island, Lagos",
     type: "For Sale",
@@ -111,6 +117,7 @@ export const PROPERTIES: Property[] = [
   },
   {
     id: "p5",
+    lat: 4.8156, lng: 7.0498,
     title: "Land 900sqm, GRA Phase 2",
     location: "GRA Phase 2, Port Harcourt",
     type: "Land",
@@ -130,6 +137,7 @@ export const PROPERTIES: Property[] = [
   },
   {
     id: "p6",
+    lat: 9.0667, lng: 7.4667,
     title: "Commercial Plot, Wuse",
     location: "Wuse Zone 5, Abuja",
     type: "Commercial",

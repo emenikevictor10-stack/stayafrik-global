@@ -4,6 +4,7 @@ import { ChevronLeft, Heart, Share2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRole } from "@/contexts/RoleContext";
+import { SinglePropertyMap } from "@/components/map/PropertyMap";
 
 const PropertyDetail = () => {
   const { id } = useParams();
@@ -134,6 +135,12 @@ const PropertyDetail = () => {
               </div>
             ))}
           </div>
+        </section>
+
+        <section className="mt-6">
+          <h2 className="font-bold text-sm mb-3">Location</h2>
+          <SinglePropertyMap p={p} height={220} />
+          <p className="text-[11px] text-muted-foreground mt-2">📍 {p.location}</p>
         </section>
 
         <section className="mt-6 rounded-2xl bg-card border border-border p-4">

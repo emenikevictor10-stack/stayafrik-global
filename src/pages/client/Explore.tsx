@@ -1,13 +1,15 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { PROPERTIES, CATEGORIES } from "@/data/properties";
-import { Search } from "lucide-react";
+import { Search, Map as MapIcon, List as ListIcon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { PropertiesMap } from "@/components/map/PropertyMap";
 
 const Explore = () => {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<string | null>(null);
+  const [view, setView] = useState<"list" | "map">("list");
   const list = PROPERTIES.filter((p) => {
     const matchesQ =
       !q ||
@@ -29,6 +31,13 @@ const Explore = () => {
             placeholder="Search city, area or property…"
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
+          <button
+            onClick={() => setView(view === "list" ? "map" : "list")}
+            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-primary"
+            aria-label="Toggle map view"
+          >
+            {view === "list" ? <><MapIcon className="w-4 h-4" /> Map</> : <><ListIcon className="w-4 h-4" /> List</>}
+          </button>
         </div>
 
         <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5 mt-4 pb-1">
@@ -60,17 +69,23 @@ const Explore = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 mt-5">
-          {list.map((p) => (
-            <PropertyCard key={p.id} p={p} />
-          ))}
-          {list.length === 0 && (
-            <div className="text-center py-16 text-muted-foreground text-sm">
-              <div className="text-4xl mb-2">🔍</div>
-              No properties match your search.
-            </div>
-          )}
-        </div>
+        {view === "map" ? (
+          <div className="mt-5">
+            <PropertiesMap list={list} height={520} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 mt-5">
+            {list.map((p) => (
+              <PropertyCard key={p.id} p={p} />
+            ))}
+            {list.length === 0 && (
+              <div className="text-center py-16 text-muted-foreground text-sm">
+                <div className="text-4xl mb-2">🔍</div>
+                No properties match your search.
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </>
   );

@@ -31,6 +31,13 @@ const Explore = () => {
             placeholder="Search city, area or property…"
             className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
           />
+          <button
+            onClick={() => setView(view === "list" ? "map" : "list")}
+            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-primary"
+            aria-label="Toggle map view"
+          >
+            {view === "list" ? <><MapIcon className="w-4 h-4" /> Map</> : <><ListIcon className="w-4 h-4" /> List</>}
+          </button>
         </div>
 
         <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5 mt-4 pb-1">

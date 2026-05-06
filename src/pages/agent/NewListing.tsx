@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, Check, ImagePlus, Home, MapPin, DollarSign, FileText, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { LocationPicker } from "@/components/map/PropertyMap";
 
 const TYPES = [
   { e: "🏖️", l: "Shortlet", d: "Nightly stays" },

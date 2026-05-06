@@ -4,6 +4,7 @@ import { ChevronLeft, Heart, Share2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRole } from "@/contexts/RoleContext";
+import { SinglePropertyMap } from "@/components/map/PropertyMap";
 
 const PropertyDetail = () => {
   const { id } = useParams();

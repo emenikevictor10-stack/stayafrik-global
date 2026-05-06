@@ -27,6 +27,8 @@ export type Property = {
   reviews: number;
   desc: string;
   amenities: { emoji: string; label: string }[];
+  lat: number;
+  lng: number;
 };
 
 const baseAmenities = [

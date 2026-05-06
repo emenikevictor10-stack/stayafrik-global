@@ -27,6 +27,7 @@ const NewListing = () => {
   const [desc, setDesc] = useState("");
   const [amen, setAmen] = useState<string[]>([]);
   const [photos, setPhotos] = useState<number[]>([]);
+  const [coords, setCoords] = useState<{ lat: number; lng: number }>({ lat: 6.5244, lng: 3.3792 });
 
   const TOTAL = 7;
   const next = () => setStep((s) => Math.min(TOTAL, s + 1));

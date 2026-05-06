@@ -11,9 +11,6 @@ export const TopBar = ({ title, subtitle }: { title: string; subtitle?: string }
           <img src={icon} alt="Stay" className="h-7 w-7 rounded-md shrink-0" width={28} height={28} />
           <div className="min-w-0">
             <h1 className="text-[15px] font-bold leading-tight truncate">{title}</h1>
-            {subtitle && (
-              <p className="text-[11px] text-muted-foreground truncate">{subtitle}</p>
-            )}
           </div>
         </div>
         <button

@@ -94,13 +94,13 @@ const NewListing = () => {
               <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="12 Admiralty Way, Lekki Phase 1"
                 className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm" />
             </label>
-            <div className="rounded-2xl bg-card border border-border h-40 flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="w-6 h-6 text-primary mx-auto" />
-                <p className="text-[11px] text-muted-foreground mt-1">Map preview</p>
-              </div>
-            </div>
-            <p className="text-[11px] text-muted-foreground">Exact address shown to guests only after booking.</p>
+            <LocationPicker
+              lat={coords.lat}
+              lng={coords.lng}
+              onChange={(lat, lng) => setCoords({ lat, lng })}
+              height={220}
+            />
+            <p className="text-[11px] text-muted-foreground">Tap or drag the pin to set the exact location. Address only shown to guests after booking.</p>
           </div>
         )}
 

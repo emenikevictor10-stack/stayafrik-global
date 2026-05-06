@@ -69,17 +69,23 @@ const Explore = () => {
           ))}
         </div>
 
-        <div className="grid grid-cols-1 gap-4 mt-5">
-          {list.map((p) => (
-            <PropertyCard key={p.id} p={p} />
-          ))}
-          {list.length === 0 && (
-            <div className="text-center py-16 text-muted-foreground text-sm">
-              <div className="text-4xl mb-2">🔍</div>
-              No properties match your search.
-            </div>
-          )}
-        </div>
+        {view === "map" ? (
+          <div className="mt-5">
+            <PropertiesMap list={list} height={520} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 gap-4 mt-5">
+            {list.map((p) => (
+              <PropertyCard key={p.id} p={p} />
+            ))}
+            {list.length === 0 && (
+              <div className="text-center py-16 text-muted-foreground text-sm">
+                <div className="text-4xl mb-2">🔍</div>
+                No properties match your search.
+              </div>
+            )}
+          </div>
+        )}
       </main>
     </>
   );

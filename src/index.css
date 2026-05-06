@@ -21,7 +21,7 @@
     --popover-foreground: 0 0% 94%;
 
     /* Brand: lime accent */
-    --primary: 73 86% 59%;             /* #D4F13B */
+    --primary: 73 85% 59%;             /* #C8F03E */
     --primary-foreground: 0 0% 4%;
     --primary-dim: 73 72% 48%;         /* darker variant */
 
@@ -31,7 +31,7 @@
     --muted: 0 0% 12%;
     --muted-foreground: 0 0% 56%;      /* #909090 */
 
-    --accent: 73 86% 59%;
+    --accent: 73 85% 59%;
     --accent-foreground: 0 0% 4%;
 
     --destructive: 0 84% 60%;
@@ -39,16 +39,16 @@
 
     --success: 142 71% 45%;            /* #22C55E */
     --info: 217 91% 60%;               /* #3B82F6 */
-    --warn: 73 86% 59%;
+    --warn: 73 85% 59%;
 
     --border: 0 0% 16%;                /* #2A2A2A */
     --input: 0 0% 12%;
-    --ring: 73 86% 59%;
+    --ring: 73 85% 59%;
 
     --radius: 0.875rem;
 
     /* Shadows / glows */
-    --shadow-glow: 0 8px 32px hsl(73 86% 59% / 0.28);
+    --shadow-glow: 0 8px 32px hsl(73 85% 59% / 0.28);
     --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
 
     /* Motion */
@@ -56,12 +56,12 @@
 
     --sidebar-background: 0 0% 6%;
     --sidebar-foreground: 0 0% 94%;
-    --sidebar-primary: 73 86% 59%;
+    --sidebar-primary: 73 85% 59%;
     --sidebar-primary-foreground: 0 0% 4%;
     --sidebar-accent: 0 0% 12%;
     --sidebar-accent-foreground: 0 0% 94%;
     --sidebar-border: 0 0% 16%;
-    --sidebar-ring: 73 86% 59%;
+    --sidebar-ring: 73 85% 59%;
   }
 }
 

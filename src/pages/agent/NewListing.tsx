@@ -283,9 +283,9 @@ const NewListing = () => {
       <div className="fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
         <div className="max-w-md mx-auto px-5 py-3 pb-20">
           <button onClick={step === TOTAL ? publish : next}
-            disabled={(step === 1 && !type)}
+            disabled={(step === 1 && !type) || publishing}
             className="w-full bg-primary text-primary-foreground rounded-2xl h-12 font-bold text-sm disabled:opacity-50">
-            {step === TOTAL ? "🚀 Publish listing" : "Continue"}
+            {step === TOTAL ? (publishing ? "Publishing…" : "🚀 Publish listing") : "Continue"}
           </button>
         </div>
       </div>

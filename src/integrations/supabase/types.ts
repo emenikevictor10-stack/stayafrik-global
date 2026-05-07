@@ -14,12 +14,171 @@ export type Database = {
   }
   public: {
     Tables: {
+      bookings: {
+        Row: {
+          check_in_date: string
+          check_out_date: string
+          created_at: string
+          guest_id: string
+          id: string
+          listing_id: string
+          payment_reference: string | null
+          status: string
+          total_price: number
+          updated_at: string
+        }
+        Insert: {
+          check_in_date: string
+          check_out_date: string
+          created_at?: string
+          guest_id: string
+          id?: string
+          listing_id: string
+          payment_reference?: string | null
+          status?: string
+          total_price?: number
+          updated_at?: string
+        }
+        Update: {
+          check_in_date?: string
+          check_out_date?: string
+          created_at?: string
+          guest_id?: string
+          id?: string
+          listing_id?: string
+          payment_reference?: string | null
+          status?: string
+          total_price?: number
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bookings_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listings: {
+        Row: {
+          address: string | null
+          amenities: string[]
+          area: string | null
+          bathrooms: number
+          bedrooms: number
+          city: string | null
+          created_at: string
+          description: string | null
+          host_id: string
+          id: string
+          images: string[]
+          is_available: boolean
+          lat: number | null
+          lng: number | null
+          location: string | null
+          price_per_night: number
+          rating: number
+          reviews_count: number
+          title: string
+          type: string
+          updated_at: string
+          verified: boolean
+        }
+        Insert: {
+          address?: string | null
+          amenities?: string[]
+          area?: string | null
+          bathrooms?: number
+          bedrooms?: number
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          host_id: string
+          id?: string
+          images?: string[]
+          is_available?: boolean
+          lat?: number | null
+          lng?: number | null
+          location?: string | null
+          price_per_night?: number
+          rating?: number
+          reviews_count?: number
+          title: string
+          type?: string
+          updated_at?: string
+          verified?: boolean
+        }
+        Update: {
+          address?: string | null
+          amenities?: string[]
+          area?: string | null
+          bathrooms?: number
+          bedrooms?: number
+          city?: string | null
+          created_at?: string
+          description?: string | null
+          host_id?: string
+          id?: string
+          images?: string[]
+          is_available?: boolean
+          lat?: number | null
+          lng?: number | null
+          location?: string | null
+          price_per_night?: number
+          rating?: number
+          reviews_count?: number
+          title?: string
+          type?: string
+          updated_at?: string
+          verified?: boolean
+        }
+        Relationships: []
+      }
+      messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          listing_id: string | null
+          receiver_id: string
+          sender_id: string
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          receiver_id: string
+          sender_id: string
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          listing_id?: string | null
+          receiver_id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
           created_at: string
+          email: string | null
           full_name: string | null
           id: string
+          is_host: boolean
           phone: string | null
           updated_at: string
           user_id: string
@@ -27,8 +186,10 @@ export type Database = {
         Insert: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
+          is_host?: boolean
           phone?: string | null
           updated_at?: string
           user_id: string
@@ -36,13 +197,60 @@ export type Database = {
         Update: {
           avatar_url?: string | null
           created_at?: string
+          email?: string | null
           full_name?: string | null
           id?: string
+          is_host?: boolean
           phone?: string | null
           updated_at?: string
           user_id?: string
         }
         Relationships: []
+      }
+      reviews: {
+        Row: {
+          booking_id: string
+          comment: string | null
+          created_at: string
+          guest_id: string
+          id: string
+          listing_id: string
+          rating: number
+        }
+        Insert: {
+          booking_id: string
+          comment?: string | null
+          created_at?: string
+          guest_id: string
+          id?: string
+          listing_id: string
+          rating: number
+        }
+        Update: {
+          booking_id?: string
+          comment?: string | null
+          created_at?: string
+          guest_id?: string
+          id?: string
+          listing_id?: string
+          rating?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       user_roles: {
         Row: {

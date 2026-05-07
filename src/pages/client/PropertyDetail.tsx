@@ -1,5 +1,5 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { PROPERTIES } from "@/data/properties";
+import { useListing } from "@/hooks/useListings";
 import { ChevronLeft, Heart, Share2, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
@@ -10,7 +10,15 @@ const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { role } = useRole();
-  const p = PROPERTIES.find((x) => x.id === id);
+  const { data: p, loading } = useListing(id);
+
+  if (loading) {
+    return (
+      <main className="min-h-[60vh] flex items-center justify-center">
+        <div className="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+      </main>
+    );
+  }
 
   if (!p) {
     return (

@@ -1,16 +1,18 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { PropertyCard } from "@/components/property/PropertyCard";
-import { PROPERTIES, CATEGORIES } from "@/data/properties";
+import { CATEGORIES } from "@/data/properties";
 import { Search, Map as MapIcon, List as ListIcon } from "lucide-react";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { PropertiesMap } from "@/components/map/PropertyMap";
+import { useListings } from "@/hooks/useListings";
 
 const Explore = () => {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "map">("list");
-  const list = PROPERTIES.filter((p) => {
+  const { data: properties, loading } = useListings();
+  const list = properties.filter((p) => {
     const matchesQ =
       !q ||
       p.title.toLowerCase().includes(q.toLowerCase()) ||

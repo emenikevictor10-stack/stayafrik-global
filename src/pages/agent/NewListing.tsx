@@ -198,17 +198,37 @@ const NewListing = () => {
 
         {step === 4 && (
           <div>
-            <p className="text-xs text-muted-foreground mb-3">Add at least 5 photos. First one becomes the cover.</p>
+            <p className="text-xs text-muted-foreground mb-3">Add at least 1 photo. First one becomes the cover.</p>
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFiles(e.target.files)}
+            />
             <div className="grid grid-cols-2 gap-2.5">
-              {photos.map((i) => (
-                <div key={i} className="aspect-square rounded-xl bg-secondary border border-border flex items-center justify-center text-3xl">
-                  📷
+              {photos.map((url) => (
+                <div key={url} className="relative aspect-square rounded-xl bg-secondary border border-border overflow-hidden">
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(url)}
+                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-background/80 backdrop-blur flex items-center justify-center"
+                    aria-label="Remove photo"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               ))}
-              <button onClick={() => setPhotos((p) => [...p, Date.now()])}
-                className="aspect-square rounded-xl border-2 border-dashed border-border bg-card flex flex-col items-center justify-center gap-1 text-muted-foreground">
-                <ImagePlus className="w-6 h-6" />
-                <span className="text-[10px] font-semibold">Add photo</span>
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => fileInput.current?.click()}
+                className="aspect-square rounded-xl border-2 border-dashed border-border bg-card flex flex-col items-center justify-center gap-1 text-muted-foreground disabled:opacity-50"
+              >
+                {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <ImagePlus className="w-6 h-6" />}
+                <span className="text-[10px] font-semibold">{uploading ? "Uploading…" : "Add photo"}</span>
               </button>
             </div>
           </div>

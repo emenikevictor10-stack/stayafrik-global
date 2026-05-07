@@ -127,7 +127,7 @@ const EditListing = () => {
         <button onClick={save} className="mt-6 w-full rounded-2xl bg-primary text-primary-foreground py-3.5 font-bold text-sm shadow-glow">
           Save changes
         </button>
-        <button onClick={() => toast.error("Listing deleted")}
+        <button onClick={remove}
           className="mt-3 w-full rounded-2xl border border-destructive/40 bg-destructive/10 text-destructive py-3 font-bold text-sm flex items-center justify-center gap-2">
           <Trash2 className="w-4 h-4" /> Delete listing
         </button>

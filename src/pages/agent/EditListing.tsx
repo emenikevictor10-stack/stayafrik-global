@@ -1,26 +1,58 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { PROPERTIES } from "@/data/properties";
+import { useListing } from "@/hooks/useListings";
 import { ChevronLeft, Eye, EyeOff, Trash2, ImagePlus } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
 
 const EditListing = () => {
   const { id } = useParams();
   const nav = useNavigate();
-  const p = PROPERTIES.find((x) => x.id === id);
-  const [title, setTitle] = useState(p?.title || "");
-  const [price, setPrice] = useState(p?.priceNum.toString() || "");
-  const [desc, setDesc] = useState(p?.desc || "");
-  const [beds, setBeds] = useState(p?.beds || 0);
-  const [baths, setBaths] = useState(p?.baths || 0);
-  const [area, setArea] = useState(p?.area || "");
+  const { data: p, loading } = useListing(id);
+  const [title, setTitle] = useState("");
+  const [price, setPrice] = useState("");
+  const [desc, setDesc] = useState("");
+  const [beds, setBeds] = useState(0);
+  const [baths, setBaths] = useState(0);
+  const [area, setArea] = useState("");
   const [live, setLive] = useState(true);
 
+  useEffect(() => {
+    if (!p) return;
+    setTitle(p.title);
+    setPrice(p.priceNum.toString());
+    setDesc(p.desc);
+    setBeds(p.beds);
+    setBaths(p.baths);
+    setArea(p.area);
+  }, [p]);
+
+  if (loading) return <main className="p-8 text-center"><div className="w-8 h-8 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin" /></main>;
   if (!p) return <main className="p-8">Listing not found</main>;
 
-  const save = () => {
+  const save = async () => {
+    const { error } = await supabase
+      .from("listings")
+      .update({
+        title,
+        price_per_night: Number(price) || 0,
+        description: desc,
+        bedrooms: beds,
+        bathrooms: baths,
+        area,
+        is_available: live,
+      })
+      .eq("id", p.id);
+    if (error) return toast.error(error.message);
     toast.success("Listing updated");
+    nav("/listings");
+  };
+
+  const remove = async () => {
+    const { error } = await supabase.from("listings").delete().eq("id", p.id);
+    if (error) return toast.error(error.message);
+    toast.success("Listing deleted");
     nav("/listings");
   };
 
@@ -95,7 +127,7 @@ const EditListing = () => {
         <button onClick={save} className="mt-6 w-full rounded-2xl bg-primary text-primary-foreground py-3.5 font-bold text-sm shadow-glow">
           Save changes
         </button>
-        <button onClick={() => toast.error("Listing deleted")}
+        <button onClick={remove}
           className="mt-3 w-full rounded-2xl border border-destructive/40 bg-destructive/10 text-destructive py-3 font-bold text-sm flex items-center justify-center gap-2">
           <Trash2 className="w-4 h-4" /> Delete listing
         </button>

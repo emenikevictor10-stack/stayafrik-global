@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Check, ImagePlus, Home, MapPin, DollarSign, FileText, Sparkles } from "lucide-react";
+import { ChevronLeft, Check, ImagePlus, Home, MapPin, DollarSign, FileText, Sparkles, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { LocationPicker } from "@/components/map/PropertyMap";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const TYPES = [
   { e: "🏖️", l: "Shortlet", d: "Nightly stays" },
@@ -15,6 +17,8 @@ const AMENITIES = ["Wi-Fi", "AC", "Generator", "Pool", "Gym", "Parking", "Securi
 
 const NewListing = () => {
   const nav = useNavigate();
+  const { user } = useAuth();
+  const fileInput = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
   const [type, setType] = useState("");
   const [title, setTitle] = useState("");
@@ -26,7 +30,9 @@ const NewListing = () => {
   const [price, setPrice] = useState("");
   const [desc, setDesc] = useState("");
   const [amen, setAmen] = useState<string[]>([]);
-  const [photos, setPhotos] = useState<number[]>([]);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number }>({ lat: 6.5244, lng: 3.3792 });
 
   const TOTAL = 7;
@@ -36,9 +42,60 @@ const NewListing = () => {
   const toggleAmen = (a: string) =>
     setAmen((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]));
 
-  const publish = () => {
-    toast.success("🎉 Listing submitted for verification");
-    nav("/listings");
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || !user) return;
+    setUploading(true);
+    try {
+      const uploaded: string[] = [];
+      for (const file of Array.from(files)) {
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error } = await supabase.storage.from("listing-images").upload(path, file);
+        if (error) throw error;
+        const { data } = supabase.storage.from("listing-images").getPublicUrl(path);
+        uploaded.push(data.publicUrl);
+      }
+      setPhotos((p) => [...p, ...uploaded]);
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removePhoto = (url: string) => setPhotos((p) => p.filter((x) => x !== url));
+
+  const publish = async () => {
+    if (!user) return toast.error("Please sign in");
+    setPublishing(true);
+    try {
+      const dbType =
+        type === "Home for sale" ? "For Sale" : type === "Shortlet" ? "Shortlet" : type;
+      const { error } = await supabase.from("listings").insert({
+        host_id: user.id,
+        title: title || "Untitled listing",
+        description: desc,
+        type: dbType,
+        price_per_night: Number(price) || 0,
+        location: [address, city].filter(Boolean).join(", "),
+        address,
+        city,
+        images: photos,
+        bedrooms: beds,
+        bathrooms: baths,
+        area,
+        amenities: amen,
+        lat: coords.lat,
+        lng: coords.lng,
+      });
+      if (error) throw error;
+      toast.success("🎉 Listing submitted for verification");
+      nav("/listings");
+    } catch (err: any) {
+      toast.error(err.message || "Could not publish");
+    } finally {
+      setPublishing(false);
+    }
   };
 
   const stepTitle = [
@@ -141,17 +198,37 @@ const NewListing = () => {
 
         {step === 4 && (
           <div>
-            <p className="text-xs text-muted-foreground mb-3">Add at least 5 photos. First one becomes the cover.</p>
+            <p className="text-xs text-muted-foreground mb-3">Add at least 1 photo. First one becomes the cover.</p>
+            <input
+              ref={fileInput}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => handleFiles(e.target.files)}
+            />
             <div className="grid grid-cols-2 gap-2.5">
-              {photos.map((i) => (
-                <div key={i} className="aspect-square rounded-xl bg-secondary border border-border flex items-center justify-center text-3xl">
-                  📷
+              {photos.map((url) => (
+                <div key={url} className="relative aspect-square rounded-xl bg-secondary border border-border overflow-hidden">
+                  <img src={url} alt="" className="w-full h-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(url)}
+                    className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-background/80 backdrop-blur flex items-center justify-center"
+                    aria-label="Remove photo"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
                 </div>
               ))}
-              <button onClick={() => setPhotos((p) => [...p, Date.now()])}
-                className="aspect-square rounded-xl border-2 border-dashed border-border bg-card flex flex-col items-center justify-center gap-1 text-muted-foreground">
-                <ImagePlus className="w-6 h-6" />
-                <span className="text-[10px] font-semibold">Add photo</span>
+              <button
+                type="button"
+                disabled={uploading}
+                onClick={() => fileInput.current?.click()}
+                className="aspect-square rounded-xl border-2 border-dashed border-border bg-card flex flex-col items-center justify-center gap-1 text-muted-foreground disabled:opacity-50"
+              >
+                {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <ImagePlus className="w-6 h-6" />}
+                <span className="text-[10px] font-semibold">{uploading ? "Uploading…" : "Add photo"}</span>
               </button>
             </div>
           </div>
@@ -206,9 +283,9 @@ const NewListing = () => {
       <div className="fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
         <div className="max-w-md mx-auto px-5 py-3 pb-20">
           <button onClick={step === TOTAL ? publish : next}
-            disabled={(step === 1 && !type)}
+            disabled={(step === 1 && !type) || publishing}
             className="w-full bg-primary text-primary-foreground rounded-2xl h-12 font-bold text-sm disabled:opacity-50">
-            {step === TOTAL ? "🚀 Publish listing" : "Continue"}
+            {step === TOTAL ? (publishing ? "Publishing…" : "🚀 Publish listing") : "Continue"}
           </button>
         </div>
       </div>

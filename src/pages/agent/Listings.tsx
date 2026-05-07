@@ -1,12 +1,13 @@
 import { TopBar } from "@/components/shell/TopBar";
-import { PROPERTIES } from "@/data/properties";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
+import { useListings } from "@/hooks/useListings";
 
 const Listings = () => {
+  const { data: properties, loading } = useListings();
   return (
     <>
-      <TopBar title="My listings" subtitle={`${PROPERTIES.length} properties · all verified`} />
+      <TopBar title="My listings" />
       <main className="px-5 pt-5 pb-8">
         <Link
           to="/listings/new"
@@ -18,9 +19,9 @@ const Listings = () => {
 
         <div className="mt-4 grid grid-cols-3 gap-2 text-center">
           {[
-            { l: "Live", v: "9", c: "text-success" },
-            { l: "In review", v: "2", c: "text-primary" },
-            { l: "Drafts", v: "1", c: "text-muted-foreground" },
+            { l: "Live", v: properties.filter((p) => p.verified).length, c: "text-success" },
+            { l: "In review", v: properties.filter((p) => !p.verified).length, c: "text-primary" },
+            { l: "Total", v: properties.length, c: "text-muted-foreground" },
           ].map((s) => (
             <div key={s.l} className="rounded-xl bg-card border border-border py-3">
               <div className={`text-lg font-extrabold ${s.c}`}>{s.v}</div>
@@ -30,7 +31,19 @@ const Listings = () => {
         </div>
 
         <div className="mt-5 space-y-3">
-          {PROPERTIES.map((p, i) => (
+          {loading && (
+            <div className="text-center py-10 text-muted-foreground text-sm">
+              <div className="w-6 h-6 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin mb-2" />
+              Loading listings…
+            </div>
+          )}
+          {!loading && properties.length === 0 && (
+            <div className="text-center py-10 text-muted-foreground text-sm">
+              <div className="text-3xl mb-2">📭</div>
+              No listings yet.
+            </div>
+          )}
+          {properties.map((p, i) => (
             <Link
               key={p.id}
               to={`/listings/${p.id}/edit`}
@@ -47,16 +60,17 @@ const Listings = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold text-sm truncate">{p.title}</h3>
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/30 shrink-0">
-                    ✓ Live
-                  </span>
+                  {p.verified && (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/30 shrink-0">
+                      ✓ Live
+                    </span>
+                  )}
                 </div>
                 <p className="text-[11px] text-muted-foreground truncate">📍 {p.location}</p>
                 <div className="text-primary font-extrabold text-sm mt-1.5">{p.price}</div>
                 <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
                   <span>👁️ {1200 - i * 80}</span>
-                  <span>📩 {30 - i * 4} leads</span>
-                  <span>🔐 {i % 2 === 0 ? "1 in escrow" : "—"}</span>
+                  <span>📩 {Math.max(0, 30 - i * 4)} leads</span>
                 </div>
               </div>
             </Link>

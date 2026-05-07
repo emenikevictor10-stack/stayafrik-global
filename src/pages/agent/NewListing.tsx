@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Check, ImagePlus, Home, MapPin, DollarSign, FileText, Sparkles } from "lucide-react";
+import { ChevronLeft, Check, ImagePlus, Home, MapPin, DollarSign, FileText, Sparkles, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { LocationPicker } from "@/components/map/PropertyMap";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 const TYPES = [
   { e: "🏖️", l: "Shortlet", d: "Nightly stays" },
@@ -15,6 +17,8 @@ const AMENITIES = ["Wi-Fi", "AC", "Generator", "Pool", "Gym", "Parking", "Securi
 
 const NewListing = () => {
   const nav = useNavigate();
+  const { user } = useAuth();
+  const fileInput = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
   const [type, setType] = useState("");
   const [title, setTitle] = useState("");
@@ -26,7 +30,9 @@ const NewListing = () => {
   const [price, setPrice] = useState("");
   const [desc, setDesc] = useState("");
   const [amen, setAmen] = useState<string[]>([]);
-  const [photos, setPhotos] = useState<number[]>([]);
+  const [photos, setPhotos] = useState<string[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const [publishing, setPublishing] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number }>({ lat: 6.5244, lng: 3.3792 });
 
   const TOTAL = 7;
@@ -36,9 +42,60 @@ const NewListing = () => {
   const toggleAmen = (a: string) =>
     setAmen((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]));
 
-  const publish = () => {
-    toast.success("🎉 Listing submitted for verification");
-    nav("/listings");
+  const handleFiles = async (files: FileList | null) => {
+    if (!files || !user) return;
+    setUploading(true);
+    try {
+      const uploaded: string[] = [];
+      for (const file of Array.from(files)) {
+        const ext = file.name.split(".").pop() || "jpg";
+        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
+        const { error } = await supabase.storage.from("listing-images").upload(path, file);
+        if (error) throw error;
+        const { data } = supabase.storage.from("listing-images").getPublicUrl(path);
+        uploaded.push(data.publicUrl);
+      }
+      setPhotos((p) => [...p, ...uploaded]);
+    } catch (err: any) {
+      toast.error(err.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const removePhoto = (url: string) => setPhotos((p) => p.filter((x) => x !== url));
+
+  const publish = async () => {
+    if (!user) return toast.error("Please sign in");
+    setPublishing(true);
+    try {
+      const dbType =
+        type === "Home for sale" ? "For Sale" : type === "Shortlet" ? "Shortlet" : type;
+      const { error } = await supabase.from("listings").insert({
+        host_id: user.id,
+        title: title || "Untitled listing",
+        description: desc,
+        type: dbType,
+        price_per_night: Number(price) || 0,
+        location: [address, city].filter(Boolean).join(", "),
+        address,
+        city,
+        images: photos,
+        bedrooms: beds,
+        bathrooms: baths,
+        area,
+        amenities: amen,
+        lat: coords.lat,
+        lng: coords.lng,
+      });
+      if (error) throw error;
+      toast.success("🎉 Listing submitted for verification");
+      nav("/listings");
+    } catch (err: any) {
+      toast.error(err.message || "Could not publish");
+    } finally {
+      setPublishing(false);
+    }
   };
 
   const stepTitle = [

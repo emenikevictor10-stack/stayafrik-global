@@ -48,14 +48,21 @@ const NewListing = () => {
     try {
       const uploaded: string[] = [];
       for (const file of Array.from(files)) {
-        const ext = file.name.split(".").pop() || "jpg";
-        const path = `${user.id}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-        const { error } = await supabase.storage.from("listing-images").upload(path, file);
+        if (!file.type.startsWith("image/")) throw new Error("Please upload image files only");
+        const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+        const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+        const { error } = await supabase.storage.from("listing-images").upload(path, file, {
+          cacheControl: "3600",
+          contentType: file.type,
+          upsert: false,
+        });
         if (error) throw error;
         const { data } = supabase.storage.from("listing-images").getPublicUrl(path);
         uploaded.push(data.publicUrl);
       }
       setPhotos((p) => [...p, ...uploaded]);
+      if (fileInput.current) fileInput.current.value = "";
+      toast.success(uploaded.length === 1 ? "Photo uploaded" : `${uploaded.length} photos uploaded`);
     } catch (err: any) {
       toast.error(err.message || "Upload failed");
     } finally {
@@ -67,13 +74,16 @@ const NewListing = () => {
 
   const publish = async () => {
     if (!user) return toast.error("Please sign in");
+    if (!type) return toast.error("Choose a listing type");
+    if (!title.trim()) return toast.error("Add a listing title");
+    if (!city.trim() && !address.trim()) return toast.error("Add a city or address");
     setPublishing(true);
     try {
       const dbType =
         type === "Home for sale" ? "For Sale" : type === "Shortlet" ? "Shortlet" : type;
-      const { error } = await supabase.from("listings").insert({
+      const { data, error } = await supabase.from("listings").insert({
         host_id: user.id,
-        title: title || "Untitled listing",
+        title: title.trim(),
         description: desc,
         type: dbType,
         price_per_night: Number(price) || 0,
@@ -87,10 +97,10 @@ const NewListing = () => {
         amenities: amen,
         lat: coords.lat,
         lng: coords.lng,
-      });
+      }).select("id").single();
       if (error) throw error;
       toast.success("🎉 Listing submitted for verification");
-      nav("/listings");
+      nav(data?.id ? `/listings/${data.id}/edit` : "/listings");
     } catch (err: any) {
       toast.error(err.message || "Could not publish");
     } finally {

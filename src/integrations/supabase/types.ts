@@ -134,7 +134,15 @@ export type Database = {
           updated_at?: string
           verified?: boolean
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "listings_host_id_fkey"
+            columns: ["host_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["user_id"]
+          },
+        ]
       }
       messages: {
         Row: {

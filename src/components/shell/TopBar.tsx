@@ -30,7 +30,9 @@ export const TopBar = ({ title, subtitle }: { title: string; subtitle?: string }
           className="w-9 h-9 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-base"
           aria-label={user.name}
         >
-          {user.emoji}
+          {user.avatarUrl ? (
+            <img src={user.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
+          ) : user.emoji}
         </div>
       </div>
     </header>

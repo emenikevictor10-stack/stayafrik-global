@@ -1,20 +1,36 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { useRole } from "@/contexts/RoleContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, Camera } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 const EditProfile = () => {
-  const { user, role } = useRole();
+  const { user } = useRole();
+  const { user: authUser, profile, refreshProfile } = useAuth();
   const navigate = useNavigate();
   const [name, setName] = useState(user.name);
-  const [email, setEmail] = useState(role === "agent" ? "emeka@stay.com" : "adaeze@example.com");
-  const [phone, setPhone] = useState("+234 803 555 0123");
-  const [bio, setBio] = useState(role === "agent" ? "Lagos-based agent · Lekki, Ikoyi, VI." : "Diaspora traveller — love verified shortlets in Lagos.");
-  const [city, setCity] = useState("Lagos");
+  const [email, setEmail] = useState(authUser?.email || "");
+  const [phone, setPhone] = useState(profile?.phone || "");
+  const [saving, setSaving] = useState(false);
 
-  const save = () => {
+  useEffect(() => {
+    setName(user.name);
+    setEmail(profile?.email || authUser?.email || "");
+    setPhone(profile?.phone || "");
+  }, [authUser?.email, profile?.email, profile?.phone, user.name]);
+
+  const save = async () => {
+    if (!authUser) return;
+    setSaving(true);
+    const { error } = await supabase
+      .from("profiles")
+      .upsert({ user_id: authUser.id, full_name: name.trim(), email, phone }, { onConflict: "user_id" });
+    setSaving(false);
+    if (error) return toast.error(error.message);
+    await refreshProfile();
     toast.success("Profile updated");
     navigate("/profile");
   };
@@ -30,8 +46,8 @@ const EditProfile = () => {
         {/* Avatar */}
         <section className="flex flex-col items-center mb-6">
           <div className="relative">
-            <div className="w-24 h-24 rounded-full bg-primary/15 border-2 border-primary/40 flex items-center justify-center text-5xl">
-              {user.emoji}
+            <div className="w-24 h-24 rounded-full bg-primary/15 border-2 border-primary/40 flex items-center justify-center text-5xl overflow-hidden">
+              {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : user.emoji}
             </div>
             <button onClick={() => toast.success("Photo picker coming soon")}
               className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-primary text-primary-foreground border-2 border-background flex items-center justify-center">
@@ -47,7 +63,6 @@ const EditProfile = () => {
             { l: "Full name", v: name, set: setName, type: "text" },
             { l: "Email", v: email, set: setEmail, type: "email" },
             { l: "Phone", v: phone, set: setPhone, type: "tel" },
-            { l: "City", v: city, set: setCity, type: "text" },
           ].map((f) => (
             <label key={f.l} className="block">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{f.l}</span>
@@ -55,15 +70,10 @@ const EditProfile = () => {
                 className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm" />
             </label>
           ))}
-          <label className="block">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">Bio</span>
-            <textarea rows={4} value={bio} onChange={(e) => setBio(e.target.value)}
-              className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm resize-none" />
-          </label>
         </section>
 
-        <button onClick={save} className="mt-6 w-full rounded-2xl bg-primary text-primary-foreground py-3.5 font-bold text-sm shadow-glow">
-          Save changes
+        <button onClick={save} disabled={saving} className="mt-6 w-full rounded-2xl bg-primary text-primary-foreground py-3.5 font-bold text-sm shadow-glow disabled:opacity-60">
+          {saving ? "Saving…" : "Save changes"}
         </button>
         <button onClick={() => navigate(-1)} className="mt-3 w-full rounded-2xl border border-border bg-card py-3.5 font-bold text-sm">
           Cancel

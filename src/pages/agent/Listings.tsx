@@ -1,10 +1,12 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { Link } from "react-router-dom";
 import { Plus } from "lucide-react";
-import { useListings } from "@/hooks/useListings";
+import { useMyListings } from "@/hooks/useListings";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Listings = () => {
-  const { data: properties, loading } = useListings();
+  const { user } = useAuth();
+  const { data: properties, loading } = useMyListings(user?.id);
   return (
     <>
       <TopBar title="My listings" />

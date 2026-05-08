@@ -1,11 +1,13 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { useRole } from "@/contexts/RoleContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { ChevronLeft, Camera, MapPin, Phone, Mail, Globe, Star, Pencil } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
 const AgentProfile = () => {
   const { user } = useRole();
+  const { profile, user: authUser } = useAuth();
 
   const stats = [
     { l: "Listings", v: "12" },
@@ -40,8 +42,8 @@ const AgentProfile = () => {
           </div>
           <div className="bg-card px-5 pt-0 pb-5 -mt-10 relative">
             <div className="flex items-end gap-3">
-              <div className="w-20 h-20 rounded-2xl bg-primary/20 border-4 border-card flex items-center justify-center text-4xl shadow-card">
-                {user.emoji}
+              <div className="w-20 h-20 rounded-2xl bg-primary/20 border-4 border-card flex items-center justify-center text-4xl shadow-card overflow-hidden">
+                {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : user.emoji}
               </div>
               <div className="flex-1 pb-1">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/15 border border-success/30 text-[10px] font-bold text-success">
@@ -111,10 +113,10 @@ const AgentProfile = () => {
         {/* Contact */}
         <section className="mt-4 rounded-2xl bg-card border border-border divide-y divide-border overflow-hidden">
           {[
-            { i: Phone, l: "+234 803 555 0123", s: "Mobile" },
-            { i: Mail, l: "emeka@stay.com", s: "Email" },
+            { i: Phone, l: profile?.phone || "Add phone number", s: "Mobile" },
+            { i: Mail, l: profile?.email || authUser?.email || "Add email", s: "Email" },
             { i: MapPin, l: "Lekki Phase 1, Lagos", s: "Office" },
-            { i: Globe, l: "stay.com/emeka", s: "Public page" },
+            { i: Globe, l: `stay.com/${user.name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "agent"}`, s: "Public page" },
           ].map((c, i) => (
             <div key={i} className="flex items-center gap-3 px-4 py-3">
               <div className="w-8 h-8 rounded-lg bg-secondary border border-border flex items-center justify-center">

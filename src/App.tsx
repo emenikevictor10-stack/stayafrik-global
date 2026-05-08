@@ -48,8 +48,8 @@ const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Sonner position="top-center" />
-      <RoleProvider>
-        <AuthProvider>
+      <AuthProvider>
+        <RoleProvider>
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
@@ -83,8 +83,8 @@ const App = () => (
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
-        </AuthProvider>
-      </RoleProvider>
+        </RoleProvider>
+      </AuthProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );

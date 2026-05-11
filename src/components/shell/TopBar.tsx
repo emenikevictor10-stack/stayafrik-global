@@ -1,9 +1,10 @@
 import { useRole } from "@/contexts/RoleContext";
-import { Bell } from "lucide-react";
+import { Bell, User, Briefcase } from "lucide-react";
 import icon from "@/assets/stay-icon.png";
 
 export const TopBar = ({ title, subtitle }: { title: string; subtitle?: string }) => {
   const { user, role, setRole } = useRole();
+  const RoleIcon = role === "client" ? User : Briefcase;
   return (
     <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl border-b border-border">
       <div className="px-5 pt-4 pb-3 flex items-center gap-3">
@@ -15,10 +16,10 @@ export const TopBar = ({ title, subtitle }: { title: string; subtitle?: string }
         </div>
         <button
           onClick={() => setRole(role === "client" ? "agent" : "client")}
-          className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1.5 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors"
+          className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1.5 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors inline-flex items-center gap-1"
           aria-label="Switch role"
         >
-          {role === "client" ? "👤 Client" : "🧑‍💼 Agent"}
+          <RoleIcon className="w-3 h-3" /> {role === "client" ? "Client" : "Agent"}
         </button>
         <button
           className="w-9 h-9 rounded-full bg-secondary border border-border flex items-center justify-center text-muted-foreground hover:text-primary"
@@ -27,12 +28,14 @@ export const TopBar = ({ title, subtitle }: { title: string; subtitle?: string }
           <Bell className="w-4 h-4" />
         </button>
         <div
-          className="w-9 h-9 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-base"
+          className="w-9 h-9 rounded-full bg-primary/20 border border-primary/40 flex items-center justify-center text-xs font-bold text-primary overflow-hidden"
           aria-label={user.name}
         >
           {user.avatarUrl ? (
             <img src={user.avatarUrl} alt="" className="w-full h-full rounded-full object-cover" />
-          ) : user.emoji}
+          ) : (
+            user.initials
+          )}
         </div>
       </div>
     </header>

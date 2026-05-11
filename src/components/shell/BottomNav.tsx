@@ -1,21 +1,31 @@
 import { NavLink } from "react-router-dom";
 import { useRole } from "@/contexts/RoleContext";
 import { cn } from "@/lib/utils";
+import {
+  Home,
+  Search,
+  CalendarDays,
+  MessageSquare,
+  User,
+  LayoutDashboard,
+  Building2,
+  ShieldCheck,
+} from "lucide-react";
 
 const clientTabs = [
-  { to: "/", emoji: "🏠", label: "Home" },
-  { to: "/explore", emoji: "🔎", label: "Explore" },
-  { to: "/bookings", emoji: "🗓️", label: "Bookings" },
-  { to: "/messages", emoji: "💬", label: "Inbox" },
-  { to: "/profile", emoji: "👤", label: "Profile" },
+  { to: "/", Icon: Home, label: "Home" },
+  { to: "/explore", Icon: Search, label: "Explore" },
+  { to: "/bookings", Icon: CalendarDays, label: "Bookings" },
+  { to: "/messages", Icon: MessageSquare, label: "Inbox" },
+  { to: "/profile", Icon: User, label: "Profile" },
 ];
 
 const agentTabs = [
-  { to: "/", emoji: "📊", label: "Dashboard" },
-  { to: "/listings", emoji: "🏘️", label: "Listings" },
-  { to: "/escrow", emoji: "🔐", label: "Escrow" },
-  { to: "/messages", emoji: "💬", label: "Inbox" },
-  { to: "/profile", emoji: "👤", label: "Profile" },
+  { to: "/", Icon: LayoutDashboard, label: "Dashboard" },
+  { to: "/listings", Icon: Building2, label: "Listings" },
+  { to: "/escrow", Icon: ShieldCheck, label: "Escrow" },
+  { to: "/messages", Icon: MessageSquare, label: "Inbox" },
+  { to: "/profile", Icon: User, label: "Profile" },
 ];
 
 export const BottomNav = () => {
@@ -27,10 +37,10 @@ export const BottomNav = () => {
       aria-label="Primary"
     >
       <ul className="grid grid-cols-5 max-w-md mx-auto">
-        {tabs.map((t) => (
-          <li key={t.to}>
+        {tabs.map(({ to, Icon, label }) => (
+          <li key={to}>
             <NavLink
-              to={t.to}
+              to={to}
               end
               className={({ isActive }) =>
                 cn(
@@ -39,10 +49,8 @@ export const BottomNav = () => {
                 )
               }
             >
-              <span className="text-xl leading-none" aria-hidden>
-                {t.emoji}
-              </span>
-              <span>{t.label}</span>
+              <Icon className="w-5 h-5" aria-hidden />
+              <span>{label}</span>
             </NavLink>
           </li>
         ))}

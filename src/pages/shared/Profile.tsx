@@ -1,27 +1,46 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { useRole } from "@/contexts/RoleContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { ChevronRight, LogOut, Pencil } from "lucide-react";
+import {
+  ChevronRight,
+  LogOut,
+  Pencil,
+  IdCard,
+  CreditCard,
+  ShieldCheck,
+  Heart,
+  Globe,
+  LifeBuoy,
+  BadgeCheck,
+  Wallet,
+  Banknote,
+  TrendingUp,
+  User,
+  Briefcase,
+  type LucideIcon,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-const clientItems = [
-  { e: "🪪", l: "Personal info", to: "/profile/edit" },
-  { e: "💳", l: "Payment methods", to: "/profile/edit" },
-  { e: "🔐", l: "Escrow history", to: "/bookings" },
-  { e: "❤️", l: "Saved properties", to: "/explore" },
-  { e: "🌍", l: "Language & currency", to: "/profile/language" },
-  { e: "🛟", l: "Help & support", to: "/profile/help" },
+type Item = { Icon: LucideIcon; l: string; to: string };
+
+const clientItems: Item[] = [
+  { Icon: IdCard, l: "Personal info", to: "/profile/edit" },
+  { Icon: CreditCard, l: "Payment methods", to: "/profile/edit" },
+  { Icon: ShieldCheck, l: "Escrow history", to: "/bookings" },
+  { Icon: Heart, l: "Saved properties", to: "/explore" },
+  { Icon: Globe, l: "Language & currency", to: "/profile/language" },
+  { Icon: LifeBuoy, l: "Help & support", to: "/profile/help" },
 ];
 
-const agentItems = [
-  { e: "🪪", l: "Agent profile", to: "/profile/agent" },
-  { e: "📜", l: "Verification status", to: "/profile/verification" },
-  { e: "💼", l: "Commission & payouts", to: "/profile/commission" },
-  { e: "🏦", l: "Payout accounts", to: "/profile/payout" },
-  { e: "📈", l: "Performance", to: "/profile/performance" },
-  { e: "🌍", l: "Language & currency", to: "/profile/language" },
-  { e: "🛟", l: "Help & support", to: "/profile/help" },
+const agentItems: Item[] = [
+  { Icon: IdCard, l: "Agent profile", to: "/profile/agent" },
+  { Icon: BadgeCheck, l: "Verification status", to: "/profile/verification" },
+  { Icon: Wallet, l: "Commission & payouts", to: "/profile/commission" },
+  { Icon: Banknote, l: "Payout accounts", to: "/profile/payout" },
+  { Icon: TrendingUp, l: "Performance", to: "/profile/performance" },
+  { Icon: Globe, l: "Language & currency", to: "/profile/language" },
+  { Icon: LifeBuoy, l: "Help & support", to: "/profile/help" },
 ];
 
 const Profile = () => {
@@ -36,7 +55,7 @@ const Profile = () => {
       <main className="px-5 pt-5 pb-8">
         <section className="rounded-2xl bg-card border border-border p-5 flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-3xl overflow-hidden">
-            {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : user.emoji}
+            {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-xl font-extrabold text-primary">{user.initials}</span>}
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="font-bold flex items-center gap-1.5">
@@ -65,14 +84,14 @@ const Profile = () => {
           }}
           className="mt-4 w-full rounded-2xl border border-primary/40 bg-primary/10 text-primary py-3 text-sm font-bold hover:bg-primary/15"
         >
-          Switch to {role === "client" ? "🧑‍💼 Agent" : "👤 Client"} mode
+          Switch to <span className="inline-flex items-center gap-1">{role === "client" ? <><Briefcase className="w-3.5 h-3.5" /> Agent</> : <><User className="w-3.5 h-3.5" /> Client</>}</span> mode
         </button>
 
         <section className="mt-5 rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
-          {items.map((i) => (
-            <Link key={i.l} to={i.to} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary text-left">
-              <span className="text-lg">{i.e}</span>
-              <span className="text-sm flex-1">{i.l}</span>
+          {items.map(({ Icon, l, to }) => (
+            <Link key={l} to={to} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary text-left">
+              <Icon className="w-5 h-5 text-primary" />
+              <span className="text-sm flex-1">{l}</span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </Link>
           ))}

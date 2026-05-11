@@ -1,6 +1,6 @@
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useListing } from "@/hooks/useListings";
-import { ChevronLeft, Heart, Share2, Star } from "lucide-react";
+import { ChevronLeft, Heart, Share2, Star, User, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRole } from "@/contexts/RoleContext";
@@ -110,12 +110,12 @@ const PropertyDetail = () => {
 
         {/* Agent */}
         <section className="mt-6 rounded-2xl bg-card border border-border p-4 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-xl">
-            {p.agentEmoji}
+          <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
+            <User className="w-6 h-6 text-primary" />
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-semibold text-sm truncate">{p.agent}</div>
-            <div className="text-[11px] text-success font-medium">✓ {p.agentTag}</div>
+            <div className="text-[11px] text-success font-medium inline-flex items-center gap-1"><BadgeCheck className="w-3 h-3" /> {p.agentTag}</div>
           </div>
           <Link
             to={`/messages/${p.agent.toLowerCase().replace(/\s+/g, "-")}?prop=${p.id}`}

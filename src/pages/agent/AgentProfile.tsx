@@ -1,7 +1,7 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { useRole } from "@/contexts/RoleContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { ChevronLeft, Camera, MapPin, Phone, Mail, Globe, Star, Pencil } from "lucide-react";
+import { ChevronLeft, Camera, MapPin, Phone, Mail, Globe, Star, Pencil, BadgeCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -43,11 +43,11 @@ const AgentProfile = () => {
           <div className="bg-card px-5 pt-0 pb-5 -mt-10 relative">
             <div className="flex items-end gap-3">
               <div className="w-20 h-20 rounded-2xl bg-primary/20 border-4 border-card flex items-center justify-center text-4xl shadow-card overflow-hidden">
-                {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : user.emoji}
+                {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-2xl font-extrabold text-primary">{user.initials}</span>}
               </div>
               <div className="flex-1 pb-1">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/15 border border-success/30 text-[10px] font-bold text-success">
-                  ✓ Verified · Tier 2
+                  <BadgeCheck className="w-3 h-3" /> Verified · Tier 2
                 </span>
               </div>
               <Link

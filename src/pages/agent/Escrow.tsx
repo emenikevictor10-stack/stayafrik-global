@@ -1,5 +1,6 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { Link } from "react-router-dom";
+import { CreditCard, ShieldCheck, Lock, Package, CheckCircle2, type LucideIcon } from "lucide-react";
 
 const escrows = [
   {
@@ -24,16 +25,16 @@ const escrows = [
     buyer: "Ifeanyi C.",
     amount: "₦55,000,000",
     step: 5,
-    status: "Released ✓",
+    status: "Released",
   },
 ];
 
-const steps = [
-  { e: "💳", l: "Funded" },
-  { e: "🛡️", l: "Verified" },
-  { e: "🔐", l: "Held" },
-  { e: "📦", l: "In transit" },
-  { e: "✅", l: "Released" },
+const steps: { Icon: LucideIcon; l: string }[] = [
+  { Icon: CreditCard, l: "Funded" },
+  { Icon: ShieldCheck, l: "Verified" },
+  { Icon: Lock, l: "Held" },
+  { Icon: Package, l: "In transit" },
+  { Icon: CheckCircle2, l: "Released" },
 ];
 
 const Escrow = () => {
@@ -75,7 +76,7 @@ const Escrow = () => {
                           : "bg-secondary border-border text-muted-foreground"
                       }`}
                     >
-                      {s.e}
+                      <s.Icon className="w-3.5 h-3.5" />
                     </div>
                     <div
                       className={`mt-1 text-[9px] font-medium ${

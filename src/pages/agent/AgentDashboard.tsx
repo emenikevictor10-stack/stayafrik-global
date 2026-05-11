@@ -1,19 +1,28 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { Link } from "react-router-dom";
 import { PROPERTIES } from "@/data/properties";
+import {
+  Building2,
+  MessageSquare,
+  Lock,
+  Wallet,
+  BadgeCheck,
+  Inbox,
+  type LucideIcon,
+} from "lucide-react";
 
 export const AgentDashboard = () => {
-  const stats = [
-    { e: "🏘️", l: "Active listings", v: "12" },
-    { e: "💬", l: "New leads", v: "34" },
-    { e: "🔐", l: "In escrow", v: "₦142M" },
-    { e: "💼", l: "Commission MTD", v: "₦2.8M" },
+  const stats: { Icon: LucideIcon; l: string; v: string }[] = [
+    { Icon: Building2, l: "Active listings", v: "12" },
+    { Icon: MessageSquare, l: "New leads", v: "34" },
+    { Icon: Lock, l: "In escrow", v: "₦142M" },
+    { Icon: Wallet, l: "Commission MTD", v: "₦2.8M" },
   ];
 
-  const activity = [
-    { e: "✓", t: "Verification approved", s: "SA-PROP-0421 · Lekki Phase 1", c: "success" },
-    { e: "🔐", t: "Escrow funded", s: "₦95M held · V.I apartment", c: "info" },
-    { e: "📩", t: "New inspection request", s: "Adaeze O. · GRA Phase 2 plot", c: "warn" },
+  const activity: { Icon: LucideIcon; t: string; s: string; c: string }[] = [
+    { Icon: BadgeCheck, t: "Verification approved", s: "SA-PROP-0421 · Lekki Phase 1", c: "success" },
+    { Icon: Lock, t: "Escrow funded", s: "₦95M held · V.I apartment", c: "info" },
+    { Icon: Inbox, t: "New inspection request", s: "Adaeze O. · GRA Phase 2 plot", c: "warn" },
   ];
 
   const colorMap: Record<string, string> = {
@@ -45,7 +54,7 @@ export const AgentDashboard = () => {
         <section className="grid grid-cols-2 gap-3 mt-5">
           {stats.map((s) => (
             <div key={s.l} className="rounded-2xl bg-card border border-border p-4">
-              <div className="text-xl">{s.e}</div>
+              <s.Icon className="w-5 h-5 text-primary" />
               <div className="text-primary font-extrabold text-xl mt-2">{s.v}</div>
               <div className="text-[11px] text-muted-foreground mt-0.5">{s.l}</div>
             </div>
@@ -63,9 +72,9 @@ export const AgentDashboard = () => {
             {activity.map((a, i) => (
               <div key={i} className="flex items-start gap-3 rounded-2xl bg-card border border-border p-3.5">
                 <div
-                  className={`w-9 h-9 rounded-lg border flex items-center justify-center text-sm font-bold shrink-0 ${colorMap[a.c]}`}
+                  className={`w-9 h-9 rounded-lg border flex items-center justify-center shrink-0 ${colorMap[a.c]}`}
                 >
-                  {a.e}
+                  <a.Icon className="w-4 h-4" />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-semibold">{a.t}</div>

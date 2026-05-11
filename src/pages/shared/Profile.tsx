@@ -36,7 +36,7 @@ const Profile = () => {
       <main className="px-5 pt-5 pb-8">
         <section className="rounded-2xl bg-card border border-border p-5 flex items-center gap-4">
           <div className="w-16 h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-3xl overflow-hidden">
-            {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : user.emoji}
+            {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-xl font-extrabold text-primary">{user.initials}</span>}
           </div>
           <div className="flex-1 min-w-0">
             <h2 className="font-bold flex items-center gap-1.5">

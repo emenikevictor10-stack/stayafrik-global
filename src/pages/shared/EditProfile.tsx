@@ -47,7 +47,7 @@ const EditProfile = () => {
         <section className="flex flex-col items-center mb-6">
           <div className="relative">
             <div className="w-24 h-24 rounded-full bg-primary/15 border-2 border-primary/40 flex items-center justify-center text-5xl overflow-hidden">
-              {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : user.emoji}
+              {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-3xl font-extrabold text-primary">{user.initials}</span>}
             </div>
             <button onClick={() => toast.success("Photo picker coming soon")}
               className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-primary text-primary-foreground border-2 border-background flex items-center justify-center">

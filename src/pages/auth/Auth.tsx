@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRole, Role } from "@/contexts/RoleContext";
 import { toast } from "sonner";
 import icon from "@/assets/stay-icon.png";
-import { ChevronLeft, MailCheck } from "lucide-react";
+import { ChevronLeft, MailCheck, User, Briefcase } from "lucide-react";
 import { GoogleIcon } from "@/lib/google-icon";
 
 type Mode = "signin" | "signup" | "forgot";
@@ -151,8 +151,8 @@ const Auth = () => {
             <div className="grid grid-cols-2 gap-2">
               {(["client", "agent"] as Role[]).map((r) => (
                 <button type="button" key={r} onClick={() => setPickedRole(r)}
-                  className={`rounded-xl border py-3 text-sm font-bold ${pickedRole === r ? "border-primary bg-primary/10 text-primary" : "border-border bg-secondary text-muted-foreground"}`}>
-                  {r === "client" ? "👤 I'm booking" : "🧑‍💼 I'm an agent"}
+                  className={`rounded-xl border py-3 text-sm font-bold inline-flex items-center justify-center gap-1.5 ${pickedRole === r ? "border-primary bg-primary/10 text-primary" : "border-border bg-secondary text-muted-foreground"}`}>
+                  {r === "client" ? <><User className="w-4 h-4" /> I'm booking</> : <><Briefcase className="w-4 h-4" /> I'm an agent</>}
                 </button>
               ))}
             </div>

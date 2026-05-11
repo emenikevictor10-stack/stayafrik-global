@@ -84,14 +84,14 @@ const Profile = () => {
           }}
           className="mt-4 w-full rounded-2xl border border-primary/40 bg-primary/10 text-primary py-3 text-sm font-bold hover:bg-primary/15"
         >
-          Switch to {role === "client" ? "🧑‍💼 Agent" : "👤 Client"} mode
+          Switch to <span className="inline-flex items-center gap-1">{role === "client" ? <><Briefcase className="w-3.5 h-3.5" /> Agent</> : <><User className="w-3.5 h-3.5" /> Client</>}</span> mode
         </button>
 
         <section className="mt-5 rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">
-          {items.map((i) => (
-            <Link key={i.l} to={i.to} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary text-left">
-              <span className="text-lg">{i.e}</span>
-              <span className="text-sm flex-1">{i.l}</span>
+          {items.map(({ Icon, l, to }) => (
+            <Link key={l} to={to} className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-secondary text-left">
+              <Icon className="w-5 h-5 text-primary" />
+              <span className="text-sm flex-1">{l}</span>
               <ChevronRight className="w-4 h-4 text-muted-foreground" />
             </Link>
           ))}

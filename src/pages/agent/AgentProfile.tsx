@@ -1,7 +1,7 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { useRole } from "@/contexts/RoleContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { ChevronLeft, Camera, MapPin, Phone, Mail, Globe, Star, Pencil } from "lucide-react";
+import { ChevronLeft, Camera, MapPin, Phone, Mail, Globe, Star, Pencil, BadgeCheck } from "lucide-react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
 
@@ -47,7 +47,7 @@ const AgentProfile = () => {
               </div>
               <div className="flex-1 pb-1">
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/15 border border-success/30 text-[10px] font-bold text-success">
-                  ✓ Verified · Tier 2
+                  <BadgeCheck className="w-3 h-3" /> Verified · Tier 2
                 </span>
               </div>
               <Link

@@ -1,27 +1,46 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { useRole } from "@/contexts/RoleContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { ChevronRight, LogOut, Pencil } from "lucide-react";
+import {
+  ChevronRight,
+  LogOut,
+  Pencil,
+  IdCard,
+  CreditCard,
+  ShieldCheck,
+  Heart,
+  Globe,
+  LifeBuoy,
+  BadgeCheck,
+  Wallet,
+  Banknote,
+  TrendingUp,
+  User,
+  Briefcase,
+  type LucideIcon,
+} from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 
-const clientItems = [
-  { e: "🪪", l: "Personal info", to: "/profile/edit" },
-  { e: "💳", l: "Payment methods", to: "/profile/edit" },
-  { e: "🔐", l: "Escrow history", to: "/bookings" },
-  { e: "❤️", l: "Saved properties", to: "/explore" },
-  { e: "🌍", l: "Language & currency", to: "/profile/language" },
-  { e: "🛟", l: "Help & support", to: "/profile/help" },
+type Item = { Icon: LucideIcon; l: string; to: string };
+
+const clientItems: Item[] = [
+  { Icon: IdCard, l: "Personal info", to: "/profile/edit" },
+  { Icon: CreditCard, l: "Payment methods", to: "/profile/edit" },
+  { Icon: ShieldCheck, l: "Escrow history", to: "/bookings" },
+  { Icon: Heart, l: "Saved properties", to: "/explore" },
+  { Icon: Globe, l: "Language & currency", to: "/profile/language" },
+  { Icon: LifeBuoy, l: "Help & support", to: "/profile/help" },
 ];
 
-const agentItems = [
-  { e: "🪪", l: "Agent profile", to: "/profile/agent" },
-  { e: "📜", l: "Verification status", to: "/profile/verification" },
-  { e: "💼", l: "Commission & payouts", to: "/profile/commission" },
-  { e: "🏦", l: "Payout accounts", to: "/profile/payout" },
-  { e: "📈", l: "Performance", to: "/profile/performance" },
-  { e: "🌍", l: "Language & currency", to: "/profile/language" },
-  { e: "🛟", l: "Help & support", to: "/profile/help" },
+const agentItems: Item[] = [
+  { Icon: IdCard, l: "Agent profile", to: "/profile/agent" },
+  { Icon: BadgeCheck, l: "Verification status", to: "/profile/verification" },
+  { Icon: Wallet, l: "Commission & payouts", to: "/profile/commission" },
+  { Icon: Banknote, l: "Payout accounts", to: "/profile/payout" },
+  { Icon: TrendingUp, l: "Performance", to: "/profile/performance" },
+  { Icon: Globe, l: "Language & currency", to: "/profile/language" },
+  { Icon: LifeBuoy, l: "Help & support", to: "/profile/help" },
 ];
 
 const Profile = () => {

@@ -1,6 +1,6 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, Send, Phone, Paperclip, Image } from "lucide-react";
+import { ChevronLeft, Send, Phone, Paperclip, Image, User, BadgeCheck } from "lucide-react";
 import { PROPERTIES } from "@/data/properties";
 
 type Msg = { id: number; from: "me" | "them"; text: string; time: string };
@@ -13,7 +13,6 @@ const ChatThread = () => {
   const prop = propId ? PROPERTIES.find((p) => p.id === propId) : undefined;
   const agent = prop || PROPERTIES.find((p) => p.agent.toLowerCase().replace(/\s+/g, "-") === agentId);
   const name = agent?.agent || "Stay Agent";
-  const emoji = agent?.agentEmoji || "👤";
   const tag = agent?.agentTag || "Verified Agent";
 
   const [msgs, setMsgs] = useState<Msg[]>([
@@ -46,10 +45,10 @@ const ChatThread = () => {
           <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center">
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center text-xl">{emoji}</div>
+          <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center"><User className="w-5 h-5 text-primary" /></div>
           <div className="flex-1 min-w-0">
             <div className="font-bold text-sm truncate">{name}</div>
-            <div className="text-[11px] text-success font-medium">✓ {tag} · online</div>
+            <div className="text-[11px] text-success font-medium inline-flex items-center gap-1"><BadgeCheck className="w-3 h-3" /> {tag} · online</div>
           </div>
           <button className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center">
             <Phone className="w-4 h-4 text-primary" />

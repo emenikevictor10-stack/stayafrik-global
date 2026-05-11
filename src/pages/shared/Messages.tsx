@@ -1,17 +1,20 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { useRole } from "@/contexts/RoleContext";
 import { Link } from "react-router-dom";
+import { Headphones, Shield, User, type LucideIcon } from "lucide-react";
 
-const clientThreads = [
-  { id: 1, name: "Amaka Osei", role: "Verified Agent", emoji: "👩🏾‍💼", last: "Yes, the apartment is available those dates ✓", time: "2m", unread: 1 },
-  { id: 2, name: "Kofi Mensah", role: "Verified Agent", emoji: "👨🏾‍💼", last: "I'll send the inspection slot tomorrow.", time: "1h", unread: 0 },
-  { id: 3, name: "Stay Support", role: "Concierge", emoji: "🎧", last: "How was your stay in Maitama?", time: "2d", unread: 0 },
+type Thread = { id: number; name: string; role: string; Icon: LucideIcon; last: string; time: string; unread: number };
+
+const clientThreads: Thread[] = [
+  { id: 1, name: "Amaka Osei", role: "Verified Agent", Icon: User, last: "Yes, the apartment is available those dates ✓", time: "2m", unread: 1 },
+  { id: 2, name: "Kofi Mensah", role: "Verified Agent", Icon: User, last: "I'll send the inspection slot tomorrow.", time: "1h", unread: 0 },
+  { id: 3, name: "Stay Support", role: "Concierge", Icon: Headphones, last: "How was your stay in Maitama?", time: "2d", unread: 0 },
 ];
 
-const agentThreads = [
-  { id: 1, name: "Adaeze O.", role: "Client · V.I apt", emoji: "🙋🏾‍♀️", last: "What time can I check in?", time: "5m", unread: 2 },
-  { id: 2, name: "Tobi A.", role: "Client · Lekki house", emoji: "🧑🏾", last: "Document received, releasing escrow.", time: "1h", unread: 0 },
-  { id: 3, name: "Stay Verify Team", role: "Internal", emoji: "🛡️", last: "Title check complete on SA-PROP-0421.", time: "1d", unread: 1 },
+const agentThreads: Thread[] = [
+  { id: 1, name: "Adaeze O.", role: "Client · V.I apt", Icon: User, last: "What time can I check in?", time: "5m", unread: 2 },
+  { id: 2, name: "Tobi A.", role: "Client · Lekki house", Icon: User, last: "Document received, releasing escrow.", time: "1h", unread: 0 },
+  { id: 3, name: "Stay Verify Team", role: "Internal", Icon: Shield, last: "Title check complete on SA-PROP-0421.", time: "1d", unread: 1 },
 ];
 
 const Messages = () => {
@@ -28,8 +31,8 @@ const Messages = () => {
             to={`/messages/${t.name.toLowerCase().replace(/\s+/g, "-")}`}
             className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-card transition-colors text-left"
           >
-            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center text-xl shrink-0">
-              {t.emoji}
+            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0">
+              <t.Icon className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2">

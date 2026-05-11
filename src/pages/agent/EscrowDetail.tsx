@@ -1,32 +1,32 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { useParams, Link, useNavigate } from "react-router-dom";
-import { ChevronLeft, ShieldCheck, Download, FileText, MessageSquare } from "lucide-react";
+import { ChevronLeft, ShieldCheck, Download, FileText, MessageSquare, CreditCard, Lock, Package, CheckCircle2, User, type LucideIcon } from "lucide-react";
 import { toast } from "sonner";
 
 const ESCROWS: Record<string, any> = {
   "SA-ESC-9912": {
     code: "SA-ESC-9912", prop: "5-Bed Detached, Lekki Phase 1", buyer: "Tobi Adeyemi",
-    buyerEmoji: "🧑🏾", amount: 185000000, step: 3, status: "Funds held",
+    amount: 185000000, step: 3, status: "Funds held",
     opened: "Apr 09, 2026", funded: "Apr 11, 2026",
   },
   "SA-ESC-9874": {
     code: "SA-ESC-9874", prop: "3-Bed Apartment, V.I", buyer: "Adaeze O.",
-    buyerEmoji: "🙋🏾‍♀️", amount: 95000000, step: 4, status: "Documents in transit",
+    amount: 95000000, step: 4, status: "Documents in transit",
     opened: "Mar 28, 2026", funded: "Mar 30, 2026",
   },
   "SA-ESC-9810": {
     code: "SA-ESC-9810", prop: "Land 900sqm, GRA Phase 2", buyer: "Ifeanyi C.",
-    buyerEmoji: "👨🏾", amount: 55000000, step: 5, status: "Released ✓",
+    amount: 55000000, step: 5, status: "Released",
     opened: "Mar 12, 2026", funded: "Mar 15, 2026",
   },
 };
 
-const STEPS = [
-  { e: "💳", l: "Funded", d: "Buyer transferred funds to escrow" },
-  { e: "🛡️", l: "Verified", d: "PropertyVerify™ confirmed title" },
-  { e: "🔐", l: "Held", d: "Funds locked pending handover" },
-  { e: "📦", l: "In transit", d: "Documents being delivered" },
-  { e: "✅", l: "Released", d: "Funds released to seller" },
+const STEPS: { Icon: LucideIcon; l: string; d: string }[] = [
+  { Icon: CreditCard, l: "Funded", d: "Buyer transferred funds to escrow" },
+  { Icon: ShieldCheck, l: "Verified", d: "PropertyVerify™ confirmed title" },
+  { Icon: Lock, l: "Held", d: "Funds locked pending handover" },
+  { Icon: Package, l: "In transit", d: "Documents being delivered" },
+  { Icon: CheckCircle2, l: "Released", d: "Funds released to seller" },
 ];
 
 const EscrowDetail = () => {
@@ -58,7 +58,7 @@ const EscrowDetail = () => {
 
         {/* Buyer */}
         <section className="mt-4 rounded-2xl bg-card border border-border p-4 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center text-2xl">{e.buyerEmoji}</div>
+          <div className="w-12 h-12 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center"><User className="w-6 h-6 text-primary" /></div>
           <div className="flex-1">
             <div className="text-[11px] text-muted-foreground">Buyer</div>
             <div className="text-sm font-bold">{e.buyer}</div>
@@ -76,13 +76,14 @@ const EscrowDetail = () => {
             {STEPS.map((s, i) => {
               const done = i < e.step;
               const active = i === e.step - 1;
+              const Icon = s.Icon;
               return (
                 <div key={i} className="flex gap-3">
                   <div className="flex flex-col items-center">
-                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center text-sm ${
-                      done ? "bg-primary border-primary" : active ? "bg-primary/20 border-primary" : "bg-secondary border-border"
+                    <div className={`w-8 h-8 rounded-full border-2 flex items-center justify-center ${
+                      done ? "bg-primary border-primary text-primary-foreground" : active ? "bg-primary/20 border-primary text-primary" : "bg-secondary border-border text-muted-foreground"
                     }`}>
-                      {s.e}
+                      <Icon className="w-4 h-4" />
                     </div>
                     {i < STEPS.length - 1 && <div className={`flex-1 w-0.5 my-1 ${done ? "bg-primary" : "bg-border"}`} style={{ minHeight: "24px" }} />}
                   </div>

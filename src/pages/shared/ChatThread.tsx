@@ -36,12 +36,9 @@ const ChatThread = () => {
   useEffect(() => {
     if (!user || !isUuid(otherId)) return;
     (async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, email, avatar_url")
-        .eq("user_id", otherId!)
-        .maybeSingle();
-      setOther((profile as Profile) || null);
+      const { data: profiles } = await supabase.rpc("get_public_profiles", { _user_ids: [otherId!] });
+      const profile = (profiles as Profile[] | null)?.[0] ?? null;
+      setOther(profile);
 
       const { data } = await supabase
         .from("messages")

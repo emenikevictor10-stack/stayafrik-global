@@ -14,7 +14,7 @@ type Msg = {
   listing_id?: string | null;
 };
 
-type Profile = { user_id: string; full_name: string | null; email: string | null; avatar_url: string | null };
+type Profile = { user_id: string; full_name: string | null; avatar_url: string | null };
 
 const isUuid = (s: string | undefined) =>
   !!s && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);

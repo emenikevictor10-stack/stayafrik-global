@@ -93,7 +93,7 @@ const ChatThread = () => {
     }
   };
 
-  const name = other?.full_name || other?.email?.split("@")[0] || "User";
+  const name = other?.full_name || "User";
   const quick = ["Is it available?", "Can I check in this weekend?", "Best price?"];
 
   if (!isUuid(otherId)) {

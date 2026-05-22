@@ -18,12 +18,10 @@ import {
   User,
   Briefcase,
   Lock,
-  Bell,
   type LucideIcon,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { requestPushPermission } from "@/hooks/usePushNotifications";
 
 type Item = { Icon: LucideIcon; l: string; to: string };
 

@@ -5,7 +5,7 @@ import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole, Role } from "@/contexts/RoleContext";
 import { toast } from "sonner";
-import icon from "@/assets/stay-icon.png";
+import icon from "@/assets/stay-logo-2.png";
 import { ChevronLeft, MailCheck, User, Briefcase } from "lucide-react";
 import { GoogleIcon } from "@/lib/google-icon";
 import { Seo } from "@/components/seo/Seo";

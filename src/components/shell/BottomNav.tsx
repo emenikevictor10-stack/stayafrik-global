@@ -2,7 +2,6 @@ import { NavLink, useLocation, matchPath } from "react-router-dom";
 import { useRole } from "@/contexts/RoleContext";
 import { cn } from "@/lib/utils";
 import {
-  Home,
   Search,
   CalendarDays,
   MessageSquare,
@@ -13,8 +12,7 @@ import {
 } from "lucide-react";
 
 const clientTabs = [
-  { to: "/", Icon: Home, label: "Home" },
-  { to: "/explore", Icon: Search, label: "Explore" },
+  { to: "/", Icon: Search, label: "Explore" },
   { to: "/bookings", Icon: CalendarDays, label: "Bookings" },
   { to: "/messages", Icon: MessageSquare, label: "Inbox" },
   { to: "/profile", Icon: User, label: "Profile" },
@@ -38,7 +36,12 @@ export const BottomNav = () => {
       className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl safe-bottom"
       aria-label="Primary"
     >
-      <ul className="grid grid-cols-5 max-w-md mx-auto">
+      <ul
+        className={cn(
+          "max-w-md mx-auto grid",
+          role === "client" ? "grid-cols-4" : "grid-cols-5",
+        )}
+      >
         {tabs.map(({ to, Icon, label }) => (
           <li key={to}>
             <NavLink

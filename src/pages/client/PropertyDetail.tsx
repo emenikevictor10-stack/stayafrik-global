@@ -1,17 +1,29 @@
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useListing } from "@/hooks/useListings";
 import { ChevronLeft, Heart, Share2, Star, User, BadgeCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRole } from "@/contexts/RoleContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { SinglePropertyMap } from "@/components/map/PropertyMap";
 import { Seo } from "@/components/seo/Seo";
 
 const PropertyDetail = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const { role } = useRole();
+  const { session } = useAuth();
   const { data: p, loading } = useListing(id);
+
+  const handleBook = () => {
+    if (!session) {
+      toast.message("Sign in to book this stay");
+      navigate(`/auth?mode=signin`, { state: { from: `/property/${id}/book` } });
+      return;
+    }
+    navigate(`/property/${id}/book`);
+  };
 
   if (loading) {
     return (
@@ -206,7 +218,7 @@ const PropertyDetail = () => {
             </Button>
           ) : p.type === "Shortlet" ? (
             <Button
-              onClick={() => navigate(`/property/${p.id}/book`)}
+              onClick={handleBook}
               className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 h-12 font-bold"
             >
               Book stay

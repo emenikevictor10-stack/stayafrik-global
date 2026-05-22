@@ -4,7 +4,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronLeft, Camera } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 const EditProfile = () => {
@@ -15,12 +15,42 @@ const EditProfile = () => {
   const [email, setEmail] = useState(authUser?.email || "");
   const [phone, setPhone] = useState(profile?.phone || "");
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
+  const fileRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     setName(user.name);
     setEmail(profile?.email || authUser?.email || "");
     setPhone(profile?.phone || "");
   }, [authUser?.email, profile?.email, profile?.phone, user.name]);
+
+  const uploadAvatar = async (file: File) => {
+    if (!authUser) return;
+    if (file.size > 5 * 1024 * 1024) return toast.error("Image must be under 5MB");
+    setUploading(true);
+    try {
+      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+      const path = `${authUser.id}/avatar-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
+        cacheControl: "3600",
+        upsert: true,
+        contentType: file.type,
+      });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
+      const { error: dbErr } = await supabase
+        .from("profiles")
+        .update({ avatar_url: pub.publicUrl })
+        .eq("user_id", authUser.id);
+      if (dbErr) throw dbErr;
+      await refreshProfile();
+      toast.success("Profile picture updated");
+    } catch (e: any) {
+      toast.error(e.message || "Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const save = async () => {
     if (!authUser) return;
@@ -49,12 +79,32 @@ const EditProfile = () => {
             <div className="w-24 h-24 rounded-full bg-primary/15 border-2 border-primary/40 flex items-center justify-center text-5xl overflow-hidden">
               {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-3xl font-extrabold text-primary">{user.initials}</span>}
             </div>
-            <button onClick={() => toast.success("Photo picker coming soon")}
-              className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-primary text-primary-foreground border-2 border-background flex items-center justify-center">
+            <button
+              onClick={() => fileRef.current?.click()}
+              disabled={uploading}
+              className="absolute -bottom-1 -right-1 w-9 h-9 rounded-full bg-primary text-primary-foreground border-2 border-background flex items-center justify-center disabled:opacity-60"
+            >
               <Camera className="w-4 h-4" />
             </button>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={(e) => {
+                const f = e.target.files?.[0];
+                if (f) uploadAvatar(f);
+                e.target.value = "";
+              }}
+            />
           </div>
-          <button onClick={() => toast.success("Photo picker coming soon")} className="mt-3 text-xs text-primary font-bold">Change profile picture</button>
+          <button
+            onClick={() => fileRef.current?.click()}
+            disabled={uploading}
+            className="mt-3 text-xs text-primary font-bold disabled:opacity-60"
+          >
+            {uploading ? "Uploading…" : "Change profile picture"}
+          </button>
         </section>
 
         {/* Form */}

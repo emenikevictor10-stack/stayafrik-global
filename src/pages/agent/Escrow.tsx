@@ -1,111 +1,100 @@
+import { useEffect, useState } from "react";
 import { TopBar } from "@/components/shell/TopBar";
-import { Link } from "react-router-dom";
-import { CreditCard, ShieldCheck, Lock, Package, CheckCircle2, type LucideIcon } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { Loader2, ShieldCheck, Lock, CheckCircle2, Clock } from "lucide-react";
 
-const escrows = [
-  {
-    code: "SA-ESC-9912",
-    prop: "5-Bed Detached, Lekki Phase 1",
-    buyer: "Tobi Adeyemi",
-    amount: "₦185,000,000",
-    step: 3,
-    status: "Funds held",
-  },
-  {
-    code: "SA-ESC-9874",
-    prop: "3-Bed Apartment, V.I",
-    buyer: "Adaeze O.",
-    amount: "₦95,000,000",
-    step: 4,
-    status: "Documents in transit",
-  },
-  {
-    code: "SA-ESC-9810",
-    prop: "Land 900sqm, GRA Phase 2",
-    buyer: "Ifeanyi C.",
-    amount: "₦55,000,000",
-    step: 5,
-    status: "Released",
-  },
-];
+type Row = {
+  id: string;
+  guest_id: string;
+  check_in_date: string;
+  check_out_date: string;
+  total_price: number;
+  status: string;
+  created_at: string;
+  released_at: string | null;
+  listings: { id: string; title: string; images: string[] } | null;
+};
 
-const steps: { Icon: LucideIcon; l: string }[] = [
-  { Icon: CreditCard, l: "Funded" },
-  { Icon: ShieldCheck, l: "Verified" },
-  { Icon: Lock, l: "Held" },
-  { Icon: Package, l: "In transit" },
-  { Icon: CheckCircle2, l: "Released" },
-];
+const fmt = (n: number) => "₦" + Math.round(Number(n || 0)).toLocaleString();
 
 const Escrow = () => {
+  const { user } = useAuth();
+  const [rows, setRows] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      // RLS already allows hosts to see bookings for their own listings
+      const { data } = await supabase
+        .from("bookings")
+        .select("*, listings!inner(id,title,images,host_id)")
+        .eq("listings.host_id", user.id)
+        .order("created_at", { ascending: false });
+      setRows((data as any) || []);
+      setLoading(false);
+    })();
+  }, [user?.id]);
+
+  const held = rows.filter((r) => r.status === "confirmed");
+  const released = rows.filter((r) => r.status === "released");
+  const totalHeld = held.reduce((s, r) => s + Number(r.total_price || 0), 0);
+  const totalReleased = released.reduce((s, r) => s + Number(r.total_price || 0), 0);
+
   return (
     <>
-      <TopBar title="Escrow" subtitle="Track every transaction" />
-      <main className="px-5 pt-5 pb-8 space-y-4">
-        {escrows.map((e) => (
-          <article key={e.code} className="rounded-2xl bg-card border border-border p-4">
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0">
-                <h3 className="font-semibold text-sm truncate">{e.prop}</h3>
-                <p className="text-[11px] text-muted-foreground mt-0.5">
-                  Buyer: {e.buyer} · <span className="font-mono">{e.code}</span>
-                </p>
+      <TopBar title="Escrow" subtitle="Funds you've received" />
+      <main className="px-5 pt-4 pb-8 space-y-4">
+        <div className="grid grid-cols-2 gap-3">
+          <div className="rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 p-4">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary uppercase"><Lock className="w-3 h-3" /> Held</div>
+            <div className="text-xl font-extrabold mt-1">{fmt(totalHeld)}</div>
+            <div className="text-[10px] text-muted-foreground">{held.length} booking{held.length !== 1 ? "s" : ""}</div>
+          </div>
+          <div className="rounded-2xl bg-card border border-border p-4">
+            <div className="flex items-center gap-1.5 text-[10px] font-bold text-success uppercase"><CheckCircle2 className="w-3 h-3" /> Released</div>
+            <div className="text-xl font-extrabold mt-1">{fmt(totalReleased)}</div>
+            <div className="text-[10px] text-muted-foreground">{released.length} payout{released.length !== 1 ? "s" : ""}</div>
+          </div>
+        </div>
+
+        {loading && <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}
+
+        {!loading && rows.length === 0 && (
+          <div className="rounded-2xl border border-dashed border-border p-8 text-center">
+            <ShieldCheck className="w-8 h-8 text-primary mx-auto" />
+            <p className="text-xs text-muted-foreground mt-2">No escrowed bookings yet.</p>
+          </div>
+        )}
+
+        {rows.map((r) => {
+          const img = r.listings?.images?.[0] || "/placeholder.svg";
+          const isHeld = r.status === "confirmed";
+          return (
+            <article key={r.id} className="rounded-2xl bg-card border border-border p-4">
+              <div className="flex gap-3">
+                <img src={img} alt={r.listings?.title || "Listing"} className="w-14 h-14 rounded-xl object-cover" loading="lazy" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="font-semibold text-sm truncate">{r.listings?.title || "Listing"}</h3>
+                  <p className="text-[11px] text-muted-foreground mt-0.5">{r.check_in_date} → {r.check_out_date}</p>
+                </div>
+                <div className="text-primary font-extrabold text-sm shrink-0">{fmt(r.total_price)}</div>
               </div>
-              <div className="text-primary font-extrabold text-sm shrink-0">{e.amount}</div>
-            </div>
 
-            <div className="mt-4 flex items-center justify-between">
-              {steps.map((s, i) => {
-                const done = i < e.step;
-                const active = i === e.step - 1;
-                return (
-                  <div key={i} className="flex flex-col items-center flex-1 relative">
-                    {i > 0 && (
-                      <div
-                        className={`absolute right-1/2 top-3.5 w-full h-0.5 ${
-                          done ? "bg-primary" : "bg-border"
-                        }`}
-                      />
-                    )}
-                    <div
-                      className={`relative w-7 h-7 rounded-full border-2 flex items-center justify-center text-xs ${
-                        done
-                          ? "bg-primary text-primary-foreground border-primary"
-                          : active
-                          ? "bg-primary/20 border-primary text-primary"
-                          : "bg-secondary border-border text-muted-foreground"
-                      }`}
-                    >
-                      <s.Icon className="w-3.5 h-3.5" />
-                    </div>
-                    <div
-                      className={`mt-1 text-[9px] font-medium ${
-                        done || active ? "text-foreground" : "text-muted-foreground"
-                      }`}
-                    >
-                      {s.l}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            <div className="mt-3 flex items-center justify-between">
-              <span
-                className={`text-[10px] font-bold px-2 py-1 rounded-full border ${
-                  e.status.includes("Released")
-                    ? "bg-success/15 text-success border-success/30"
-                    : e.status.includes("transit")
-                    ? "bg-info/15 text-info border-info/30"
-                    : "bg-primary/15 text-primary border-primary/30"
-                }`}
-              >
-                {e.status}
-              </span>
-              <Link to={`/escrow/${e.code}`} className="text-[11px] font-semibold text-primary">View details →</Link>
-            </div>
-          </article>
-        ))}
+              <div className="mt-3 flex items-center justify-between">
+                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full border ${
+                  isHeld ? "bg-primary/15 text-primary border-primary/30" : "bg-success/15 text-success border-success/30"
+                }`}>
+                  {isHeld ? <><Clock className="w-3 h-3" /> Awaiting client release</> : <><CheckCircle2 className="w-3 h-3" /> Released</>}
+                </span>
+                <span className="text-[10px] text-muted-foreground">
+                  {isHeld ? `Booked ${new Date(r.created_at).toLocaleDateString()}` : r.released_at ? `Paid ${new Date(r.released_at).toLocaleDateString()}` : ""}
+                </span>
+              </div>
+            </article>
+          );
+        })}
       </main>
     </>
   );

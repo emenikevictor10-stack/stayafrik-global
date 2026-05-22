@@ -5,6 +5,7 @@ import { Search } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { Seo } from "@/components/seo/Seo";
 
 export const ClientHome = () => {
   const [cat, setCat] = useState<string>("Shortlet");
@@ -12,6 +13,10 @@ export const ClientHome = () => {
 
   return (
     <>
+      <Seo
+        title="Stay — Africa's verified shortlets, homes & land"
+        description="Browse independently verified shortlets, homes and land across Africa. Pay safely through PropertyEscrow™."
+      />
       <TopBar title="​" subtitle="\n" />
       <main className="px-5 pt-5 pb-8">
         {/* Search */}

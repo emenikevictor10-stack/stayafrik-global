@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useRole } from "@/contexts/RoleContext";
 import { toast } from "sonner";
+import { Seo } from "@/components/seo/Seo";
 
 const topicsClient = [
   { e: "🔐", l: "How escrow works", c: "Secure your funds" },
@@ -43,8 +44,23 @@ const Help = () => {
   const topics = role === "agent" ? topicsAgent : topicsClient;
   const [open, setOpen] = useState<number | null>(0);
 
+  const faqJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: faqs.map((f) => ({
+      "@type": "Question",
+      name: f.q,
+      acceptedAnswer: { "@type": "Answer", text: f.a },
+    })),
+  };
+
   return (
     <>
+      <Seo
+        title="Help & support — escrow, verification, payouts | Stay"
+        description="Answers to common questions about PropertyEscrow™, verified listings, bookings, refunds and agent payouts on Stay."
+        jsonLd={faqJsonLd}
+      />
       <TopBar title="Help & support" subtitle="We're here 24/7" />
       <main className="px-5 pt-4 pb-8">
         <Link

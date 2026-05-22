@@ -177,9 +177,9 @@ const Profile = () => {
           <Link
             key={title}
             to={to}
-            className="flex items-center gap-4 rounded-2xl bg-card border border-border/60 px-4 py-3.5 hover:bg-secondary transition-colors"
+            className="flex items-center gap-4 rounded-2xl bg-card border border-border/60 px-4 py-3.5 hover:bg-secondary transition-colors border-none"
           >
-            <div className="w-11 h-11 rounded-2xl bg-background flex items-center justify-center border border-border/60">
+            <div className="w-11 h-11 rounded-2xl bg-background flex items-center justify-center border border-border/60 border-none">
               <Icon className="w-5 h-5 text-primary" />
             </div>
             <div className="flex-1 min-w-0">

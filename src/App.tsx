@@ -32,6 +32,9 @@ import LanguageCurrency from "./pages/shared/LanguageCurrency";
 import Help from "./pages/shared/Help";
 import Notifications from "./pages/shared/Notifications";
 import PaymentMethods from "./pages/client/PaymentMethods";
+import PinSettings from "./pages/shared/PinSettings";
+import { PinGate } from "@/components/auth/PinGate";
+import { usePushNotifications } from "@/hooks/usePushNotifications";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();

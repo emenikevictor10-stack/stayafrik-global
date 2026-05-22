@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, useLocation } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,7 @@ type Mode = "signin" | "signup" | "forgot";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [params] = useSearchParams();
   const initialMode = (params.get("mode") as Mode) || "signin";
   const [mode, setMode] = useState<Mode>(initialMode);
@@ -26,19 +27,20 @@ const Auth = () => {
   const { setIsNewUser, session } = useAuth();
   const { setRole } = useRole();
 
-  // If already signed in, route by role
+  const fromPath = (location.state as { from?: string } | null)?.from;
+
+  // If already signed in, route by role (or back to where they came from)
   useEffect(() => {
     const routeByRole = async () => {
       if (!session?.user) return;
       const { data } = await supabase.from("user_roles").select("role").eq("user_id", session.user.id).maybeSingle();
       const r = (data?.role as Role) || "client";
       setRole(r);
-      const onboarded = localStorage.getItem(`stay:onboarded:${session.user.id}`) === "1";
-      if (!onboarded) return navigate("/welcome", { replace: true });
+      if (fromPath) return navigate(fromPath, { replace: true });
       navigate(r === "agent" ? "/listings" : "/explore", { replace: true });
     };
     routeByRole();
-  }, [session, navigate, setRole]);
+  }, [session, navigate, setRole, fromPath]);
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();

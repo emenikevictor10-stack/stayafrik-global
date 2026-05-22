@@ -14,7 +14,7 @@ type Row = {
   created_at: string;
 };
 
-type Profile = { user_id: string; full_name: string | null; avatar_url: string | null; email: string | null };
+type Profile = { user_id: string; full_name: string | null; avatar_url: string | null };
 
 type Thread = {
   otherId: string;
@@ -52,10 +52,7 @@ const Messages = () => {
 
     let profiles: Profile[] = [];
     if (otherIds.length) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, avatar_url, email")
-        .in("user_id", otherIds);
+      const { data: profs } = await supabase.rpc("get_public_profiles", { _user_ids: otherIds });
       profiles = (profs as Profile[]) || [];
     }
     const pmap = new Map(profiles.map((p) => [p.user_id, p]));
@@ -79,7 +76,7 @@ const Messages = () => {
       const p = pmap.get(id);
       return {
         otherId: id,
-        name: p?.full_name || p?.email?.split("@")[0] || "User",
+        name: p?.full_name || "User",
         avatarUrl: p?.avatar_url || null,
         last: latest.content,
         time: formatDistanceToNow(new Date(latest.created_at), { addSuffix: false }),

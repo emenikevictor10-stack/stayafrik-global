@@ -14,7 +14,7 @@ type Msg = {
   listing_id?: string | null;
 };
 
-type Profile = { user_id: string; full_name: string | null; email: string | null; avatar_url: string | null };
+type Profile = { user_id: string; full_name: string | null; avatar_url: string | null };
 
 const isUuid = (s: string | undefined) =>
   !!s && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
@@ -36,12 +36,9 @@ const ChatThread = () => {
   useEffect(() => {
     if (!user || !isUuid(otherId)) return;
     (async () => {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, email, avatar_url")
-        .eq("user_id", otherId!)
-        .maybeSingle();
-      setOther((profile as Profile) || null);
+      const { data: profiles } = await supabase.rpc("get_public_profiles", { _user_ids: [otherId!] });
+      const profile = (profiles as Profile[] | null)?.[0] ?? null;
+      setOther(profile);
 
       const { data } = await supabase
         .from("messages")
@@ -96,7 +93,7 @@ const ChatThread = () => {
     }
   };
 
-  const name = other?.full_name || other?.email?.split("@")[0] || "User";
+  const name = other?.full_name || "User";
   const quick = ["Is it available?", "Can I check in this weekend?", "Best price?"];
 
   if (!isUuid(otherId)) {
@@ -120,7 +117,6 @@ const ChatThread = () => {
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-bold text-sm truncate">{name}</div>
-            <div className="text-[11px] text-muted-foreground">{other?.email}</div>
           </div>
         </div>
       </header>

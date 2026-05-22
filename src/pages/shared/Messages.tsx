@@ -14,7 +14,7 @@ type Row = {
   created_at: string;
 };
 
-type Profile = { user_id: string; full_name: string | null; avatar_url: string | null; email: string | null };
+type Profile = { user_id: string; full_name: string | null; avatar_url: string | null };
 
 type Thread = {
   otherId: string;

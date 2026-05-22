@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import { useState } from "react";
 import { useRole } from "@/contexts/RoleContext";
 import { toast } from "sonner";
+import { Seo } from "@/components/seo/Seo";
 
 const topicsClient = [
   { e: "🔐", l: "How escrow works", c: "Secure your funds" },

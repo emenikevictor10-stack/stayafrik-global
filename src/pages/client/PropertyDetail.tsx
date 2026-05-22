@@ -33,8 +33,33 @@ const PropertyDetail = () => {
     );
   }
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    name: p.title,
+    description: p.desc || `${p.type} in ${p.location}`,
+    image: p.image,
+    category: p.type,
+    aggregateRating: p.reviews
+      ? { "@type": "AggregateRating", ratingValue: p.rating, reviewCount: p.reviews }
+      : undefined,
+    offers: {
+      "@type": "Offer",
+      price: p.priceNum,
+      priceCurrency: "NGN",
+      availability: "https://schema.org/InStock",
+    },
+  };
+
   return (
     <main className="pb-32">
+      <Seo
+        title={`${p.title} — ${p.location} | Stay`}
+        description={(p.desc || `Verified ${p.type.toLowerCase()} in ${p.location}.`).slice(0, 160)}
+        image={p.image}
+        type="product"
+        jsonLd={jsonLd}
+      />
       {/* Image header */}
       <div className="relative aspect-[4/3] bg-secondary">
         <img

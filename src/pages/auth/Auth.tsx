@@ -143,11 +143,11 @@ const Auth = () => {
         <ChevronLeft className="w-4 h-4" />
       </button>
 
-      <div className="flex items-center gap-3 mb-2">
-        <img src={icon} alt="Stay" className="h-10 w-auto" />
+      <div className="flex flex-col items-center text-center mb-7">
+        <img src={icon} alt="Stay" className="h-10 w-auto mb-3" />
         <h1 className="text-2xl font-extrabold">{title}</h1>
+        <p className="text-sm text-muted-foreground mt-2">{sub}</p>
       </div>
-      <p className="text-sm text-muted-foreground mb-7">{sub}</p>
 
       <form onSubmit={submit} className="space-y-3">
         {mode === "signup" && (

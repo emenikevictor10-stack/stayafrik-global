@@ -1,4 +1,4 @@
-import { NavLink } from "react-router-dom";
+import { NavLink, useLocation, matchPath } from "react-router-dom";
 import { useRole } from "@/contexts/RoleContext";
 import { cn } from "@/lib/utils";
 import {
@@ -30,6 +30,8 @@ const agentTabs = [
 
 export const BottomNav = () => {
   const { role } = useRole();
+  const { pathname } = useLocation();
+  if (matchPath("/messages/:id", pathname)) return null;
   const tabs = role === "client" ? clientTabs : agentTabs;
   return (
     <nav

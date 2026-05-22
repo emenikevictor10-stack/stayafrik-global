@@ -12,7 +12,7 @@ export const TopBar = ({ title, subtitle }: { title: string; subtitle?: string }
     <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl border-b border-border">
       <div className="px-5 pt-4 pb-3 flex items-center gap-3">
         <div className="flex items-center gap-2 flex-1 min-w-0">
-          <img src={icon} alt="Stay" className="h-7 w-7 rounded-md shrink-0" width={28} height={28} />
+          <img src={icon} alt="Stay" className="h-7 w-auto shrink-0" width={56} height={28} />
           <div className="min-w-0">
             <h1 className="text-[15px] font-bold leading-tight truncate">{title}</h1>
             {subtitle && <p className="text-[10px] text-muted-foreground truncate">{subtitle}</p>}

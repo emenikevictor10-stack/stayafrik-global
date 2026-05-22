@@ -6,6 +6,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { PropertiesMap } from "@/components/map/PropertyMap";
 import { useListings } from "@/hooks/useListings";
+import { Seo } from "@/components/seo/Seo";
 
 const Explore = () => {
   const [q, setQ] = useState("");
@@ -24,6 +25,10 @@ const Explore = () => {
 
   return (
     <>
+      <Seo
+        title="Explore verified shortlets across Africa | Stay"
+        description="Search verified shortlets in Lagos, Abuja, Accra, Nairobi, Cape Town and more. Every property independently inspected."
+      />
       <TopBar title="Explore" subtitle={`${list.length} verified properties`} />
       <main className="px-5 pt-5 pb-8">
         <div className="flex items-center gap-3 px-4 py-3 rounded-full bg-card border border-border focus-within:border-primary">

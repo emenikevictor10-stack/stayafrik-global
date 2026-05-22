@@ -2,7 +2,7 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ImagePlus, Home, Sparkles, X, Loader2, MapPin } from "lucide-react";
 import { toast } from "sonner";
-import { LocationPicker } from "@/components/map/PropertyMap";
+import { LocationPicker, loadMaps } from "@/components/map/PropertyMap";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/contexts/RoleContext";
@@ -10,9 +10,13 @@ import { useRole } from "@/contexts/RoleContext";
 const AMENITIES = ["Wi-Fi", "AC", "Generator", "Pool", "Gym", "Parking", "Security", "Kitchen", "Hot water", "Pet-friendly"];
 
 const geocode = async (address: string) => {
-  const { data, error } = await supabase.functions.invoke("geocode-address", { body: { address } });
-  if (error) throw error;
-  return data as { lat: number; lng: number; formatted: string };
+  const g = await loadMaps();
+  const geocoder = new g.maps.Geocoder();
+  const res = await geocoder.geocode({ address });
+  const r = res.results?.[0];
+  if (!r) throw new Error("No result");
+  const loc = r.geometry.location;
+  return { lat: loc.lat(), lng: loc.lng(), formatted: r.formatted_address as string };
 };
 
 const NewListing = () => {

@@ -14,6 +14,7 @@ import Explore from "./pages/client/Explore";
 import PropertyDetail from "./pages/client/PropertyDetail";
 import Bookings from "./pages/client/Bookings";
 import BookProperty from "./pages/client/BookProperty";
+import BookingConfirm from "./pages/client/BookingConfirm";
 import Listings from "./pages/agent/Listings";
 import NewListing from "./pages/agent/NewListing";
 import EditListing from "./pages/agent/EditListing";
@@ -89,6 +90,7 @@ const App = () => (
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/property/:id" element={<PropertyDetail />} />
                   <Route path="/property/:id/book" element={<BookProperty />} />
+                  <Route path="/booking/confirm" element={<BookingConfirm />} />
                 </Route>
               </Route>
               <Route path="*" element={<NotFound />} />

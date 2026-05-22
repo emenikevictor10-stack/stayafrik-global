@@ -1,73 +1,74 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Stay — Dark + Lime Design System
- * Single font: Inter. All colors HSL.
+/* StayAfrik — Dark + Neon Lime Design System
+ * Font: Plus Jakarta Sans. All colors HSL.
+ * Tokens locked to selected direction (v1 — Modern high density).
  */
 
 @layer base {
   :root {
-    /* Surfaces */
-    --background: 0 0% 4%;            /* #0A0A0A */
-    --foreground: 0 0% 94%;            /* #F0F0F0 */
+    /* Surfaces — #0B0B0E canvas, #1C1C21 cards */
+    --background: 240 12% 5%;          /* #0B0B0E */
+    --foreground: 0 0% 100%;           /* #FFFFFF */
 
-    --card: 0 0% 9%;                   /* #161616 */
-    --card-foreground: 0 0% 94%;
+    --card: 240 8% 12%;                /* #1C1C21 */
+    --card-foreground: 0 0% 100%;
 
-    --popover: 0 0% 9%;
-    --popover-foreground: 0 0% 94%;
+    --popover: 240 8% 12%;
+    --popover-foreground: 0 0% 100%;
 
-    /* Brand: lime accent */
-    --primary: 73 85% 59%;             /* #C8F03E */
-    --primary-foreground: 0 0% 4%;
-    --primary-dim: 73 72% 48%;         /* darker variant */
+    /* Brand: neon lime accent #D4FF3D */
+    --primary: 73 100% 62%;
+    --primary-foreground: 240 12% 5%;
+    --primary-dim: 73 72% 48%;
 
-    --secondary: 0 0% 12%;             /* #1E1E1E */
-    --secondary-foreground: 0 0% 94%;
+    --secondary: 240 8% 12%;           /* #1C1C21 */
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 0 0% 12%;
-    --muted-foreground: 0 0% 56%;      /* #909090 */
+    --muted: 240 8% 12%;
+    --muted-foreground: 220 9% 46%;    /* gray-500 */
 
-    --accent: 73 85% 59%;
-    --accent-foreground: 0 0% 4%;
+    --accent: 73 100% 62%;
+    --accent-foreground: 240 12% 5%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;            /* #22C55E */
-    --info: 217 91% 60%;               /* #3B82F6 */
-    --warn: 73 85% 59%;
+    --success: 142 71% 45%;
+    --info: 217 91% 60%;
+    --warn: 73 100% 62%;
 
-    --border: 0 0% 16%;                /* #2A2A2A */
-    --input: 0 0% 12%;
-    --ring: 73 85% 59%;
+    --border: 0 0% 100% / 0.05;        /* white/5 borders */
+    --input: 240 8% 12%;
+    --ring: 73 100% 62%;
 
-    --radius: 0.875rem;
+    --radius: 1.5rem;                  /* 24px — soft cards */
 
     /* Shadows / glows */
-    --shadow-glow: 0 8px 32px hsl(73 85% 59% / 0.28);
+    --shadow-glow: 0 8px 32px hsl(73 100% 62% / 0.28);
     --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
 
     /* Motion */
     --ease-smooth: cubic-bezier(0.32, 0.72, 0, 1);
 
-    --sidebar-background: 0 0% 6%;
-    --sidebar-foreground: 0 0% 94%;
-    --sidebar-primary: 73 85% 59%;
-    --sidebar-primary-foreground: 0 0% 4%;
-    --sidebar-accent: 0 0% 12%;
-    --sidebar-accent-foreground: 0 0% 94%;
-    --sidebar-border: 0 0% 16%;
-    --sidebar-ring: 73 85% 59%;
+    --sidebar-background: 240 12% 5%;
+    --sidebar-foreground: 0 0% 100%;
+    --sidebar-primary: 73 100% 62%;
+    --sidebar-primary-foreground: 240 12% 5%;
+    --sidebar-accent: 240 8% 12%;
+    --sidebar-accent-foreground: 0 0% 100%;
+    --sidebar-border: 0 0% 100% / 0.05;
+    --sidebar-ring: 73 100% 62%;
   }
 }
 
 @layer base {
   * {
-    @apply border-border;
+    border-color: hsl(0 0% 100% / 0.05);
   }
   html {
     -webkit-font-smoothing: antialiased;
@@ -75,22 +76,13 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     overscroll-behavior-y: none;
   }
   h1, h2, h3, h4, h5 {
-    font-family: 'Inter', system-ui, sans-serif;
+    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
     letter-spacing: -0.02em;
-  }
-  /* Subtle film grain */
-  body::before {
-    content: '';
-    position: fixed;
-    inset: 0;
-    pointer-events: none;
-    z-index: 100;
-    opacity: 0.25;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.025'/%3E%3C/svg%3E");
+    font-weight: 800;
   }
 }
 

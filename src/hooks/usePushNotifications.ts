@@ -16,6 +16,10 @@ export const usePushNotifications = () => {
     if (!("Notification" in window)) return;
     subbed.current = true;
 
+    if (Notification.permission === "default") {
+      Notification.requestPermission();
+    }
+
     const show = (title: string, body: string | null, link: string | null) => {
       if (Notification.permission !== "granted") return;
       try {

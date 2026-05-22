@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { hasPin, isUnlocked, verifyPin, setPin as savePin, PIN_LENGTH } from "@/lib/pin";
+import { hasPin, isUnlocked, verifyPin, setPin as savePin, clearPin, PIN_LENGTH } from "@/lib/pin";
 import { Delete, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
@@ -116,12 +116,25 @@ export const PinGate = ({ children }: { children: React.ReactNode }) => {
         </div>
 
         {mode === "verify" && (
-          <button
-            onClick={signOut}
-            className="mt-8 text-[13px] text-muted-foreground underline underline-offset-4"
-          >
-            Use a different account
-          </button>
+          <div className="mt-8 flex items-center gap-6">
+            <button
+              onClick={async () => {
+                if (user) clearPin(user.id);
+                await signOut();
+                toast.success("PIN reset. Sign in to set a new one.");
+              }}
+              className="text-[13px] text-muted-foreground underline underline-offset-4 hover:text-foreground"
+            >
+              Forgot PIN
+            </button>
+            <span className="w-px h-4 bg-border" />
+            <button
+              onClick={signOut}
+              className="text-[13px] text-primary font-semibold underline underline-offset-4"
+            >
+              Continue with email
+            </button>
+          </div>
         )}
       </div>
 

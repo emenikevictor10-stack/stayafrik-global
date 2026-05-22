@@ -1,123 +1,107 @@
-import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, Popup, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Property } from "@/data/properties";
 
-// Fix default marker icon paths (Vite/CDN)
-const icon = L.divIcon({
-  className: "stay-pin",
-  html: `<div style="background:hsl(var(--primary));color:hsl(var(--primary-foreground));border-radius:9999px;padding:6px 10px;font-weight:800;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,0.4);border:2px solid #0A0A0A;white-space:nowrap;">📍</div>`,
-  iconSize: [30, 30],
-  iconAnchor: [15, 30],
-});
+const BROWSER_KEY = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as string | undefined;
+const CHANNEL = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as string | undefined;
 
-const priceIcon = (label: string) =>
-  L.divIcon({
-    className: "stay-price-pin",
-    html: `<div style="background:hsl(var(--primary));color:hsl(var(--primary-foreground));border-radius:9999px;padding:4px 10px;font-weight:800;font-size:11px;box-shadow:0 4px 12px rgba(0,0,0,0.4);border:2px solid #0A0A0A;white-space:nowrap;">${label}</div>`,
-    iconSize: [60, 24],
-    iconAnchor: [30, 24],
+let mapsPromise: Promise<any> | null = null;
+const loadMaps = () => {
+  if (typeof window === "undefined") return Promise.reject(new Error("no window"));
+  if ((window as any).google?.maps) return Promise.resolve((window as any).google);
+  if (mapsPromise) return mapsPromise;
+  mapsPromise = new Promise((resolve, reject) => {
+    if (!BROWSER_KEY) { reject(new Error("Google Maps key missing")); return; }
+    (window as any).__stayInitMap = () => resolve((window as any).google);
+    const s = document.createElement("script");
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${BROWSER_KEY}&loading=async&callback=__stayInitMap${CHANNEL ? `&channel=${CHANNEL}` : ""}&libraries=places`;
+    s.async = true;
+    s.onerror = () => reject(new Error("Failed to load Google Maps"));
+    document.head.appendChild(s);
   });
-
-const Recenter = ({ lat, lng }: { lat: number; lng: number }) => {
-  const map = useMap();
-  useEffect(() => {
-    map.setView([lat, lng], map.getZoom());
-  }, [lat, lng, map]);
-  return null;
+  return mapsPromise;
 };
 
-export const SinglePropertyMap = ({ p, height = 200 }: { p: Property; height?: number }) => (
-  <div className="rounded-2xl overflow-hidden border border-border" style={{ height }}>
-    <MapContainer
-      center={[p.lat, p.lng]}
-      zoom={14}
-      scrollWheelZoom={false}
-      style={{ height: "100%", width: "100%" }}
-    >
-      <TileLayer
-        attribution='&copy; OpenStreetMap'
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-      />
-      <Marker position={[p.lat, p.lng]} icon={icon}>
-        <Popup>{p.title}</Popup>
-      </Marker>
-    </MapContainer>
+const Fallback = ({ height }: { height: number }) => (
+  <div className="rounded-2xl border border-border bg-card flex items-center justify-center text-xs text-muted-foreground" style={{ height }}>
+    Map unavailable
   </div>
 );
 
+export const SinglePropertyMap = ({ p, height = 200 }: { p: Property; height?: number }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const [err, setErr] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    loadMaps().then((g) => {
+      if (cancelled || !ref.current) return;
+      const map = new g.maps.Map(ref.current, { center: { lat: p.lat, lng: p.lng }, zoom: 14, disableDefaultUI: true, zoomControl: true });
+      new g.maps.Marker({ map, position: { lat: p.lat, lng: p.lng }, title: p.title });
+    }).catch(() => setErr(true));
+    return () => { cancelled = true; };
+  }, [p.lat, p.lng, p.title]);
+  if (err) return <Fallback height={height} />;
+  return <div ref={ref} className="rounded-2xl overflow-hidden border border-border" style={{ height }} />;
+};
+
 export const PropertiesMap = ({ list, height = 400 }: { list: Property[]; height?: number }) => {
-  const center: [number, number] = list.length
-    ? [list[0].lat, list[0].lng]
-    : [9.082, 8.6753];
-  return (
-    <div className="rounded-2xl overflow-hidden border border-border" style={{ height }}>
-      <MapContainer center={center} zoom={6} style={{ height: "100%", width: "100%" }}>
-        <TileLayer
-          attribution='&copy; OpenStreetMap'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {list.map((p) => (
-          <Marker key={p.id} position={[p.lat, p.lng]} icon={priceIcon(p.price)}>
-            <Popup>
-              <Link to={`/property/${p.id}`} className="font-semibold text-sm">
-                {p.title}
-              </Link>
-              <div className="text-xs text-muted-foreground">{p.location}</div>
-            </Popup>
-          </Marker>
-        ))}
-      </MapContainer>
-    </div>
-  );
+  const ref = useRef<HTMLDivElement>(null);
+  const [err, setErr] = useState(false);
+  useEffect(() => {
+    let cancelled = false;
+    loadMaps().then((g) => {
+      if (cancelled || !ref.current) return;
+      const center = list.length ? { lat: list[0].lat, lng: list[0].lng } : { lat: 9.082, lng: 8.6753 };
+      const map = new g.maps.Map(ref.current, { center, zoom: list.length > 1 ? 6 : 12, disableDefaultUI: true, zoomControl: true });
+      const bounds = new g.maps.LatLngBounds();
+      list.forEach((p) => {
+        const pos = { lat: p.lat, lng: p.lng };
+        const m = new g.maps.Marker({ map, position: pos, title: p.title });
+        const info = new g.maps.InfoWindow({ content: `<div style="font-size:12px"><b>${p.title}</b><br/>${p.location}</div>` });
+        m.addListener("click", () => info.open({ anchor: m, map }));
+        bounds.extend(pos);
+      });
+      if (list.length > 1) map.fitBounds(bounds);
+    }).catch(() => setErr(true));
+  }, [list]);
+  if (err) return <Fallback height={height} />;
+  return <div ref={ref} className="rounded-2xl overflow-hidden border border-border" style={{ height }} />;
 };
 
 export const LocationPicker = ({
-  lat,
-  lng,
-  onChange,
-  height = 240,
-}: {
-  lat: number;
-  lng: number;
-  onChange: (lat: number, lng: number) => void;
-  height?: number;
-}) => {
-  const InnerEvents = () => {
-    const map = useMap();
-    useEffect(() => {
-      const handler = (e: L.LeafletMouseEvent) => onChange(e.latlng.lat, e.latlng.lng);
-      map.on("click", handler);
-      return () => {
-        map.off("click", handler);
-      };
-    }, [map]);
-    return null;
-  };
-  return (
-    <div className="rounded-2xl overflow-hidden border border-border" style={{ height }}>
-      <MapContainer center={[lat, lng]} zoom={12} style={{ height: "100%", width: "100%" }}>
-        <TileLayer
-          attribution='&copy; OpenStreetMap'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <Recenter lat={lat} lng={lng} />
-        <InnerEvents />
-        <Marker
-          position={[lat, lng]}
-          icon={icon}
-          draggable
-          eventHandlers={{
-            dragend: (e) => {
-              const m = e.target as L.Marker;
-              const ll = m.getLatLng();
-              onChange(ll.lat, ll.lng);
-            },
-          }}
-        />
-      </MapContainer>
-    </div>
-  );
+  lat, lng, onChange, height = 240,
+}: { lat: number; lng: number; onChange: (lat: number, lng: number) => void; height?: number; }) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const markerRef = useRef<any>(null);
+  const mapRef = useRef<any>(null);
+  const [err, setErr] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    loadMaps().then((g) => {
+      if (cancelled || !ref.current) return;
+      const map = new g.maps.Map(ref.current, { center: { lat, lng }, zoom: 13, disableDefaultUI: true, zoomControl: true });
+      const m = new g.maps.Marker({ map, position: { lat, lng }, draggable: true });
+      m.addListener("dragend", () => {
+        const p = m.getPosition();
+        if (p) onChange(p.lat(), p.lng());
+      });
+      map.addListener("click", (e: any) => {
+        m.setPosition(e.latLng);
+        onChange(e.latLng.lat(), e.latLng.lng());
+      });
+      mapRef.current = map; markerRef.current = m;
+    }).catch(() => setErr(true));
+    return () => { cancelled = true; };
+  }, []); // init once
+
+  useEffect(() => {
+    if (markerRef.current && mapRef.current) {
+      markerRef.current.setPosition({ lat, lng });
+      mapRef.current.panTo({ lat, lng });
+    }
+  }, [lat, lng]);
+
+  if (err) return <Fallback height={height} />;
+  return <div ref={ref} className="rounded-2xl overflow-hidden border border-border" style={{ height }} />;
 };

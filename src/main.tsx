@@ -1,8 +1,13 @@
 import { createRoot } from "react-dom/client";
+import { HelmetProvider } from "react-helmet-async";
 import App from "./App.tsx";
 import "./index.css";
 
-createRoot(document.getElementById("root")!).render(<App />);
+createRoot(document.getElementById("root")!).render(
+  <HelmetProvider>
+    <App />
+  </HelmetProvider>,
+);
 
 // PWA service worker — only register on the published site (never inside the editor preview iframe).
 const isInIframe = (() => {
@@ -21,13 +26,10 @@ const isPreviewHost =
 
 if ("serviceWorker" in navigator) {
   if (isInIframe || isPreviewHost || !import.meta.env.PROD) {
-    // Make sure no stale worker hijacks the preview.
     navigator.serviceWorker.getRegistrations().then((regs) => regs.forEach((r) => r.unregister()));
   } else {
     window.addEventListener("load", () => {
-      navigator.serviceWorker.register("/sw.js").catch(() => {
-        /* noop — install will retry on next visit */
-      });
+      navigator.serviceWorker.register("/sw.js").catch(() => {});
     });
   }
 }

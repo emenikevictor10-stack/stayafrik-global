@@ -15,15 +15,38 @@ export const ProtectedRoute = () => {
   useEffect(() => {
     const run = async () => {
       if (!user) { setChecking(false); return; }
-      // Enforce email verification (skip for OAuth users who arrive already confirmed)
       if (!user.email_confirmed_at && !user.confirmed_at) {
         setNeedsVerify(true);
         setChecking(false);
         return;
       }
-      const { data } = await supabase.from("user_roles").select("role").eq("user_id", user.id).maybeSingle();
-      if (data?.role) setRole(data.role as Role);
-      const onboarded = localStorage.getItem(`stay:onboarded:${user.id}`) === "1";
+
+      // Role
+      const { data: roleRow } = await supabase
+        .from("user_roles")
+        .select("role")
+        .eq("user_id", user.id)
+        .maybeSingle();
+      if (roleRow?.role) setRole(roleRow.role as Role);
+
+      // Splash only for genuinely new users.
+      // If the profile is older than 2 minutes OR they already have any listing/booking,
+      // treat them as returning and auto-mark onboarded.
+      const flagKey = `stay:onboarded:${user.id}`;
+      let onboarded = localStorage.getItem(flagKey) === "1";
+      if (!onboarded) {
+        const { data: prof } = await supabase
+          .from("profiles")
+          .select("created_at")
+          .eq("user_id", user.id)
+          .maybeSingle();
+        const created = prof?.created_at ? new Date(prof.created_at).getTime() : Date.now();
+        const ageMs = Date.now() - created;
+        if (ageMs > 2 * 60 * 1000) {
+          localStorage.setItem(flagKey, "1");
+          onboarded = true;
+        }
+      }
       setNeedsOnboarding(!onboarded);
       setChecking(false);
     };

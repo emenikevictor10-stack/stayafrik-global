@@ -1,4 +1,4 @@
-import { createContext, useContext, useState, ReactNode } from "react";
+import { createContext, useContext, useEffect, useState, ReactNode } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 
 export type Role = "client" | "agent";
@@ -19,9 +19,28 @@ const getInitials = (name: string) =>
     .map((p) => p[0]?.toUpperCase() ?? "")
     .join("") || "U";
 
+const STORAGE_KEY = "stay:role";
+
+const readStoredRole = (): Role => {
+  if (typeof window === "undefined") return "client";
+  const v = window.localStorage.getItem(STORAGE_KEY);
+  return v === "agent" || v === "client" ? v : "client";
+};
+
 export const RoleProvider = ({ children }: { children: ReactNode }) => {
   const { user: authUser, profile } = useAuth();
-  const [role, setRole] = useState<Role>("client");
+  const [role, setRoleState] = useState<Role>(readStoredRole);
+
+  const setRole = (r: Role) => {
+    setRoleState(r);
+    try { window.localStorage.setItem(STORAGE_KEY, r); } catch {}
+  };
+
+  // Keep storage in sync if external code calls setRoleState somehow
+  useEffect(() => {
+    try { window.localStorage.setItem(STORAGE_KEY, role); } catch {}
+  }, [role]);
+
   const fallbackName = authUser?.email?.split("@")[0] || (role === "client" ? "Guest" : "Host");
   const name =
     profile?.full_name ||

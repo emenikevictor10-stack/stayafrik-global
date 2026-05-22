@@ -39,8 +39,8 @@ const clientItems: Item[] = [
 ];
 
 const agentItems: Item[] = [
-  { Icon: Home, title: "My Listings", subtitle: "Manage your properties", to: "/host" },
-  { Icon: Star, title: "Reviews", subtitle: "See your reviews", to: "/host/reviews" },
+  { Icon: Home, title: "My Listings", subtitle: "Manage your properties", to: "/listings" },
+  { Icon: Star, title: "Reviews", subtitle: "See your reviews", to: "/profile/performance" },
   { Icon: TrendingUp, title: "Performance", subtitle: "Bookings & insights", to: "/profile/performance" },
   { Icon: Wallet, title: "Commission & payouts", subtitle: "Earnings overview", to: "/profile/commission" },
   { Icon: Banknote, title: "Payout accounts", subtitle: "Bank details", to: "/profile/payout" },
@@ -90,7 +90,7 @@ const Profile = () => {
   const switchRole = () => {
     setRole(otherRole);
     toast.success(`Switched to ${otherRole === "agent" ? "Host" : "Client"} mode`);
-    navigate(otherRole === "agent" ? "/host" : "/", { replace: true });
+    navigate("/", { replace: true });
   };
 
   return (

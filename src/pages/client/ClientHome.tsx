@@ -17,7 +17,7 @@ export const ClientHome = () => {
         title="Stay — Africa's verified shortlets, homes & land"
         description="Browse independently verified shortlets, homes and land across Africa. Pay safely through PropertyEscrow™."
       />
-      <TopBar title="​" subtitle="\n" />
+      <TopBar title="​" subtitle="​" />
       <main className="px-5 pt-5 pb-8">
         {/* Search */}
         <Link

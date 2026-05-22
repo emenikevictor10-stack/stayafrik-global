@@ -35,57 +35,59 @@ export const SplashSequence = ({ onDone }: { onDone: () => void }) => {
   };
 
   return (
-    <div className="fixed inset-0 z-[100] bg-black text-white overflow-hidden">
-      {step === 0 && (
-        <div key="s0" className="w-full h-full flex items-center justify-center animate-[splashFade_500ms_ease-out]">
-          <img
-            src={loaderImg}
-            alt="Stay"
-            className="w-64 h-auto animate-[splashLogo_900ms_cubic-bezier(.2,.7,.2,1)]"
-          />
-        </div>
-      )}
+    <div className="fixed inset-0 z-[100] bg-black text-white overflow-hidden flex items-center justify-center">
+      <div className="relative w-full h-full sm:max-w-md sm:h-[85vh] sm:rounded-[2rem] sm:overflow-hidden sm:shadow-2xl">
+        {step === 0 && (
+          <div key="s0" className="w-full h-full flex items-center justify-center animate-[splashFade_500ms_ease-out]">
+            <img
+              src={loaderImg}
+              alt="Stay"
+              className="w-[clamp(10rem,35vw,14rem)] h-auto animate-[splashLogo_900ms_cubic-bezier(.2,.7,.2,1)]"
+            />
+          </div>
+        )}
 
-      {step === 1 && (
-        <div key="s1" className="w-full h-full relative animate-[splashFade_500ms_ease-out]">
-          <img
-            src={splash1}
-            alt="Stay without stories"
-            className="w-full h-full object-cover object-center animate-[splashZoom_1800ms_ease-out]"
-          />
-          <button
-            onClick={() => setStep(2)}
-            aria-label="Skip"
-            className="absolute top-6 right-6 text-primary text-sm font-semibold"
-          >
-            Skip ›
-          </button>
-        </div>
-      )}
+        {step === 1 && (
+          <div key="s1" className="w-full h-full relative animate-[splashFade_500ms_ease-out]">
+            <img
+              src={splash1}
+              alt="Stay without stories"
+              className="w-full h-full object-cover object-center animate-[splashZoom_1800ms_ease-out]"
+            />
+            <button
+              onClick={() => setStep(2)}
+              aria-label="Skip"
+              className="absolute top-4 right-4 sm:top-6 sm:right-6 text-primary text-sm font-semibold"
+            >
+              Skip ›
+            </button>
+          </div>
+        )}
 
-      {(step === 2 || step === 3) && (
-        <div key={`s${step}`} className="w-full h-full relative animate-[splashFade_500ms_ease-out]">
-          <img
-            src={step === 2 ? splash2 : splash3}
-            alt={step === 2 ? "Know before you book" : "Pay securely"}
-            className="w-full h-full object-cover object-center"
-          />
-          <button
-            onClick={finish}
-            aria-label="Skip"
-            className="absolute top-6 right-[72px] text-primary text-sm font-semibold"
-          >
-            Skip ›
-          </button>
-          <button
-            onClick={next}
-            aria-label={step === 3 ? "Get started" : "Next"}
-            className="absolute inset-x-0 bottom-[7%] mx-auto block w-[70%] max-w-xs rounded-2xl bg-primary text-primary-foreground font-bold py-4 text-base shadow-lg animate-[splashRise_600ms_cubic-bezier(.2,.7,.2,1)]"
-          >
-            {step === 3 ? "Get started" : "Next"}
-          </button>
-        </div>
-      )}
+        {(step === 2 || step === 3) && (
+          <div key={`s${step}`} className="w-full h-full relative animate-[splashFade_500ms_ease-out]">
+            <img
+              src={step === 2 ? splash2 : splash3}
+              alt={step === 2 ? "Know before you book" : "Pay securely"}
+              className="w-full h-full object-cover object-center"
+            />
+            <button
+              onClick={finish}
+              aria-label="Skip"
+              className="absolute top-4 right-16 sm:top-6 sm:right-[5.5rem] text-primary text-sm font-semibold"
+            >
+              Skip ›
+            </button>
+            <button
+              onClick={next}
+              aria-label={step === 3 ? "Get started" : "Next"}
+              className="absolute inset-x-0 bottom-6 sm:bottom-8 mx-auto block w-[85%] sm:w-[70%] max-w-sm rounded-2xl bg-primary text-primary-foreground font-bold py-3.5 sm:py-4 text-base shadow-lg animate-[splashRise_600ms_cubic-bezier(.2,.7,.2,1)]"
+            >
+              {step === 3 ? "Get started" : "Next"}
+            </button>
+          </div>
+        )}
+      </div>
 
       <style>{`
         @keyframes splashFade { from { opacity: 0 } to { opacity: 1 } }

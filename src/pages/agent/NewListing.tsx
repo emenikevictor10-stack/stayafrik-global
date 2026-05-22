@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ImagePlus, Home, Sparkles, X, Loader2 } from "lucide-react";
+import { ChevronLeft, ImagePlus, Home, Sparkles, X, Loader2, MapPin } from "lucide-react";
 import { toast } from "sonner";
 import { LocationPicker } from "@/components/map/PropertyMap";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,6 +8,12 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/contexts/RoleContext";
 
 const AMENITIES = ["Wi-Fi", "AC", "Generator", "Pool", "Gym", "Parking", "Security", "Kitchen", "Hot water", "Pet-friendly"];
+
+const geocode = async (address: string) => {
+  const { data, error } = await supabase.functions.invoke("geocode-address", { body: { address } });
+  if (error) throw error;
+  return data as { lat: number; lng: number; formatted: string };
+};
 
 const NewListing = () => {
   const nav = useNavigate();
@@ -27,7 +33,21 @@ const NewListing = () => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
   const [publishing, setPublishing] = useState(false);
+  const [geocoding, setGeocoding] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number }>({ lat: 6.5244, lng: 3.3792 });
+
+  const findOnMap = async () => {
+    const q = [address, city].filter(Boolean).join(", ");
+    if (!q) return toast.error("Enter an address or city first");
+    setGeocoding(true);
+    try {
+      const r = await geocode(q);
+      setCoords({ lat: r.lat, lng: r.lng });
+      toast.success("Pinned on map");
+    } catch (err: any) {
+      toast.error(err.message || "Could not find that address");
+    } finally { setGeocoding(false); }
+  };
 
   // Force-lock to agent mode while in listing flow so role toggle bug can't bounce us out
   if (typeof window !== "undefined") {
@@ -147,13 +167,18 @@ const NewListing = () => {
               <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="12 Admiralty Way, Lekki Phase 1"
                 className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm" />
             </label>
+            <button type="button" onClick={findOnMap} disabled={geocoding}
+              className="w-full rounded-xl border border-primary/30 bg-primary/10 text-primary py-2.5 text-xs font-bold inline-flex items-center justify-center gap-1.5 disabled:opacity-50">
+              {geocoding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />}
+              {geocoding ? "Locating…" : "Find on map"}
+            </button>
             <LocationPicker
               lat={coords.lat}
               lng={coords.lng}
               onChange={(lat, lng) => setCoords({ lat, lng })}
               height={220}
             />
-            <p className="text-[11px] text-muted-foreground">Drag the pin to set the exact location. Full address only shown to guests after booking.</p>
+            <p className="text-[11px] text-muted-foreground">Tap "Find on map" or drag the pin to set the exact location. Full address only shown to guests after booking.</p>
           </div>
         )}
 

@@ -52,10 +52,7 @@ const Messages = () => {
 
     let profiles: Profile[] = [];
     if (otherIds.length) {
-      const { data: profs } = await supabase
-        .from("profiles")
-        .select("user_id, full_name, avatar_url, email")
-        .in("user_id", otherIds);
+      const { data: profs } = await supabase.rpc("get_public_profiles", { _user_ids: otherIds });
       profiles = (profs as Profile[]) || [];
     }
     const pmap = new Map(profiles.map((p) => [p.user_id, p]));

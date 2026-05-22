@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import icon from "@/assets/stay-icon.png";
 import { ChevronLeft, MailCheck, User, Briefcase } from "lucide-react";
 import { GoogleIcon } from "@/lib/google-icon";
+import { Seo } from "@/components/seo/Seo";
 
 type Mode = "signin" | "signup" | "forgot";
 

@@ -12,13 +12,14 @@ const Explore = () => {
   const [filter, setFilter] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "map">("list");
   const { data: properties, loading } = useListings();
-  const list = properties.filter((p) => {
+  // v1: shortlets only
+  const shortlets = properties.filter((p) => p.type === "Shortlet");
+  const list = shortlets.filter((p) => {
     const matchesQ =
       !q ||
       p.title.toLowerCase().includes(q.toLowerCase()) ||
       p.location.toLowerCase().includes(q.toLowerCase());
-    const matchesF = !filter || p.type === filter;
-    return matchesQ && matchesF;
+    return matchesQ;
   });
 
   return (

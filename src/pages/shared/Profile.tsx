@@ -26,7 +26,7 @@ type Item = { Icon: LucideIcon; l: string; to: string };
 
 const clientItems: Item[] = [
   { Icon: IdCard, l: "Personal info", to: "/profile/edit" },
-  { Icon: CreditCard, l: "Payment methods", to: "/profile/edit" },
+  { Icon: CreditCard, l: "Payment methods", to: "/profile/payments" },
   { Icon: ShieldCheck, l: "Escrow history", to: "/bookings" },
   { Icon: Heart, l: "Saved properties", to: "/explore" },
   { Icon: Globe, l: "Language & currency", to: "/profile/language" },

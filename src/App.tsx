@@ -30,6 +30,8 @@ import Profile from "./pages/shared/Profile";
 import EditProfile from "./pages/shared/EditProfile";
 import LanguageCurrency from "./pages/shared/LanguageCurrency";
 import Help from "./pages/shared/Help";
+import Notifications from "./pages/shared/Notifications";
+import PaymentMethods from "./pages/client/PaymentMethods";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -76,6 +78,8 @@ const App = () => (
                   <Route path="/profile/performance" element={<Performance />} />
                   <Route path="/profile/language" element={<LanguageCurrency />} />
                   <Route path="/profile/help" element={<Help />} />
+                  <Route path="/profile/payments" element={<PaymentMethods />} />
+                  <Route path="/notifications" element={<Notifications />} />
                   <Route path="/property/:id" element={<PropertyDetail />} />
                   <Route path="/property/:id/book" element={<BookProperty />} />
                 </Route>

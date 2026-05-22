@@ -1,20 +1,21 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { hasPin, isUnlocked, verifyPin, setPin as savePin } from "@/lib/pin";
-import { ShieldCheck, Lock } from "lucide-react";
+import { hasPin, isUnlocked, verifyPin, setPin as savePin, PIN_LENGTH } from "@/lib/pin";
+import { Delete, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
 
+type Mode = "verify" | "create" | "confirm" | null;
+
 /**
- * Wraps protected routes. If the signed-in user has a PIN set and the
- * tab hasn't been unlocked yet, blocks the UI with a PIN keypad.
- * If they signed up with `?setpin=1` flag in localStorage, prompts to create one first time.
+ * Airbnb-style 4-digit PIN gate. Forces exactly 4 digits, custom keypad.
  */
 export const PinGate = ({ children }: { children: React.ReactNode }) => {
-  const { user } = useAuth();
+  const { user, signOut } = useAuth();
+  const [mode, setMode] = useState<Mode>(null);
   const [pin, setPin] = useState("");
-  const [mode, setMode] = useState<"verify" | "create" | null>(null);
+  const [firstPin, setFirstPin] = useState("");
+  const [shake, setShake] = useState(false);
   const [busy, setBusy] = useState(false);
-  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     if (!user) { setMode(null); return; }
@@ -24,57 +25,142 @@ export const PinGate = ({ children }: { children: React.ReactNode }) => {
     else setMode(null);
   }, [user]);
 
-  useEffect(() => { if (mode) inputRef.current?.focus(); }, [mode]);
+  const triggerShake = () => {
+    setShake(true);
+    setTimeout(() => setShake(false), 450);
+  };
+
+  // Auto-submit on full PIN
+  useEffect(() => {
+    if (!user || !mode || pin.length !== PIN_LENGTH || busy) return;
+    (async () => {
+      setBusy(true);
+      try {
+        if (mode === "verify") {
+          const ok = await verifyPin(user.id, pin);
+          if (ok) { setMode(null); setPin(""); }
+          else { toast.error("Wrong PIN"); triggerShake(); setPin(""); }
+        } else if (mode === "create") {
+          setFirstPin(pin);
+          setPin("");
+          setMode("confirm");
+        } else if (mode === "confirm") {
+          if (pin !== firstPin) {
+            toast.error("PINs don't match. Start again.");
+            triggerShake();
+            setFirstPin("");
+            setPin("");
+            setMode("create");
+          } else {
+            await savePin(user.id, pin);
+            localStorage.removeItem(`stay:pin-prompt:${user.id}`);
+            toast.success("PIN set");
+            setMode(null);
+            setPin("");
+            setFirstPin("");
+          }
+        }
+      } catch (err: any) {
+        toast.error(err.message || "Failed");
+        triggerShake();
+        setPin("");
+      } finally {
+        setBusy(false);
+      }
+    })();
+  }, [pin, mode, user, firstPin, busy]);
 
   if (!user || !mode) return <>{children}</>;
 
-  const submit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setBusy(true);
-    try {
-      if (mode === "create") {
-        await savePin(user.id, pin);
-        localStorage.removeItem(`stay:pin-prompt:${user.id}`);
-        toast.success("PIN set");
-        setMode(null);
-      } else {
-        const ok = await verifyPin(user.id, pin);
-        if (!ok) { toast.error("Wrong PIN"); setPin(""); }
-        else setMode(null);
-      }
-    } catch (err: any) {
-      toast.error(err.message || "Failed");
-    } finally {
-      setBusy(false);
-    }
+  const press = (d: string) => {
+    if (busy || pin.length >= PIN_LENGTH) return;
+    setPin((p) => (p + d).slice(0, PIN_LENGTH));
   };
+  const back = () => setPin((p) => p.slice(0, -1));
+
+  const heading =
+    mode === "verify" ? "Enter your PIN" :
+    mode === "create" ? "Create a 4-digit PIN" :
+    "Confirm your PIN";
+
+  const sub =
+    mode === "verify" ? "Quick unlock for this device." :
+    mode === "create" ? "Pick something you'll remember. 4 digits, exactly." :
+    "Type the same 4 digits again.";
 
   return (
-    <div className="fixed inset-0 z-50 bg-background flex flex-col items-center justify-center px-6">
-      <div className="w-16 h-16 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center mb-5">
-        {mode === "create" ? <ShieldCheck className="w-8 h-8 text-primary" /> : <Lock className="w-8 h-8 text-primary" />}
+    <div className="fixed inset-0 z-50 bg-background flex flex-col">
+      <div className="flex-1 flex flex-col items-center justify-center px-6">
+        <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mb-6">
+          {mode === "verify"
+            ? <Lock className="w-6 h-6 text-primary" />
+            : <ShieldCheck className="w-6 h-6 text-primary" />}
+        </div>
+        <h1 className="text-[26px] font-semibold tracking-tight text-center leading-tight">{heading}</h1>
+        <p className="text-[15px] text-muted-foreground mt-2 text-center max-w-xs">{sub}</p>
+
+        <div className={`mt-10 flex items-center gap-4 ${shake ? "animate-[shake_0.4s]" : ""}`}>
+          {Array.from({ length: PIN_LENGTH }).map((_, i) => {
+            const filled = i < pin.length;
+            return (
+              <div
+                key={i}
+                className={`w-4 h-4 rounded-full transition-all ${
+                  filled
+                    ? "bg-foreground scale-110"
+                    : "bg-transparent border-2 border-border"
+                }`}
+              />
+            );
+          })}
+        </div>
+
+        {mode === "verify" && (
+          <button
+            onClick={signOut}
+            className="mt-8 text-[13px] text-muted-foreground underline underline-offset-4"
+          >
+            Use a different account
+          </button>
+        )}
       </div>
-      <h1 className="text-2xl font-extrabold mb-1">{mode === "create" ? "Set your PIN" : "Enter your PIN"}</h1>
-      <p className="text-sm text-muted-foreground mb-6 text-center">
-        {mode === "create" ? "Pick a 4–6 digit PIN to unlock Stay quickly." : "Quick unlock for this device."}
-      </p>
-      <form onSubmit={submit} className="w-full max-w-xs">
-        <input
-          ref={inputRef}
-          type="password"
-          inputMode="numeric"
-          pattern="\d*"
-          maxLength={6}
-          value={pin}
-          onChange={(e) => setPin(e.target.value.replace(/\D/g, ""))}
-          className="w-full text-center text-3xl tracking-[0.6em] font-bold rounded-2xl bg-card border border-border py-4"
-          placeholder="••••"
-        />
-        <button disabled={busy || pin.length < 4} type="submit"
-          className="mt-4 w-full rounded-xl bg-primary text-primary-foreground font-bold py-3.5 text-sm disabled:opacity-60">
-          {busy ? "Please wait…" : mode === "create" ? "Save PIN" : "Unlock"}
-        </button>
-      </form>
+
+      {/* Keypad — Airbnb style */}
+      <div className="px-6 pb-10 pt-2 max-w-sm w-full mx-auto">
+        <div className="grid grid-cols-3 gap-3">
+          {["1","2","3","4","5","6","7","8","9"].map((d) => (
+            <Key key={d} onClick={() => press(d)}>{d}</Key>
+          ))}
+          <div />
+          <Key onClick={() => press("0")}>0</Key>
+          <button
+            onClick={back}
+            aria-label="Delete"
+            className="h-16 rounded-2xl flex items-center justify-center text-foreground hover:bg-muted active:bg-muted/70 transition"
+          >
+            <Delete className="w-6 h-6" />
+          </button>
+        </div>
+      </div>
+
+      <style>{`
+        @keyframes shake {
+          0%,100%{transform:translateX(0)}
+          20%{transform:translateX(-8px)}
+          40%{transform:translateX(8px)}
+          60%{transform:translateX(-6px)}
+          80%{transform:translateX(6px)}
+        }
+      `}</style>
     </div>
   );
 };
+
+const Key = ({ children, onClick }: { children: React.ReactNode; onClick: () => void }) => (
+  <button
+    onClick={onClick}
+    className="h-16 rounded-2xl text-[26px] font-medium tracking-tight hover:bg-muted active:bg-muted/70 transition select-none"
+  >
+    {children}
+  </button>
+);

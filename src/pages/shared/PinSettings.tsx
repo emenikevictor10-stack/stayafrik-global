@@ -1,9 +1,28 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { useAuth } from "@/contexts/AuthContext";
-import { hasPin, setPin, clearPin, verifyPin } from "@/lib/pin";
+import { hasPin, setPin, clearPin, verifyPin, PIN_LENGTH } from "@/lib/pin";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ShieldCheck, ShieldOff } from "lucide-react";
+
+const PinInput = ({
+  value, onChange, label, autoFocus,
+}: { value: string; onChange: (v: string) => void; label: string; autoFocus?: boolean }) => (
+  <label className="block">
+    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{label}</span>
+    <input
+      autoFocus={autoFocus}
+      value={value}
+      onChange={(e) => onChange(e.target.value.replace(/\D/g, "").slice(0, PIN_LENGTH))}
+      inputMode="numeric"
+      pattern="\d*"
+      maxLength={PIN_LENGTH}
+      type="password"
+      placeholder={"•".repeat(PIN_LENGTH)}
+      className="mt-1.5 w-full rounded-2xl bg-secondary border border-border px-4 py-4 text-center text-2xl tracking-[0.5em] font-bold"
+    />
+  </label>
+);
 
 const PinSettings = () => {
   const { user } = useAuth();
@@ -18,6 +37,7 @@ const PinSettings = () => {
     if (exists) {
       if (!(await verifyPin(user.id, current))) return toast.error("Current PIN is wrong");
     }
+    if (next.length !== PIN_LENGTH) return toast.error(`PIN must be exactly ${PIN_LENGTH} digits`);
     if (next !== confirm) return toast.error("PINs do not match");
     try {
       await setPin(user.id, next);
@@ -36,36 +56,34 @@ const PinSettings = () => {
 
   return (
     <>
-      <TopBar title="Unlock PIN" subtitle="Local device quick-unlock" />
+      <TopBar title="Unlock PIN" subtitle="4-digit quick unlock" />
       <main className="px-5 pt-4 pb-8 max-w-md mx-auto">
-        <div className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3 mb-4">
-          {exists ? <ShieldCheck className="w-5 h-5 text-primary" /> : <ShieldOff className="w-5 h-5 text-muted-foreground" />}
+        <div className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3 mb-5">
+          {exists
+            ? <ShieldCheck className="w-5 h-5 text-primary" />
+            : <ShieldOff className="w-5 h-5 text-muted-foreground" />}
           <div className="text-sm">{exists ? "PIN is set on this device" : "No PIN set"}</div>
         </div>
-        <form onSubmit={save} className="space-y-3">
+
+        <form onSubmit={save} className="space-y-4">
           {exists && (
-            <input value={current} onChange={(e) => setCurrent(e.target.value.replace(/\D/g, ""))} maxLength={6} inputMode="numeric"
-              placeholder="Current PIN" type="password"
-              className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm" />
+            <PinInput value={current} onChange={setCurrent} label="Current PIN" autoFocus />
           )}
-          <input value={next} onChange={(e) => setNext(e.target.value.replace(/\D/g, ""))} maxLength={6} inputMode="numeric"
-            placeholder="New PIN (4–6 digits)" type="password"
-            className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm" />
-          <input value={confirm} onChange={(e) => setConfirm(e.target.value.replace(/\D/g, ""))} maxLength={6} inputMode="numeric"
-            placeholder="Confirm new PIN" type="password"
-            className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm" />
-          <button className="w-full rounded-xl bg-primary text-primary-foreground font-bold py-3.5 text-sm">
+          <PinInput value={next} onChange={setNext} label="New 4-digit PIN" autoFocus={!exists} />
+          <PinInput value={confirm} onChange={setConfirm} label="Confirm new PIN" />
+          <button className="w-full rounded-2xl bg-primary text-primary-foreground font-bold py-4 text-sm">
             {exists ? "Update PIN" : "Set PIN"}
           </button>
         </form>
+
         {exists && (
           <button onClick={remove}
-            className="mt-3 w-full rounded-xl border border-destructive/40 bg-destructive/10 text-destructive font-bold py-3 text-sm">
+            className="mt-3 w-full rounded-2xl border border-destructive/40 bg-destructive/10 text-destructive font-bold py-3 text-sm">
             Remove PIN
           </button>
         )}
-        <p className="text-[11px] text-muted-foreground text-center mt-5">
-          The PIN is stored hashed on this device only. It is not a replacement for your password.
+        <p className="text-[11px] text-muted-foreground text-center mt-6 leading-relaxed">
+          Your PIN is stored hashed on this device only. It's a quick unlock — not a replacement for your password.
         </p>
       </main>
     </>

@@ -32,6 +32,7 @@ const clientItems: Item[] = [
   { Icon: CreditCard, l: "Payment methods", to: "/profile/payments" },
   { Icon: ShieldCheck, l: "Escrow history", to: "/bookings" },
   { Icon: Heart, l: "Saved properties", to: "/explore" },
+  { Icon: Lock, l: "Unlock PIN", to: "/profile/pin" },
   { Icon: Globe, l: "Language & currency", to: "/profile/language" },
   { Icon: LifeBuoy, l: "Help & support", to: "/profile/help" },
 ];
@@ -42,6 +43,7 @@ const agentItems: Item[] = [
   { Icon: Wallet, l: "Commission & payouts", to: "/profile/commission" },
   { Icon: Banknote, l: "Payout accounts", to: "/profile/payout" },
   { Icon: TrendingUp, l: "Performance", to: "/profile/performance" },
+  { Icon: Lock, l: "Unlock PIN", to: "/profile/pin" },
   { Icon: Globe, l: "Language & currency", to: "/profile/language" },
   { Icon: LifeBuoy, l: "Help & support", to: "/profile/help" },
 ];

@@ -23,6 +23,7 @@ export type Database = {
           id: string
           listing_id: string
           payment_reference: string | null
+          released_at: string | null
           status: string
           total_price: number
           updated_at: string
@@ -35,6 +36,7 @@ export type Database = {
           id?: string
           listing_id: string
           payment_reference?: string | null
+          released_at?: string | null
           status?: string
           total_price?: number
           updated_at?: string
@@ -47,6 +49,7 @@ export type Database = {
           id?: string
           listing_id?: string
           payment_reference?: string | null
+          released_at?: string | null
           status?: string
           total_price?: number
           updated_at?: string
@@ -394,6 +397,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      auto_release_due_bookings: { Args: never; Returns: number }
       get_public_profiles: {
         Args: { _user_ids: string[] }
         Returns: {

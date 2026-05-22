@@ -1,67 +1,74 @@
-## Goal
-Make the app installable and pass pwabuilder.com validation cleanly, and replace decorative emojis with proper Lucide icons throughout the UI.
+# Stay — v1.1 Plan (Shortlet focus)
 
-## Heads-up before we start
-PWA + service workers are advanced. Inside the Lovable editor preview the service worker will stay disabled (it runs inside an iframe and would cache stale builds). **Install / offline behaviour will only work on the published `lovable.app` URL or a custom domain — not in the editor preview.** That is the correct trade-off and is required to keep the editor usable.
+Big batch of changes grouped by area. Items in the order I'd ship them.
 
-## What pwabuilder.com checks (and what we'll fix)
+## A. Auth & onboarding
 
-1. Valid `manifest.webmanifest` linked from `index.html` — already present, will tighten fields.
-2. Required icons (192, 512, plus a maskable 512) — already present, will verify sizes/format.
-3. A registered service worker reachable at `/sw.js` with `fetch`, `install`, `activate` handlers — to be added.
-4. HTTPS + correct `start_url` / `scope` / `id` — fine on `*.lovable.app`.
-5. `theme_color` matching `<meta name="theme-color">` — will align both to brand lime `#C8F03E`.
-6. Screenshots for desktop + mobile form factors — already present, will keep.
-7. Categories, description, lang, dir — will add `lang: "en"`, `dir: "ltr"`.
+1. **Skip splash for returning users.** `Welcome` only renders on first sign-in. Persist `stay:onboarded:{user.id}=1` (already exists) but also flip the flag for users who already have any data (e.g. profile `created_at` older than session). New users → `/welcome`, existing → `/explore`.
+2. **Sign-in pin (PIN code) alongside Google.** Add a 4-digit PIN as a *local-device* secondary unlock after successful Supabase login. Stored as SHA-256 hash in `localStorage` per user. Settings entry to set/reset PIN. Asked once per app open. (Not a replacement for password — it's a quick re-auth on a trusted device, common in fintech/shortlet apps.)
+3. **Email/password sign-in already exists** — verify it works end-to-end and surface "Forgot password" clearly.
 
-## Plan
+## B. Notifications
 
-### 1. Manifest (`public/manifest.webmanifest`)
-- Add `"lang": "en"`, `"dir": "ltr"`.
-- Keep `theme_color: "#C8F03E"` and update `<meta name="theme-color">` in `index.html` to match (currently `#0A0A0A`).
-- Keep existing icons + screenshots (already valid).
-- Add a `shortcuts` array (Explore, New Listing, Bookings) — pwabuilder rewards this.
+4. **`/notifications` page** + bell entry in TopBar with unread dot.
+   - New table `notifications` (id, user_id, type, title, body, link, read_at, created_at) with RLS (user reads/updates own).
+   - Triggers: booking created/updated → notify host; message received → notify receiver; listing verified → notify host.
+   - Realtime via Supabase channels for live unread count.
 
-### 2. Service worker (`public/sw.js`)
-A minimal, safe SW:
-- `install`: `skipWaiting()`, precache app shell (`/`, `/manifest.webmanifest`, icons).
-- `activate`: `clients.claim()`, purge old caches.
-- `fetch`: **NetworkFirst** for navigations (so new deploys never get stuck behind cached HTML), **CacheFirst** for hashed static assets, bypass for non-GET and cross-origin Supabase calls.
-- No Workbox / no `vite-plugin-pwa` — plain JS to keep the Vite/HMR setup untouched.
+## C. Chat
 
-### 3. Registration guard (`src/main.tsx`)
-Register the SW only when **all** are true:
-- `'serviceWorker' in navigator`
-- `window.self === window.top` (not in an iframe → skips Lovable preview)
-- hostname does **not** include `lovableproject.com` or `id-preview--`
-- `import.meta.env.PROD`
+5. **Wire `Messages` + `ChatThread` to the real `messages` table** (currently mocked). 
+   - Threads list from distinct `(sender_id, receiver_id)` pairs.
+   - Insert on send, realtime subscribe on receive, mark-as-read on open.
+   - Profile join for names/avatars; deep link from PropertyDetail "Message host".
 
-In preview/iframe, actively `unregister()` any existing SW and clear caches so a stale worker can never wedge the editor.
+## D. PWA manifest
 
-### 4. Replace emojis with Lucide icons
-Swap decorative emojis for `lucide-react` icons (already a dep), keeping copy unchanged:
+6. **Regenerate icons** so the file dimensions match the manifest:
+   - `icon-192.png` → exactly 192×192
+   - `icon-512.png` → exactly 512×512
+   - `icon-maskable.png` → 512×512 maskable
+   - New `shortcut-96.png` → exactly 96×96, used for all 3 shortcuts.
+   - Update `manifest.webmanifest` accordingly.
 
-| Location | Today | After |
-|---|---|---|
-| `TopBar` role pill, `Profile` mode-switch button | 👤 / 🧑‍💼 | `User` / `Briefcase` |
-| `RoleContext` avatar fallback (`user.emoji`) | 🙋🏾‍♀️ / 🧑🏾‍💼 | initials chip (first letter of name) wrapped over a `User` icon fallback |
-| `Profile.tsx` menu items (🪪💳🔐❤️🌍🛟 etc.) | emoji glyph | `IdCard`, `CreditCard`, `ShieldCheck`, `Heart`, `Globe`, `LifeBuoy`, `BadgeCheck`, `Wallet`, `Banknote`, `TrendingUp` |
-| `AgentProfile` "Verified" pill | ✓ emoji | `BadgeCheck` |
-| `Messages` / `ChatThread` / `EscrowDetail` / `Auth` / `EditProfile` decorative emojis | various | nearest matching Lucide icon, same colour token |
+## E. Shortlet-only positioning (v1)
 
-Avatar fallback approach: render initials in the existing primary-tinted circle; if no name yet, render a `<User />` icon. This removes all `user.emoji` references from `RoleContext` and its consumers.
+7. **Hide rental & buy/sale UI** across Explore filters, listing types, copy ("homes and land" → "shortlets"). Keep DB columns untouched; just default `listings.type = 'Shortlet'` and remove the type picker from New Listing for now. Update manifest description + welcome slides copy. Plan: re-enable in v2 behind a feature flag.
 
-### 5. `index.html` polish
-- Sync `theme-color` meta to `#C8F03E`.
-- Keep existing apple-touch-icon, manifest link, viewport-fit cover.
+## F. Payments
 
-### 6. Verification
-After changes:
-- Build (auto via harness) and confirm no TS errors.
-- Open the **published** URL in pwabuilder.com → expect green on Manifest, Service Worker, Security; address any warnings it surfaces.
-- Confirm editor preview still hot-reloads (SW must stay unregistered there).
+8. **`/profile/payment-methods` page** for clients:
+   - List saved methods (`payment_methods` table: id, user_id, brand, last4, exp, is_default).
+   - Add (card form — store metadata only, no real PCI flow yet; placeholder for Paystack/Stripe later), set default, remove.
+   - Wire entry from Profile menu and from `BookProperty` checkout step.
 
-## Out of scope
-- Offline data sync for Supabase queries (would require IndexedDB strategy — separate ask).
-- Push notifications.
-- iOS splash screens beyond the existing apple-touch-icon (can add later if pwabuilder flags it).
+## G. Google Maps
+
+9. **Connect Google Maps Platform connector**, replace the current `PropertyMap` (Mapbox/placeholder) with the Maps JS API using `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY`.
+10. **Geocode on listing create/edit** (server-side via gateway from an edge function) so `listings.lat/lng` is populated automatically from `address + city`.
+11. **Browser autocomplete** (Places API New `AutocompleteSuggestion`) on the address field in New/Edit Listing.
+
+## H. Agent section
+
+12. **Auto-verify bank account name on entry.** In `PayoutAccount`, when bank + account number are filled, call an edge function `verify-bank-account` that hits a Nigerian bank-account resolution provider (Paystack `/bank/resolve`). Display the resolved name; require the user to confirm before save. *(Needs a `PAYSTACK_SECRET_KEY` — I'll ask before wiring.)*
+13. **Basic KYC**: government-issued ID only. New table `kyc_submissions` (user_id, id_type, id_number, id_image_url, status, reviewed_at). Storage bucket `kyc-documents` (private, owner-only RLS). 
+14. **`/profile/verification` page**: upload front of ID, enter ID number, submit. Show current status (pending / approved / rejected) with timeline.
+15. **Listings save reliability.** Audit `NewListing` + `EditListing`: required-field validation, optimistic state, toast on error with the real PostgREST message, retry. Make sure `host_id = auth.uid()` is always set and `images[]` is the uploaded public URLs (not blob URLs).
+16. **Role-swap bug.** `RoleProvider` currently starts in `client` and only updates from `ProtectedRoute`'s async query. Fix: persist `role` in `localStorage`, hydrate synchronously, and make `setRole` write through. Also gate `SecondTab`/`ThirdTab` on `roleReady` to avoid the flash to Explore/Bookings before user_roles loads.
+
+---
+
+## Implementation order
+
+I'd ship in 3 commits so the preview stays usable:
+
+- **Commit 1 — Foundations**: H16 role-fix, A1 splash gate, A3 password polish, D6 icons, E7 shortlet copy.
+- **Commit 2 — Data features**: B4 notifications, C5 chat wiring, F8 payment methods, H13/H14 KYC, H15 listing save audit.
+- **Commit 3 — External services** *(need confirmations)*: G9–G11 Google Maps (will trigger the connector flow), H12 Paystack bank-resolve (needs `PAYSTACK_SECRET_KEY`), A2 PIN unlock.
+
+## Questions before I start
+
+1. **Paystack** for bank-name verification — OK to use? You'll need to paste `PAYSTACK_SECRET_KEY` when I ask.
+2. **PIN scope** — local device-only unlock (my recommendation), or do you want it server-side as a real auth factor?
+3. **Notifications scope** — in-app only for v1, or also browser push? (Push needs more PWA work.)
+4. **Payment Methods** — UI shell + storage only for now (no real charges), and we wire a real provider in v2? Or do you want Paystack/Stripe live now?

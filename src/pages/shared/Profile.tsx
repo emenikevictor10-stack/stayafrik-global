@@ -66,7 +66,7 @@ const Profile = () => {
             <h2 className="font-bold flex items-center gap-1.5">
               {user.name}
               {authUser?.email_confirmed_at && (
-                <span className="text-[10px] text-primary font-bold">✓ Verified</span>
+                <BadgeCheck size={14} className="text-primary" />
               )}
             </h2>
             <p className="text-[11px] text-muted-foreground truncate">{authUser?.email}</p>

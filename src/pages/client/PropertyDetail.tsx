@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRole } from "@/contexts/RoleContext";
 import { SinglePropertyMap } from "@/components/map/PropertyMap";
+import { Seo } from "@/components/seo/Seo";
 
 const PropertyDetail = () => {
   const { id } = useParams();

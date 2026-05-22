@@ -1,5 +1,5 @@
 /* Stay PWA service worker */
-const VERSION = "v1";
+const VERSION = "v2";
 const STATIC_CACHE = `stay-static-${VERSION}`;
 const RUNTIME_CACHE = `stay-runtime-${VERSION}`;
 const PRECACHE = [
@@ -17,10 +17,15 @@ self.addEventListener("install", (event) => {
 });
 
 self.addEventListener("activate", (event) => {
+  // Nuke every old cache so stale index.html / asset references can't hijack the app.
   event.waitUntil(
-    caches.keys().then((keys) =>
-      Promise.all(keys.filter((k) => ![STATIC_CACHE, RUNTIME_CACHE].includes(k)).map((k) => caches.delete(k)))
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then((keys) => Promise.all(
+        keys
+          .filter((k) => k !== STATIC_CACHE && k !== RUNTIME_CACHE)
+          .map((k) => caches.delete(k))
+      ))
+      .then(() => self.clients.claim())
   );
 });
 

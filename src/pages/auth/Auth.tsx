@@ -144,7 +144,7 @@ const Auth = () => {
       </button>
 
       <div className="flex items-center gap-3 mb-2">
-        <img src={icon} alt="Stay" className="h-10 w-10 rounded-lg" />
+        <img src={icon} alt="Stay" className="h-10 w-auto" />
         <h1 className="text-2xl font-extrabold">{title}</h1>
       </div>
       <p className="text-sm text-muted-foreground mb-7">{sub}</p>

@@ -1,26 +1,20 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Check, ImagePlus, Home, MapPin, DollarSign, FileText, Sparkles, X, Loader2 } from "lucide-react";
+import { ChevronLeft, ImagePlus, Home, Sparkles, X, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { LocationPicker } from "@/components/map/PropertyMap";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-
-const TYPES = [
-  { e: "🏖️", l: "Shortlet", d: "Nightly stays" },
-  { e: "🏡", l: "Home for sale", d: "House or apartment" },
-  { e: "🌱", l: "Land", d: "Plot or estate" },
-  { e: "🏢", l: "Commercial", d: "Office, retail, mixed" },
-];
+import { useRole } from "@/contexts/RoleContext";
 
 const AMENITIES = ["Wi-Fi", "AC", "Generator", "Pool", "Gym", "Parking", "Security", "Kitchen", "Hot water", "Pet-friendly"];
 
 const NewListing = () => {
   const nav = useNavigate();
   const { user } = useAuth();
+  const { setRole } = useRole();
   const fileInput = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
-  const [type, setType] = useState("");
   const [title, setTitle] = useState("");
   const [city, setCity] = useState("");
   const [address, setAddress] = useState("");
@@ -35,7 +29,13 @@ const NewListing = () => {
   const [publishing, setPublishing] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number }>({ lat: 6.5244, lng: 3.3792 });
 
-  const TOTAL = 7;
+  // Force-lock to agent mode while in listing flow so role toggle bug can't bounce us out
+  if (typeof window !== "undefined") {
+    // best-effort one-time set
+    try { window.localStorage.setItem("stay:role", "agent"); } catch {}
+  }
+
+  const TOTAL = 6;
   const next = () => setStep((s) => Math.min(TOTAL, s + 1));
   const back = () => (step === 1 ? nav(-1) : setStep((s) => s - 1));
 
@@ -74,18 +74,17 @@ const NewListing = () => {
 
   const publish = async () => {
     if (!user) return toast.error("Please sign in");
-    if (!type) return toast.error("Choose a listing type");
     if (!title.trim()) return toast.error("Add a listing title");
     if (!city.trim() && !address.trim()) return toast.error("Add a city or address");
+    if (photos.length === 0) return toast.error("Add at least one photo");
+    if (!price) return toast.error("Set a nightly price");
     setPublishing(true);
     try {
-      const dbType =
-        type === "Home for sale" ? "For Sale" : type === "Shortlet" ? "Shortlet" : type;
       const { data, error } = await supabase.from("listings").insert({
         host_id: user.id,
         title: title.trim(),
         description: desc,
-        type: dbType,
+        type: "Shortlet",
         price_per_night: Number(price) || 0,
         location: [address, city].filter(Boolean).join(", "),
         address,
@@ -99,7 +98,8 @@ const NewListing = () => {
         lng: coords.lng,
       }).select("id").single();
       if (error) throw error;
-      toast.success("🎉 Listing submitted for verification");
+      toast.success("Listing submitted for verification");
+      setRole("agent");
       nav(data?.id ? `/listings/${data.id}/edit` : "/listings");
     } catch (err: any) {
       toast.error(err.message || "Could not publish");
@@ -109,12 +109,11 @@ const NewListing = () => {
   };
 
   const stepTitle = [
-    "What are you listing?",
-    "Where is it located?",
+    "Where is your shortlet?",
     "Property details",
     "Add photos",
     "What's included?",
-    "Set your price",
+    "Set your nightly price",
     "Review & publish",
   ][step - 1];
 
@@ -137,19 +136,6 @@ const NewListing = () => {
 
       <div className="px-5 pt-6">
         {step === 1 && (
-          <div className="grid grid-cols-2 gap-3">
-            {TYPES.map((t) => (
-              <button key={t.l} onClick={() => setType(t.l)}
-                className={`rounded-2xl border p-4 text-left ${type === t.l ? "border-primary bg-primary/5" : "border-border bg-card"}`}>
-                <div className="text-3xl">{t.e}</div>
-                <div className="text-sm font-bold mt-2">{t.l}</div>
-                <div className="text-[11px] text-muted-foreground">{t.d}</div>
-              </button>
-            ))}
-          </div>
-        )}
-
-        {step === 2 && (
           <div className="space-y-4">
             <label className="block">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase">City</span>
@@ -167,15 +153,15 @@ const NewListing = () => {
               onChange={(lat, lng) => setCoords({ lat, lng })}
               height={220}
             />
-            <p className="text-[11px] text-muted-foreground">Tap or drag the pin to set the exact location. Address only shown to guests after booking.</p>
+            <p className="text-[11px] text-muted-foreground">Drag the pin to set the exact location. Full address only shown to guests after booking.</p>
           </div>
         )}
 
-        {step === 3 && (
+        {step === 2 && (
           <div className="space-y-4">
             <label className="block">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase">Listing title</span>
-              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Beautiful 3-bed in Lekki"
+              <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Cozy 2-bed in Lekki"
                 className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm" />
             </label>
             <div className="grid grid-cols-3 gap-2">
@@ -206,37 +192,23 @@ const NewListing = () => {
           </div>
         )}
 
-        {step === 4 && (
+        {step === 3 && (
           <div>
             <p className="text-xs text-muted-foreground mb-3">Add at least 1 photo. First one becomes the cover.</p>
-            <input
-              ref={fileInput}
-              type="file"
-              accept="image/*"
-              multiple
-              className="hidden"
-              onChange={(e) => handleFiles(e.target.files)}
-            />
+            <input ref={fileInput} type="file" accept="image/*" multiple className="hidden" onChange={(e) => handleFiles(e.target.files)} />
             <div className="grid grid-cols-2 gap-2.5">
               {photos.map((url) => (
                 <div key={url} className="relative aspect-square rounded-xl bg-secondary border border-border overflow-hidden">
                   <img src={url} alt="" className="w-full h-full object-cover" />
-                  <button
-                    type="button"
-                    onClick={() => removePhoto(url)}
+                  <button type="button" onClick={() => removePhoto(url)}
                     className="absolute top-1.5 right-1.5 w-6 h-6 rounded-full bg-background/80 backdrop-blur flex items-center justify-center"
-                    aria-label="Remove photo"
-                  >
+                    aria-label="Remove photo">
                     <X className="w-3.5 h-3.5" />
                   </button>
                 </div>
               ))}
-              <button
-                type="button"
-                disabled={uploading}
-                onClick={() => fileInput.current?.click()}
-                className="aspect-square rounded-xl border-2 border-dashed border-border bg-card flex flex-col items-center justify-center gap-1 text-muted-foreground disabled:opacity-50"
-              >
+              <button type="button" disabled={uploading} onClick={() => fileInput.current?.click()}
+                className="aspect-square rounded-xl border-2 border-dashed border-border bg-card flex flex-col items-center justify-center gap-1 text-muted-foreground disabled:opacity-50">
                 {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <ImagePlus className="w-6 h-6" />}
                 <span className="text-[10px] font-semibold">{uploading ? "Uploading…" : "Add photo"}</span>
               </button>
@@ -244,7 +216,7 @@ const NewListing = () => {
           </div>
         )}
 
-        {step === 5 && (
+        {step === 4 && (
           <div className="flex flex-wrap gap-2">
             {AMENITIES.map((a) => (
               <button key={a} onClick={() => toggleAmen(a)}
@@ -255,10 +227,10 @@ const NewListing = () => {
           </div>
         )}
 
-        {step === 6 && (
+        {step === 5 && (
           <div className="space-y-4">
             <label className="block">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase">{type === "Shortlet" ? "Price per night (₦)" : "Asking price (₦)"}</span>
+              <span className="text-[11px] font-semibold text-muted-foreground uppercase">Price per night (₦)</span>
               <input value={price} onChange={(e) => setPrice(e.target.value)} type="number" placeholder="150000"
                 className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-lg font-extrabold" />
             </label>
@@ -270,14 +242,14 @@ const NewListing = () => {
           </div>
         )}
 
-        {step === 7 && (
+        {step === 6 && (
           <div className="space-y-3">
             <div className="rounded-2xl bg-card border border-border p-4">
               <div className="flex items-center gap-2 mb-2"><Home className="w-4 h-4 text-primary" /><h3 className="text-sm font-bold">{title || "Untitled"}</h3></div>
               <div className="text-[11px] text-muted-foreground space-y-1">
-                <div>{type} · {beds} bed · {baths} bath · {area || "—"}</div>
-                <div>📍 {address || "—"}, {city || "—"}</div>
-                <div className="text-primary font-extrabold text-sm">₦{Number(price || 0).toLocaleString()}</div>
+                <div>Shortlet · {beds} bed · {baths} bath · {area || "—"}</div>
+                <div>{address || "—"}, {city || "—"}</div>
+                <div className="text-primary font-extrabold text-sm">₦{Number(price || 0).toLocaleString()} / night</div>
               </div>
             </div>
             <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4 flex gap-3">
@@ -292,10 +264,9 @@ const NewListing = () => {
 
       <div className="fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
         <div className="max-w-md mx-auto px-5 py-3 pb-20">
-          <button onClick={step === TOTAL ? publish : next}
-            disabled={(step === 1 && !type) || publishing}
+          <button onClick={step === TOTAL ? publish : next} disabled={publishing}
             className="w-full bg-primary text-primary-foreground rounded-2xl h-12 font-bold text-sm disabled:opacity-50">
-            {step === TOTAL ? (publishing ? "Publishing…" : "🚀 Publish listing") : "Continue"}
+            {step === TOTAL ? (publishing ? "Publishing…" : "Publish listing") : "Continue"}
           </button>
         </div>
       </div>

@@ -1,8 +1,8 @@
 {
   "id": "/",
-  "name": "Stay — Verified African Property",
+  "name": "Stay — Verified African Shortlets",
   "short_name": "Stay",
-  "description": "Verified shortlets, homes and land across Africa. Escrow-protected payments.",
+  "description": "Verified shortlets across Africa. Escrow-protected payments.",
   "start_url": "/",
   "scope": "/",
   "display": "standalone",
@@ -12,7 +12,7 @@
   "theme_color": "#C8F03E",
   "lang": "en",
   "dir": "ltr",
-  "categories": ["travel", "business", "lifestyle"],
+  "categories": ["travel", "lifestyle"],
   "icons": [
     { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
     { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
@@ -24,7 +24,7 @@
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Browse verified properties on mobile"
+      "label": "Browse verified shortlets on mobile"
     },
     {
       "src": "/screenshot-desktop.png",
@@ -35,8 +35,8 @@
     }
   ],
   "shortcuts": [
-    { "name": "Explore", "short_name": "Explore", "url": "/explore", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "New Listing", "short_name": "New", "url": "/listings/new", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] },
-    { "name": "Bookings", "short_name": "Bookings", "url": "/bookings", "icons": [{ "src": "/icon-192.png", "sizes": "192x192" }] }
+    { "name": "Explore", "short_name": "Explore", "url": "/explore", "icons": [{ "src": "/shortcut-96.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Bookings", "short_name": "Bookings", "url": "/bookings", "icons": [{ "src": "/shortcut-96.png", "sizes": "96x96", "type": "image/png" }] },
+    { "name": "Inbox", "short_name": "Inbox", "url": "/messages", "icons": [{ "src": "/shortcut-96.png", "sizes": "96x96", "type": "image/png" }] }
   ]
 }

@@ -1,91 +1,151 @@
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { useState, useRef, useEffect } from "react";
-import { ChevronLeft, Send, Phone, Paperclip, Image, User, BadgeCheck } from "lucide-react";
-import { PROPERTIES } from "@/data/properties";
+import { ChevronLeft, Send, User } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 
-type Msg = { id: number; from: "me" | "them"; text: string; time: string };
+type Msg = {
+  id: string;
+  sender_id: string;
+  receiver_id: string;
+  content: string;
+  created_at: string;
+  listing_id?: string | null;
+};
+
+type Profile = { user_id: string; full_name: string | null; email: string | null; avatar_url: string | null };
+
+const isUuid = (s: string | undefined) =>
+  !!s && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
 const ChatThread = () => {
   const { agentId } = useParams();
   const [params] = useSearchParams();
-  const propId = params.get("prop");
+  const listingId = params.get("listing");
   const navigate = useNavigate();
-  const prop = propId ? PROPERTIES.find((p) => p.id === propId) : undefined;
-  const agent = prop || PROPERTIES.find((p) => p.agent.toLowerCase().replace(/\s+/g, "-") === agentId);
-  const name = agent?.agent || "Stay Agent";
-  const tag = agent?.agentTag || "Verified Agent";
-
-  const [msgs, setMsgs] = useState<Msg[]>([
-    { id: 1, from: "them", text: `Hi! Thanks for reaching out about ${prop?.title || "the property"}. How can I help?`, time: "10:24" },
-  ]);
+  const { user } = useAuth();
+  const [other, setOther] = useState<Profile | null>(null);
+  const [msgs, setMsgs] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
+  const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [msgs]);
+  const otherId = agentId;
 
-  const send = () => {
-    if (!draft.trim()) return;
-    const t = new Date().toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" });
-    setMsgs((m) => [...m, { id: Date.now(), from: "me", text: draft, time: t }]);
+  useEffect(() => {
+    if (!user || !isUuid(otherId)) return;
+    (async () => {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("user_id, full_name, email, avatar_url")
+        .eq("user_id", otherId!)
+        .maybeSingle();
+      setOther((profile as Profile) || null);
+
+      const { data } = await supabase
+        .from("messages")
+        .select("*")
+        .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${user.id})`)
+        .order("created_at", { ascending: true });
+      setMsgs((data as Msg[]) || []);
+
+      // Mark related notifications as read
+      await supabase
+        .from("notifications")
+        .update({ read_at: new Date().toISOString() })
+        .eq("user_id", user.id)
+        .eq("type", "message")
+        .eq("link", `/messages/${otherId}`)
+        .is("read_at", null);
+    })();
+
+    const ch = supabase
+      .channel(`thread:${user.id}:${otherId}`)
+      .on(
+        "postgres_changes",
+        { event: "INSERT", schema: "public", table: "messages" },
+        (payload) => {
+          const m = payload.new as Msg;
+          const mine = (m.sender_id === user.id && m.receiver_id === otherId) ||
+                       (m.sender_id === otherId && m.receiver_id === user.id);
+          if (mine) setMsgs((prev) => [...prev, m]);
+        },
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(ch); };
+  }, [user, otherId]);
+
+  useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [msgs]);
+
+  const send = async () => {
+    if (!draft.trim() || !user || !isUuid(otherId)) return;
+    setSending(true);
+    const content = draft.trim();
     setDraft("");
-    setTimeout(() => {
-      setMsgs((m) => [...m, { id: Date.now() + 1, from: "them", text: "Got it 👍 I'll get back to you in a few minutes.", time: t }]);
-    }, 900);
+    const { error } = await supabase.from("messages").insert({
+      sender_id: user.id,
+      receiver_id: otherId,
+      content,
+      listing_id: listingId || null,
+    });
+    setSending(false);
+    if (error) {
+      toast.error(error.message);
+      setDraft(content);
+    }
   };
 
-  const quick = ["Is it available?", "Can I inspect this weekend?", "Final price?"];
+  const name = other?.full_name || other?.email?.split("@")[0] || "User";
+  const quick = ["Is it available?", "Can I check in this weekend?", "Best price?"];
+
+  if (!isUuid(otherId)) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center p-8 text-center">
+        <p className="text-sm text-muted-foreground">Invalid conversation.</p>
+        <button onClick={() => navigate("/messages")} className="mt-4 text-primary text-sm font-bold">Back to inbox</button>
+      </main>
+    );
+  }
 
   return (
     <main className="flex flex-col h-screen">
-      {/* Header */}
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="px-4 py-3 flex items-center gap-3">
           <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center">
             <ChevronLeft className="w-4 h-4" />
           </button>
-          <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center"><User className="w-5 h-5 text-primary" /></div>
+          <div className="w-10 h-10 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center overflow-hidden">
+            {other?.avatar_url ? <img src={other.avatar_url} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-primary" />}
+          </div>
           <div className="flex-1 min-w-0">
             <div className="font-bold text-sm truncate">{name}</div>
-            <div className="text-[11px] text-success font-medium inline-flex items-center gap-1"><BadgeCheck className="w-3 h-3" /> {tag} · online</div>
+            <div className="text-[11px] text-muted-foreground">{other?.email}</div>
           </div>
-          <button className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center">
-            <Phone className="w-4 h-4 text-primary" />
-          </button>
         </div>
-        {prop && (
-          <div className="mx-4 mb-3 flex gap-2 rounded-xl bg-card border border-border p-2">
-            <img src={prop.image} alt="" className="w-10 h-10 rounded-lg object-cover" />
-            <div className="flex-1 min-w-0">
-              <div className="text-xs font-semibold truncate">{prop.title}</div>
-              <div className="text-[10px] text-primary font-bold">{prop.price}</div>
-            </div>
-          </div>
-        )}
       </header>
 
-      {/* Messages */}
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 pb-32">
-        <div className="text-center">
-          <span className="text-[10px] text-muted-foreground bg-card px-3 py-1 rounded-full border border-border">Today</span>
-        </div>
+        {msgs.length === 0 && (
+          <p className="text-center text-xs text-muted-foreground pt-10">No messages yet. Say hello!</p>
+        )}
         {msgs.map((m) => (
-          <div key={m.id} className={`flex ${m.from === "me" ? "justify-end" : "justify-start"}`}>
+          <div key={m.id} className={`flex ${m.sender_id === user?.id ? "justify-end" : "justify-start"}`}>
             <div className={`max-w-[78%] px-3.5 py-2 rounded-2xl text-sm ${
-              m.from === "me"
+              m.sender_id === user?.id
                 ? "bg-primary text-primary-foreground rounded-br-sm"
                 : "bg-card border border-border rounded-bl-sm"
             }`}>
-              <div>{m.text}</div>
-              <div className={`text-[9px] mt-1 ${m.from === "me" ? "text-primary-foreground/70" : "text-muted-foreground"}`}>{m.time}</div>
+              <div className="whitespace-pre-wrap">{m.content}</div>
+              <div className={`text-[9px] mt-1 ${m.sender_id === user?.id ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+                {new Date(m.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
+              </div>
             </div>
           </div>
         ))}
         <div ref={endRef} />
       </div>
 
-      {/* Composer */}
       <div className="fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
         <div className="max-w-md mx-auto px-3 pb-20">
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide py-2">
@@ -97,7 +157,6 @@ const ChatThread = () => {
             ))}
           </div>
           <div className="flex items-center gap-2 pb-2">
-            <button className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center"><Paperclip className="w-4 h-4 text-muted-foreground" /></button>
             <input
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
@@ -105,7 +164,7 @@ const ChatThread = () => {
               placeholder="Type a message…"
               className="flex-1 rounded-full bg-card border border-border px-4 py-2.5 text-sm"
             />
-            <button onClick={send} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center">
+            <button onClick={send} disabled={sending || !draft.trim()} className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center disabled:opacity-50">
               <Send className="w-4 h-4" />
             </button>
           </div>

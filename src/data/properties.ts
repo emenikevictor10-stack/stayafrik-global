@@ -166,9 +166,9 @@ export const CITIES = [
   { emoji: "🎭", name: "Calabar", count: 58 },
 ];
 
+// v1: Shortlets only. Rentals/sales coming in v2.
 export const CATEGORIES = [
-  { emoji: "🏖️", label: "Shortlets", filter: "Shortlet" as const },
-  { emoji: "🏡", label: "Homes", filter: "For Sale" as const },
-  { emoji: "🌱", label: "Land", filter: "Land" as const },
-  { emoji: "🏢", label: "Commercial", filter: "Commercial" as const },
+  { emoji: "🏖️", label: "Beachfront", filter: "Shortlet" as const },
+  { emoji: "🏙️", label: "City", filter: "Shortlet" as const },
+  { emoji: "🏡", label: "Family", filter: "Shortlet" as const },
 ];

@@ -1,154 +1,180 @@
 import { TopBar } from "@/components/shell/TopBar";
-import { ChevronLeft, Upload, Check, Clock, AlertCircle } from "lucide-react";
+import { ChevronLeft, Upload, Check, Clock, AlertCircle, IdCard, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
-const tiers = [
-  { n: "Tier 1", l: "Identity", done: true },
-  { n: "Tier 2", l: "Professional", done: true, current: true },
-  { n: "Tier 3", l: "Premium", done: false },
+const ID_TYPES = [
+  { v: "nin", l: "National ID (NIN)" },
+  { v: "passport", l: "International passport" },
+  { v: "drivers_license", l: "Driver's license" },
+  { v: "voter_card", l: "Voter's card" },
 ];
 
-const docs = [
-  { e: "🪪", l: "Government ID", s: "approved", note: "NIN verified · Mar 2024" },
-  { e: "🤳", l: "Selfie liveness", s: "approved", note: "Match score 99%" },
-  { e: "📜", l: "REDAN certificate", s: "approved", note: "Valid till 2026" },
-  { e: "🏢", l: "Office address proof", s: "review", note: "Reviewing · ~24h" },
-  { e: "💼", l: "Tax ID (TIN)", s: "missing", note: "Required for Tier 3" },
-  { e: "🎓", l: "Real-estate license", s: "missing", note: "Optional · boosts trust" },
-];
-
-const statusMap = {
-  approved: { c: "bg-success/15 text-success border-success/30", i: Check, l: "Approved" },
-  review: { c: "bg-info/15 text-info border-info/30", i: Clock, l: "In review" },
-  missing: { c: "bg-secondary text-muted-foreground border-border", i: AlertCircle, l: "Missing" },
-} as const;
+type Submission = {
+  id: string;
+  id_type: string;
+  id_number: string;
+  id_image_url: string;
+  status: "pending" | "approved" | "rejected";
+  reviewer_notes: string | null;
+  reviewed_at: string | null;
+  created_at: string;
+};
 
 const Verification = () => {
-  const score = 78;
-  const radius = 56;
-  const circ = 2 * Math.PI * radius;
-  const dash = (score / 100) * circ;
+  const { user } = useAuth();
+  const fileInput = useRef<HTMLInputElement>(null);
+  const [loading, setLoading] = useState(true);
+  const [submission, setSubmission] = useState<Submission | null>(null);
+  const [idType, setIdType] = useState("nin");
+  const [idNumber, setIdNumber] = useState("");
+  const [imagePath, setImagePath] = useState<string | null>(null);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+
+  useEffect(() => {
+    if (!user) return;
+    (async () => {
+      const { data } = await supabase.from("kyc_submissions").select("*").eq("user_id", user.id).maybeSingle();
+      if (data) {
+        setSubmission(data as Submission);
+        setIdType(data.id_type);
+        setIdNumber(data.id_number);
+      }
+      setLoading(false);
+    })();
+  }, [user]);
+
+  const upload = async (file: File) => {
+    if (!user) return;
+    setUploading(true);
+    try {
+      if (!file.type.startsWith("image/")) throw new Error("Upload an image file");
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("kyc-documents").upload(path, file, { upsert: false });
+      if (error) throw error;
+      setImagePath(path);
+      setImagePreview(URL.createObjectURL(file));
+      toast.success("ID uploaded");
+    } catch (e: any) {
+      toast.error(e.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const submit = async () => {
+    if (!user) return;
+    if (!idNumber.trim()) return toast.error("Enter your ID number");
+    if (!imagePath && !submission) return toast.error("Upload a photo of your ID");
+    setSubmitting(true);
+    const payload = {
+      user_id: user.id,
+      id_type: idType,
+      id_number: idNumber.trim(),
+      id_image_url: imagePath || submission?.id_image_url || "",
+      status: "pending" as const,
+    };
+    const { error } = await supabase.from("kyc_submissions").upsert(payload, { onConflict: "user_id" });
+    setSubmitting(false);
+    if (error) return toast.error(error.message);
+    toast.success("Submitted for review");
+    const { data } = await supabase.from("kyc_submissions").select("*").eq("user_id", user.id).maybeSingle();
+    if (data) setSubmission(data as Submission);
+  };
+
+  const statusBadge = () => {
+    if (!submission) return null;
+    const map = {
+      pending: { c: "bg-info/15 text-info border-info/30", I: Clock, l: "In review" },
+      approved: { c: "bg-success/15 text-success border-success/30", I: Check, l: "Approved" },
+      rejected: { c: "bg-destructive/15 text-destructive border-destructive/30", I: AlertCircle, l: "Rejected" },
+    } as const;
+    const m = map[submission.status];
+    return (
+      <span className={`text-[10px] font-bold px-2 py-1 rounded-full border flex items-center gap-1 ${m.c}`}>
+        <m.I className="w-3 h-3" /> {m.l}
+      </span>
+    );
+  };
 
   return (
     <>
-      <TopBar title="Verification" subtitle="Build buyer trust" />
+      <TopBar title="Verification" subtitle="Basic KYC" />
       <main className="px-5 pt-4 pb-8">
-        <Link
-          to="/profile"
-          className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-3"
-        >
+        <Link to="/profile" className="inline-flex items-center gap-1 text-xs text-muted-foreground mb-4">
           <ChevronLeft className="w-3.5 h-3.5" /> Back to profile
         </Link>
 
-        {/* Score ring */}
-        <section className="rounded-3xl bg-card border border-border p-5 flex items-center gap-5">
-          <div className="relative w-32 h-32 shrink-0">
-            <svg viewBox="0 0 128 128" className="w-full h-full -rotate-90">
-              <circle cx="64" cy="64" r={radius} fill="none" stroke="hsl(var(--border))" strokeWidth="8" />
-              <circle
-                cx="64"
-                cy="64"
-                r={radius}
-                fill="none"
-                stroke="hsl(var(--primary))"
-                strokeWidth="8"
-                strokeLinecap="round"
-                strokeDasharray={`${dash} ${circ}`}
-                className="transition-all duration-700"
-                style={{ filter: "drop-shadow(0 0 8px hsl(var(--primary) / 0.5))" }}
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center">
-              <div className="text-3xl font-extrabold text-primary">{score}</div>
-              <div className="text-[10px] text-muted-foreground uppercase tracking-wider">Trust score</div>
-            </div>
-          </div>
-          <div className="flex-1 min-w-0">
-            <span className="inline-block px-2 py-0.5 rounded-full bg-success/15 border border-success/30 text-[10px] font-bold text-success">
-              ✓ Tier 2 active
-            </span>
-            <p className="mt-2 text-sm font-semibold leading-snug">
-              You're <span className="text-primary">2 documents</span> away from Tier 3.
-            </p>
-            <p className="text-[11px] text-muted-foreground mt-1">
-              Tier 3 unlocks lower commission & priority placement.
-            </p>
-          </div>
-        </section>
-
-        {/* Tier ladder */}
-        <section className="mt-4 rounded-2xl bg-card border border-border p-4">
-          <div className="flex items-center justify-between">
-            {tiers.map((t, i) => (
-              <div key={t.n} className="flex flex-col items-center flex-1 relative">
-                {i > 0 && (
-                  <div
-                    className={`absolute right-1/2 top-4 w-full h-0.5 ${
-                      tiers[i - 1].done ? "bg-primary" : "bg-border"
-                    }`}
-                  />
-                )}
-                <div
-                  className={`relative w-9 h-9 rounded-full border-2 flex items-center justify-center text-xs font-bold ${
-                    t.done
-                      ? "bg-primary text-primary-foreground border-primary"
-                      : t.current
-                      ? "bg-primary/20 border-primary text-primary"
-                      : "bg-secondary border-border text-muted-foreground"
-                  }`}
-                >
-                  {t.done ? "✓" : i + 1}
-                </div>
-                <div className="text-[10px] font-bold mt-1.5">{t.n}</div>
-                <div className="text-[9px] text-muted-foreground">{t.l}</div>
+        {loading ? (
+          <div className="text-center py-8"><div className="w-6 h-6 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin" /></div>
+        ) : (
+          <>
+            <section className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
+                <IdCard className="w-5 h-5 text-primary" />
               </div>
-            ))}
-          </div>
-        </section>
+              <div className="flex-1">
+                <div className="text-sm font-bold">Government-issued ID</div>
+                <div className="text-[11px] text-muted-foreground">Required to host or receive payouts.</div>
+              </div>
+              {statusBadge()}
+            </section>
 
-        {/* Documents */}
-        <section className="mt-5">
-          <h3 className="text-sm font-bold mb-3">Documents</h3>
-          <div className="space-y-2">
-            {docs.map((d) => {
-              const meta = statusMap[d.s as keyof typeof statusMap];
-              const Icon = meta.i;
-              return (
-                <div
-                  key={d.l}
-                  className="flex items-center gap-3 rounded-2xl bg-card border border-border p-3.5"
-                >
-                  <div className="w-10 h-10 rounded-xl bg-secondary border border-border flex items-center justify-center text-lg shrink-0">
-                    {d.e}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-sm font-semibold">{d.l}</div>
-                    <div className="text-[11px] text-muted-foreground truncate">{d.note}</div>
-                  </div>
-                  {d.s === "missing" ? (
-                    <button
-                      onClick={() => toast.success(`Upload flow for ${d.l}`)}
-                      className="px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center gap-1"
-                    >
-                      <Upload className="w-3 h-3" /> Upload
-                    </button>
-                  ) : (
-                    <span
-                      className={`text-[10px] font-bold px-2 py-1 rounded-full border flex items-center gap-1 ${meta.c}`}
-                    >
-                      <Icon className="w-3 h-3" /> {meta.l}
-                    </span>
-                  )}
+            {submission?.status === "approved" ? (
+              <p className="mt-4 text-sm text-success text-center">Your identity is verified.</p>
+            ) : (
+              <section className="mt-4 space-y-3">
+                <label className="block">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase">ID type</span>
+                  <select value={idType} onChange={(e) => setIdType(e.target.value)} className="mt-1.5 w-full rounded-xl bg-card border border-border px-3 py-3 text-sm">
+                    {ID_TYPES.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
+                  </select>
+                </label>
+                <label className="block">
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase">ID number</span>
+                  <input value={idNumber} onChange={(e) => setIdNumber(e.target.value)} placeholder="e.g. 12345678901"
+                    className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm" />
+                </label>
+
+                <div>
+                  <span className="text-[11px] font-semibold text-muted-foreground uppercase">Photo of ID</span>
+                  <input ref={fileInput} type="file" accept="image/*" capture="environment" hidden
+                    onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
+                  <button onClick={() => fileInput.current?.click()} disabled={uploading}
+                    className="mt-1.5 w-full aspect-video rounded-xl border-2 border-dashed border-border bg-card flex flex-col items-center justify-center text-muted-foreground hover:border-primary hover:text-primary">
+                    {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : imagePreview || submission?.id_image_url ? (
+                      <img src={imagePreview || ""} alt="ID" className="w-full h-full object-contain rounded-xl" />
+                    ) : (
+                      <>
+                        <Upload className="w-6 h-6 mb-1" />
+                        <span className="text-xs font-semibold">Upload front of ID</span>
+                      </>
+                    )}
+                  </button>
                 </div>
-              );
-            })}
-          </div>
-        </section>
 
-        <p className="text-center text-[10px] text-muted-foreground mt-6">
-          🔒 Documents are encrypted and reviewed by our compliance team within 48h.
-        </p>
+                <button onClick={submit} disabled={submitting}
+                  className="w-full rounded-2xl bg-primary text-primary-foreground py-3.5 font-bold text-sm disabled:opacity-50">
+                  {submitting ? "Submitting…" : submission ? "Resubmit" : "Submit for review"}
+                </button>
+
+                {submission?.status === "rejected" && submission.reviewer_notes && (
+                  <p className="text-xs text-destructive">Rejected: {submission.reviewer_notes}</p>
+                )}
+              </section>
+            )}
+
+            <p className="text-center text-[10px] text-muted-foreground mt-6">
+              Documents are encrypted and reviewed by our compliance team within 48h.
+            </p>
+          </>
+        )}
       </main>
     </>
   );

@@ -49,19 +49,22 @@ const ThirdTab = () => {
   return role === "client" ? <Bookings /> : <Escrow />;
 };
 
+const PushBridge = () => { usePushNotifications(); return null; };
+
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
       <Sonner position="top-center" />
       <AuthProvider>
         <RoleProvider>
+          <PushBridge />
           <BrowserRouter>
             <Routes>
               <Route path="/auth" element={<Auth />} />
               <Route path="/reset-password" element={<ResetPassword />} />
               <Route path="/welcome" element={<Welcome />} />
               <Route element={<ProtectedRoute />}>
-                <Route element={<MobileShell />}>
+                <Route element={<PinGate><MobileShell /></PinGate>}>
                   <Route path="/" element={<Index />} />
                   <Route path="/explore" element={<SecondTab />} />
                   <Route path="/listings" element={<SecondTab />} />
@@ -82,6 +85,7 @@ const App = () => (
                   <Route path="/profile/language" element={<LanguageCurrency />} />
                   <Route path="/profile/help" element={<Help />} />
                   <Route path="/profile/payments" element={<PaymentMethods />} />
+                  <Route path="/profile/pin" element={<PinSettings />} />
                   <Route path="/notifications" element={<Notifications />} />
                   <Route path="/property/:id" element={<PropertyDetail />} />
                   <Route path="/property/:id/book" element={<BookProperty />} />

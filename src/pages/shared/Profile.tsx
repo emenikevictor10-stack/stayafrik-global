@@ -18,12 +18,10 @@ import {
   User,
   Briefcase,
   Lock,
-  Bell,
   type LucideIcon,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
-import { requestPushPermission } from "@/hooks/usePushNotifications";
 
 type Item = { Icon: LucideIcon; l: string; to: string };
 
@@ -90,18 +88,6 @@ const Profile = () => {
           className="mt-4 w-full rounded-2xl border border-primary/40 bg-primary/10 text-primary py-3 text-sm font-bold hover:bg-primary/15"
         >
           Switch to <span className="inline-flex items-center gap-1">{role === "client" ? <><Briefcase className="w-3.5 h-3.5" /> Agent</> : <><User className="w-3.5 h-3.5" /> Client</>}</span> mode
-        </button>
-
-        <button
-          onClick={async () => {
-            const r = await requestPushPermission();
-            if (r === "granted") toast.success("Push notifications enabled");
-            else if (r === "denied") toast.error("Permission blocked. Enable it from your browser settings.");
-            else if (r === "unsupported") toast.error("This browser doesn't support push notifications");
-          }}
-          className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-2xl border border-border bg-card text-foreground py-3 text-sm font-bold"
-        >
-          <Bell className="w-4 h-4" /> Enable push notifications
         </button>
 
         <section className="mt-5 rounded-2xl bg-card border border-border overflow-hidden divide-y divide-border">

@@ -2,11 +2,10 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import type { Property } from "@/data/properties";
 
-const BROWSER_KEY = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as string | undefined;
-const CHANNEL = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as string | undefined;
+const BROWSER_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
 
 let mapsPromise: Promise<any> | null = null;
-const loadMaps = () => {
+export const loadMaps = () => {
   if (typeof window === "undefined") return Promise.reject(new Error("no window"));
   if ((window as any).google?.maps) return Promise.resolve((window as any).google);
   if (mapsPromise) return mapsPromise;
@@ -14,7 +13,7 @@ const loadMaps = () => {
     if (!BROWSER_KEY) { reject(new Error("Google Maps key missing")); return; }
     (window as any).__stayInitMap = () => resolve((window as any).google);
     const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${BROWSER_KEY}&loading=async&callback=__stayInitMap${CHANNEL ? `&channel=${CHANNEL}` : ""}&libraries=places`;
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${BROWSER_KEY}&loading=async&callback=__stayInitMap&libraries=places`;
     s.async = true;
     s.onerror = () => reject(new Error("Failed to load Google Maps"));
     document.head.appendChild(s);

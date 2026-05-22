@@ -1,5 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { RoleProvider, useRole } from "@/contexts/RoleContext";
@@ -36,14 +37,10 @@ import PaymentMethods from "./pages/client/PaymentMethods";
 import PinSettings from "./pages/shared/PinSettings";
 import { PinGate } from "@/components/auth/PinGate";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
+import { SplashSequence, hasSeenSplash } from "@/components/splash/SplashSequence";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
-
-const SecondTab = () => {
-  const { role } = useRole();
-  return role === "client" ? <Explore /> : <Listings />;
-};
 
 const ThirdTab = () => {
   const { role } = useRole();
@@ -51,6 +48,12 @@ const ThirdTab = () => {
 };
 
 const PushBridge = () => { usePushNotifications(); return null; };
+
+const SplashGate = ({ children }: { children: React.ReactNode }) => {
+  const [seen, setSeen] = useState(() => hasSeenSplash());
+  if (!seen) return <SplashSequence onDone={() => setSeen(true)} />;
+  return <>{children}</>;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -60,41 +63,49 @@ const App = () => (
         <RoleProvider>
           <PushBridge />
           <BrowserRouter>
-            <Routes>
-              <Route path="/auth" element={<Auth />} />
-              <Route path="/reset-password" element={<ResetPassword />} />
-              <Route path="/welcome" element={<Welcome />} />
-              <Route element={<ProtectedRoute />}>
+            <SplashGate>
+              <Routes>
+                <Route path="/auth" element={<Auth />} />
+                <Route path="/reset-password" element={<ResetPassword />} />
+                <Route path="/welcome" element={<Welcome />} />
+
+                {/* Public routes — explore is the default page, browsable without login */}
                 <Route element={<PinGate><MobileShell /></PinGate>}>
                   <Route path="/" element={<Index />} />
-                  <Route path="/explore" element={<SecondTab />} />
-                  <Route path="/listings" element={<SecondTab />} />
-                  <Route path="/listings/new" element={<NewListing />} />
-                  <Route path="/listings/:id/edit" element={<EditListing />} />
-                  <Route path="/bookings" element={<ThirdTab />} />
-                  <Route path="/escrow" element={<ThirdTab />} />
-                  <Route path="/escrow/:code" element={<EscrowDetail />} />
-                  <Route path="/messages" element={<Messages />} />
-                  <Route path="/messages/:agentId" element={<ChatThread />} />
-                  <Route path="/profile" element={<Profile />} />
-                  <Route path="/profile/edit" element={<EditProfile />} />
-                  <Route path="/profile/agent" element={<AgentProfile />} />
-                  <Route path="/profile/verification" element={<Verification />} />
-                  <Route path="/profile/commission" element={<Commission />} />
-                  <Route path="/profile/payout" element={<PayoutAccount />} />
-                  <Route path="/profile/performance" element={<Performance />} />
-                  <Route path="/profile/language" element={<LanguageCurrency />} />
-                  <Route path="/profile/help" element={<Help />} />
-                  <Route path="/profile/payments" element={<PaymentMethods />} />
-                  <Route path="/profile/pin" element={<PinSettings />} />
-                  <Route path="/notifications" element={<Notifications />} />
+                  <Route path="/explore" element={<Index />} />
                   <Route path="/property/:id" element={<PropertyDetail />} />
-                  <Route path="/property/:id/book" element={<BookProperty />} />
-                  <Route path="/booking/confirm" element={<BookingConfirm />} />
                 </Route>
-              </Route>
-              <Route path="*" element={<NotFound />} />
-            </Routes>
+
+                {/* Authenticated routes */}
+                <Route element={<ProtectedRoute />}>
+                  <Route element={<PinGate><MobileShell /></PinGate>}>
+                    <Route path="/listings" element={<Listings />} />
+                    <Route path="/listings/new" element={<NewListing />} />
+                    <Route path="/listings/:id/edit" element={<EditListing />} />
+                    <Route path="/bookings" element={<ThirdTab />} />
+                    <Route path="/escrow" element={<ThirdTab />} />
+                    <Route path="/escrow/:code" element={<EscrowDetail />} />
+                    <Route path="/messages" element={<Messages />} />
+                    <Route path="/messages/:agentId" element={<ChatThread />} />
+                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/profile/edit" element={<EditProfile />} />
+                    <Route path="/profile/agent" element={<AgentProfile />} />
+                    <Route path="/profile/verification" element={<Verification />} />
+                    <Route path="/profile/commission" element={<Commission />} />
+                    <Route path="/profile/payout" element={<PayoutAccount />} />
+                    <Route path="/profile/performance" element={<Performance />} />
+                    <Route path="/profile/language" element={<LanguageCurrency />} />
+                    <Route path="/profile/help" element={<Help />} />
+                    <Route path="/profile/payments" element={<PaymentMethods />} />
+                    <Route path="/profile/pin" element={<PinSettings />} />
+                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/property/:id/book" element={<BookProperty />} />
+                    <Route path="/booking/confirm" element={<BookingConfirm />} />
+                  </Route>
+                </Route>
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </SplashGate>
           </BrowserRouter>
         </RoleProvider>
       </AuthProvider>

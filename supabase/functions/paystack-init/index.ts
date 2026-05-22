@@ -49,44 +49,88 @@ Deno.serve(async (req) => {
     const total = subtotal + fees;
     const amountKobo = Math.round(total * 100);
 
-    const key = Deno.env.get("PAYSTACK_SECRET_KEY");
+    const key = Deno.env.get("PAYSTACK_SECRET_KEY")?.trim();
     if (!key) return json(500, { error: "Paystack is not configured" });
+
+    // Validate Paystack key format
+    const isTestKey = key.startsWith("sk_test_");
+    const isLiveKey = key.startsWith("sk_live_");
+    if (!isTestKey && !isLiveKey) {
+      return json(500, {
+        error: "Invalid Paystack secret key format. It must start with sk_test_ or sk_live_.",
+      });
+    }
+    const mode = isLiveKey ? "live" : "test";
+    console.log(`[paystack-init] mode=${mode} key_prefix=${key.slice(0, 10)} user=${userId} amount_ngn=${total}`);
 
     const reference = `STAY_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
 
-    const r = await fetch("https://api.paystack.co/transaction/initialize", {
-      method: "POST",
-      headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
-      body: JSON.stringify({
-        email,
-        amount: amountKobo,
-        currency: "NGN",
-        reference,
-        callback_url,
-        metadata: {
-          user_id: userId,
-          listing_id,
-          listing_title: listing.title,
-          check_in,
-          check_out,
-          guests,
-          nights,
-          subtotal,
-          fees,
-          total,
-        },
-      }),
-    });
-    const j = await r.json();
-    if (!r.ok || !j.status) return json(400, { error: j.message || "Could not initialize payment" });
+    let r: Response;
+    try {
+      r = await fetch("https://api.paystack.co/transaction/initialize", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${key}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          amount: amountKobo,
+          currency: "NGN",
+          reference,
+          callback_url,
+          channels: ["card", "bank", "ussd", "bank_transfer", "qr", "mobile_money"],
+          metadata: {
+            user_id: userId,
+            listing_id,
+            listing_title: listing.title,
+            check_in,
+            check_out,
+            guests,
+            nights,
+            subtotal,
+            fees,
+            total,
+            custom_fields: [
+              { display_name: "Listing", variable_name: "listing", value: listing.title },
+              { display_name: "Check-in", variable_name: "check_in", value: check_in },
+              { display_name: "Check-out", variable_name: "check_out", value: check_out },
+              { display_name: "Guests", variable_name: "guests", value: String(guests) },
+            ],
+          },
+        }),
+      });
+    } catch (e) {
+      console.error("[paystack-init] network error", e);
+      return json(502, { error: "Could not reach Paystack. Please try again." });
+    }
+
+    const j = await r.json().catch(() => ({} as any));
+    console.log(`[paystack-init] paystack_status=${r.status} ok=${j?.status} msg=${j?.message}`);
+
+    if (r.status === 401) {
+      return json(401, {
+        error:
+          "Paystack rejected the secret key (401 Unauthorized). The key may be invalid, revoked, or from a different account. Paste the secret key (not the public key) from your Paystack Dashboard → Settings → API Keys & Webhooks.",
+        mode,
+      });
+    }
+    if (!r.ok || !j?.status) {
+      return json(400, {
+        error:
+          j?.message ||
+          `Paystack rejected this transaction (HTTP ${r.status}). If you're on a live key, your business may not yet be activated for live payments, or this transaction was blocked by Paystack's fraud system.`,
+        mode,
+        paystack_status: r.status,
+      });
+    }
 
     return json(200, {
       authorization_url: j.data.authorization_url,
       reference: j.data.reference,
       total,
       nights,
+      mode,
     });
   } catch (e) {
+    console.error("[paystack-init] fatal", e);
     return json(500, { error: (e as Error).message });
   }
 });

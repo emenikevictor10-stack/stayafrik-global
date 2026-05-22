@@ -134,6 +134,11 @@ const Auth = () => {
 
   return (
     <main className="min-h-screen bg-background text-foreground px-6 pt-10 pb-12 max-w-md mx-auto">
+      <Seo
+        title={mode === "signup" ? "Create your Stay account" : mode === "forgot" ? "Reset your Stay password" : "Sign in to Stay"}
+        description="Sign in or create an account to book verified shortlets or list properties on Stay."
+        noindex
+      />
       <button onClick={() => navigate(-1)} className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center mb-6">
         <ChevronLeft className="w-4 h-4" />
       </button>

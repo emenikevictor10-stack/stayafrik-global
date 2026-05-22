@@ -76,7 +76,7 @@ const Messages = () => {
       const p = pmap.get(id);
       return {
         otherId: id,
-        name: p?.full_name || p?.email?.split("@")[0] || "User",
+        name: p?.full_name || "User",
         avatarUrl: p?.avatar_url || null,
         last: latest.content,
         time: formatDistanceToNow(new Date(latest.created_at), { addSuffix: false }),

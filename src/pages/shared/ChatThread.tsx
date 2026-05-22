@@ -117,7 +117,6 @@ const ChatThread = () => {
           </div>
           <div className="flex-1 min-w-0">
             <div className="font-bold text-sm truncate">{name}</div>
-            <div className="text-[11px] text-muted-foreground">{other?.email}</div>
           </div>
         </div>
       </header>

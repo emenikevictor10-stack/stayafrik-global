@@ -75,6 +75,7 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/explore" element={<Index />} />
                   <Route path="/property/:id" element={<PropertyDetail />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 </Route>
 
                 {/* Authenticated routes */}

@@ -202,9 +202,10 @@ const Profile = () => {
         <LogOut className="w-4 h-4" /> Log out
       </button>
 
-      <div className="mt-6 flex items-center justify-center gap-3 text-[10px] text-muted-foreground">
+      <div className="mt-6 flex items-center justify-center gap-3 text-[10px] text-muted-foreground flex-wrap">
         <span>Stay · v0.1 · Africa 🌍</span>
         <Link to="/privacy-policy" className="hover:text-primary transition-colors underline">Privacy</Link>
+        <Link to="/terms" className="hover:text-primary transition-colors underline">Terms</Link>
       </div>
     </main>
   );

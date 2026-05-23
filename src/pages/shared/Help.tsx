@@ -172,9 +172,10 @@ const Help = () => {
           </button>
         </div>
 
-        <div className="mt-6 flex items-center justify-center gap-3 text-[10px] text-muted-foreground">
+        <div className="mt-6 flex items-center justify-center gap-3 text-[10px] text-muted-foreground flex-wrap">
           <span>Stay Support · Lagos, Accra, Nairobi 🌍</span>
           <Link to="/privacy-policy" className="hover:text-primary transition-colors underline">Privacy</Link>
+          <Link to="/terms" className="hover:text-primary transition-colors underline">Terms</Link>
         </div>
       </main>
     </>

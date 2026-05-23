@@ -32,6 +32,7 @@ import Profile from "./pages/shared/Profile";
 import EditProfile from "./pages/shared/EditProfile";
 import LanguageCurrency from "./pages/shared/LanguageCurrency";
 import Help from "./pages/shared/Help";
+import PrivacyPolicy from "./pages/shared/PrivacyPolicy";
 import Notifications from "./pages/shared/Notifications";
 import PaymentMethods from "./pages/client/PaymentMethods";
 import PinSettings from "./pages/shared/PinSettings";
@@ -74,6 +75,7 @@ const App = () => (
                   <Route path="/" element={<Index />} />
                   <Route path="/explore" element={<Index />} />
                   <Route path="/property/:id" element={<PropertyDetail />} />
+                  <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 </Route>
 
                 {/* Authenticated routes */}

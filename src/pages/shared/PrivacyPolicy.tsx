@@ -143,7 +143,7 @@ const sections = [
         <p>If you have questions about this Privacy Policy or how we handle your data, please reach out:</p>
         <div className="grid gap-3">
           <a
-            href="mailto:privacy@stayglobal.app"
+            href="mailto:support@stayglobal.app"
             className="flex items-center gap-3 rounded-2xl bg-card border border-border p-4 hover:border-primary/50 transition-colors"
           >
             <div className="w-10 h-10 rounded-xl bg-background flex items-center justify-center border border-border">
@@ -151,7 +151,7 @@ const sections = [
             </div>
             <div>
               <div className="text-sm font-bold">Email</div>
-              <div className="text-xs text-muted-foreground">privacy@stayglobal.app</div>
+              <div className="text-xs text-muted-foreground">support@stayglobal.app</div>
             </div>
           </a>
           <a

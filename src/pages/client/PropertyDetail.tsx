@@ -20,6 +20,8 @@ const PropertyDetail = () => {
   const { role } = useRole();
   const { session } = useAuth();
   const { data: p, loading } = useListing(id);
+  const { has, toggle } = useWishlist();
+
 
   const handleBook = () => {
     if (!session) {

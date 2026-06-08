@@ -9,6 +9,8 @@ import { SinglePropertyMap } from "@/components/map/PropertyMap";
 import { Seo } from "@/components/seo/Seo";
 import { ImageGallery } from "@/components/property/ImageGallery";
 import { ReviewsSection } from "@/components/property/ReviewsSection";
+import { NearbyServices } from "@/components/property/NearbyServices";
+
 import { useWishlist } from "@/hooks/useWishlist";
 import { cn } from "@/lib/utils";
 

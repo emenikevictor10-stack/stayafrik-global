@@ -7,6 +7,11 @@ import { useRole } from "@/contexts/RoleContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { SinglePropertyMap } from "@/components/map/PropertyMap";
 import { Seo } from "@/components/seo/Seo";
+import { ImageGallery } from "@/components/property/ImageGallery";
+import { ReviewsSection } from "@/components/property/ReviewsSection";
+import { useWishlist } from "@/hooks/useWishlist";
+import { cn } from "@/lib/utils";
+
 
 const PropertyDetail = () => {
   const { id } = useParams();

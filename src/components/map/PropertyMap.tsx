@@ -84,9 +84,10 @@ export const PropertiesMap = ({
           map,
           position: pos,
           title: p.title,
-          icon: pricePinIcon(g),
-          label: { text: fmtPrice(p.priceNum), color: "#0f172a", fontSize: "11px", fontWeight: "700" },
-        });
+          icon: pricePinIcon(g) as any,
+          label: { text: fmtPrice(p.priceNum), color: "#0f172a", fontSize: "11px", fontWeight: "700" } as any,
+        } as any);
+
         m.addListener("click", () => {
           if (onSelect) onSelect(p);
           else {

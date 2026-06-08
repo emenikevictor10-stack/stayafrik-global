@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
 import type { Property } from "@/data/properties";
 
-const BROWSER_KEY = import.meta.env.VITE_GOOGLE_MAPS_API_KEY as string | undefined;
+const BROWSER_KEY = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY as string | undefined;
+const TRACKING_ID = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as string | undefined;
 
 let mapsPromise: Promise<any> | null = null;
 export const loadMaps = () => {
@@ -13,7 +13,8 @@ export const loadMaps = () => {
     if (!BROWSER_KEY) { reject(new Error("Google Maps key missing")); return; }
     (window as any).__stayInitMap = () => resolve((window as any).google);
     const s = document.createElement("script");
-    s.src = `https://maps.googleapis.com/maps/api/js?key=${BROWSER_KEY}&loading=async&callback=__stayInitMap&libraries=places`;
+    const channel = TRACKING_ID ? `&channel=${TRACKING_ID}` : "";
+    s.src = `https://maps.googleapis.com/maps/api/js?key=${BROWSER_KEY}&loading=async&callback=__stayInitMap&libraries=places${channel}`;
     s.async = true;
     s.onerror = () => reject(new Error("Failed to load Google Maps"));
     document.head.appendChild(s);
@@ -43,7 +44,32 @@ export const SinglePropertyMap = ({ p, height = 200 }: { p: Property; height?: n
   return <div ref={ref} className="rounded-2xl overflow-hidden border border-border" style={{ height }} />;
 };
 
-export const PropertiesMap = ({ list, height = 400 }: { list: Property[]; height?: number }) => {
+const fmtPrice = (n: number) => {
+  if (n >= 1_000_000) return `₦${(n / 1_000_000).toFixed(1)}M`;
+  if (n >= 1_000) return `₦${Math.round(n / 1_000)}k`;
+  return `₦${n}`;
+};
+
+const pricePinIcon = (g: any, selected = false): any => ({
+  path: "M -28 -28 L 28 -28 A 14 14 0 0 1 28 0 L 6 0 L 0 12 L -6 0 L -28 0 A 14 14 0 0 1 -28 -28 Z",
+  fillColor: selected ? "#16a34a" : "#ffffff",
+  fillOpacity: 1,
+  strokeColor: selected ? "#16a34a" : "#0f172a",
+  strokeWeight: 1.5,
+  scale: 0.9,
+  labelOrigin: new g.maps.Point(0, -14),
+});
+
+
+export const PropertiesMap = ({
+  list,
+  height = 400,
+  onSelect,
+}: {
+  list: Property[];
+  height?: number;
+  onSelect?: (p: Property) => void;
+}) => {
   const ref = useRef<HTMLDivElement>(null);
   const [err, setErr] = useState(false);
   useEffect(() => {
@@ -55,14 +81,29 @@ export const PropertiesMap = ({ list, height = 400 }: { list: Property[]; height
       const bounds = new g.maps.LatLngBounds();
       list.forEach((p) => {
         const pos = { lat: p.lat, lng: p.lng };
-        const m = new g.maps.Marker({ map, position: pos, title: p.title });
-        const info = new g.maps.InfoWindow({ content: `<div style="font-size:12px"><b>${p.title}</b><br/>${p.location}</div>` });
-        m.addListener("click", () => info.open({ anchor: m, map }));
+        const m = new g.maps.Marker({
+          map,
+          position: pos,
+          title: p.title,
+          icon: pricePinIcon(g) as any,
+          label: { text: fmtPrice(p.priceNum), color: "#0f172a", fontSize: "11px", fontWeight: "700" } as any,
+        } as any);
+
+        m.addListener("click", () => {
+          if (onSelect) onSelect(p);
+          else {
+            const info = new g.maps.InfoWindow({
+              content: `<div style="font-size:12px"><b>${p.title}</b><br/>${p.location}<br/><b>${p.price}</b></div>`,
+            });
+            info.open({ anchor: m, map });
+          }
+        });
         bounds.extend(pos);
       });
       if (list.length > 1) map.fitBounds(bounds);
     }).catch(() => setErr(true));
-  }, [list]);
+    return () => { cancelled = true; };
+  }, [list, onSelect]);
   if (err) return <Fallback height={height} />;
   return <div ref={ref} className="rounded-2xl overflow-hidden border border-border" style={{ height }} />;
 };

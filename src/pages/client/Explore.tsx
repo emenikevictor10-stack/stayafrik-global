@@ -1,27 +1,50 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { PropertyCard } from "@/components/property/PropertyCard";
-import { CATEGORIES } from "@/data/properties";
-import { Search, Map as MapIcon, List as ListIcon } from "lucide-react";
-import { useState } from "react";
+import { CATEGORIES, type Property } from "@/data/properties";
+import { Map as MapIcon, List as ListIcon, X } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { PropertiesMap } from "@/components/map/PropertyMap";
 import { useListings } from "@/hooks/useListings";
 import { Seo } from "@/components/seo/Seo";
+import { SmartSearchBar } from "@/components/search/SmartSearchBar";
+
+// Haversine in km
+const distKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
+  const R = 6371;
+  const toRad = (x: number) => (x * Math.PI) / 180;
+  const dLat = toRad(b.lat - a.lat);
+  const dLng = toRad(b.lng - a.lng);
+  const s = Math.sin(dLat / 2) ** 2 + Math.cos(toRad(a.lat)) * Math.cos(toRad(b.lat)) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(s));
+};
 
 const Explore = () => {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<string | null>(null);
   const [view, setView] = useState<"list" | "map">("list");
+  const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
+  const [selected, setSelected] = useState<Property | null>(null);
   const { data: properties, loading } = useListings();
-  // v1: shortlets only
-  const shortlets = properties.filter((p) => p.type === "Shortlet");
-  const list = shortlets.filter((p) => {
-    const matchesQ =
-      !q ||
-      p.title.toLowerCase().includes(q.toLowerCase()) ||
-      p.location.toLowerCase().includes(q.toLowerCase());
-    return matchesQ;
-  });
+
+  const list = useMemo(() => {
+    const shortlets = properties.filter((p) => p.type === "Shortlet");
+    let out = shortlets.filter((p) => {
+      const matchesQ =
+        !q ||
+        p.title.toLowerCase().includes(q.toLowerCase()) ||
+        p.location.toLowerCase().includes(q.toLowerCase());
+      return matchesQ;
+    });
+    if (nearMe) {
+      out = out
+        .map((p) => ({ p, d: distKm(nearMe, { lat: p.lat, lng: p.lng }) }))
+        .sort((a, b) => a.d - b.d)
+        .map((x) => x.p);
+    }
+    return out;
+  }, [properties, q, nearMe]);
 
   return (
     <>
@@ -31,22 +54,33 @@ const Explore = () => {
       />
       <TopBar title="Explore" subtitle={`${list.length} verified properties`} />
       <main className="px-5 pt-5 pb-8">
-        <div className="flex items-center gap-3 px-4 py-3 rounded-full bg-card border border-border focus-within:border-primary">
-          <Search className="w-4 h-4 text-muted-foreground" />
-          <input
-            value={q}
-            onChange={(e) => setQ(e.target.value)}
-            placeholder="Search city, area or property…"
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground"
-          />
+        <SmartSearchBar
+          value={q}
+          onChange={setQ}
+          onLocate={(c) => {
+            setNearMe(c);
+            setView("map");
+          }}
+          rightSlot={
+            <button
+              onClick={() => setView(view === "list" ? "map" : "list")}
+              className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-primary px-2 py-1 rounded-full hover:bg-primary/10"
+              aria-label="Toggle map view"
+            >
+              {view === "list" ? <><MapIcon className="w-3.5 h-3.5" /><span className="hidden sm:inline">Map</span></> : <><ListIcon className="w-3.5 h-3.5" /><span className="hidden sm:inline">List</span></>}
+            </button>
+          }
+        />
+
+        {nearMe && (
           <button
-            onClick={() => setView(view === "list" ? "map" : "list")}
-            className="shrink-0 inline-flex items-center gap-1.5 text-xs font-semibold text-primary"
-            aria-label="Toggle map view"
+            type="button"
+            onClick={() => setNearMe(null)}
+            className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30"
           >
-            {view === "list" ? <><MapIcon className="w-4 h-4" /> Map</> : <><ListIcon className="w-4 h-4" /> List</>}
+            📍 Sorted by distance · clear <X className="w-3 h-3" />
           </button>
-        </div>
+        )}
 
         <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5 mt-4 pb-1">
           <button
@@ -105,10 +139,38 @@ const Explore = () => {
           ))}
         </section>
 
-
         {view === "map" ? (
-          <div className="mt-5">
-            <PropertiesMap list={list} height={520} />
+          <div className="mt-5 relative">
+            <PropertiesMap list={list} height={520} onSelect={setSelected} />
+            {selected && (
+              <div className="absolute left-3 right-3 bottom-3 z-10">
+                <div className="rounded-2xl bg-card border border-border shadow-xl p-3 flex gap-3 items-center">
+                  <img
+                    src={selected.image}
+                    alt={selected.title}
+                    className="w-16 h-16 rounded-xl object-cover shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold truncate">{selected.title}</div>
+                    <div className="text-[11px] text-muted-foreground truncate">📍 {selected.location}</div>
+                    <div className="text-primary font-extrabold text-sm mt-0.5">{selected.price} <span className="text-[10px] font-medium text-muted-foreground">/night</span></div>
+                  </div>
+                  <button
+                    onClick={() => setSelected(null)}
+                    aria-label="Close"
+                    className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                  <Link
+                    to={`/property/${selected.id}`}
+                    className="text-xs font-bold bg-primary text-primary-foreground px-3 py-2 rounded-full"
+                  >
+                    View
+                  </Link>
+                </div>
+              </div>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-4 mt-5">

@@ -105,30 +105,6 @@ const Explore = () => {
           ))}
         </section>
 
-              "shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold border transition-colors",
-              !filter
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card text-muted-foreground border-border",
-            )}
-          >
-            ✨ All
-          </button>
-          {CATEGORIES.map((c) => (
-            <button
-              key={c.label}
-              onClick={() => setFilter(c.filter)}
-              className={cn(
-                "shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold border transition-colors",
-                filter === c.filter
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card text-muted-foreground border-border",
-              )}
-            >
-              <span>{c.emoji}</span>
-              {c.label}
-            </button>
-          ))}
-        </div>
 
         {view === "map" ? (
           <div className="mt-5">

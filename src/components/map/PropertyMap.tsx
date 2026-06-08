@@ -50,7 +50,7 @@ const fmtPrice = (n: number) => {
   return `₦${n}`;
 };
 
-const pricePinIcon = (g: any, label: string, selected = false) => ({
+const pricePinIcon = (g: any, selected = false): any => ({
   path: "M -28 -28 L 28 -28 A 14 14 0 0 1 28 0 L 6 0 L 0 12 L -6 0 L -28 0 A 14 14 0 0 1 -28 -28 Z",
   fillColor: selected ? "#16a34a" : "#ffffff",
   fillOpacity: 1,
@@ -59,6 +59,7 @@ const pricePinIcon = (g: any, label: string, selected = false) => ({
   scale: 0.9,
   labelOrigin: new g.maps.Point(0, -14),
 });
+
 
 export const PropertiesMap = ({
   list,

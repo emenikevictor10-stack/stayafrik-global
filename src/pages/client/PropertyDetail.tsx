@@ -80,16 +80,10 @@ const PropertyDetail = () => {
         jsonLd={jsonLd}
       />
       {/* Image header */}
-      <div className="relative aspect-[4/3] bg-secondary">
-        <img
-          src={p.image}
-          alt={p.title}
-          width={800}
-          height={640}
-          className="w-full h-full object-cover"
-        />
-        <div className="absolute inset-0 bg-gradient-to-b from-background/70 via-transparent to-transparent" />
-        <div className="absolute top-4 left-4 right-4 flex items-center justify-between">
+      <div className="relative">
+        <ImageGallery images={p.images && p.images.length ? p.images : [p.image]} alt={p.title} />
+        <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/70 via-transparent to-transparent pointer-events-none" />
+        <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
           <button
             onClick={() => navigate(-1)}
             className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-md border border-border flex items-center justify-center"
@@ -99,13 +93,21 @@ const PropertyDetail = () => {
           </button>
           <div className="flex gap-2">
             <button
-              onClick={() => toast.success("Saved to favourites")}
+              onClick={() => {
+                const saved = toggle(p.id);
+                toast.success(saved ? "Saved to wishlist" : "Removed from wishlist");
+              }}
+              aria-label={has(p.id) ? "Remove from saved" : "Save property"}
               className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-md border border-border flex items-center justify-center"
             >
-              <Heart className="w-4 h-4" />
+              <Heart className={cn("w-4 h-4", has(p.id) && "fill-primary text-primary")} />
             </button>
             <button
-              onClick={() => toast.success("Link copied")}
+              onClick={() => {
+                navigator.clipboard?.writeText(window.location.href).catch(() => {});
+                toast.success("Link copied");
+              }}
+              aria-label="Share"
               className="w-10 h-10 rounded-full bg-background/80 backdrop-blur-md border border-border flex items-center justify-center"
             >
               <Share2 className="w-4 h-4" />
@@ -113,6 +115,7 @@ const PropertyDetail = () => {
           </div>
         </div>
       </div>
+
 
       <div className="px-5 pt-5">
         <div className="flex items-center gap-2 flex-wrap">

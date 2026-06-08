@@ -1,8 +1,19 @@
 import { Link } from "react-router-dom";
 import type { Property } from "@/data/properties";
-import { Star } from "lucide-react";
+import { Star, Heart, BedDouble, Bath } from "lucide-react";
+import { useWishlist } from "@/hooks/useWishlist";
+import { cn } from "@/lib/utils";
 
 export const PropertyCard = ({ p }: { p: Property }) => {
+  const { has, toggle } = useWishlist();
+  const saved = has(p.id);
+
+  const onHeart = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    toggle(p.id);
+  };
+
   return (
     <Link
       to={`/property/${p.id}`}
@@ -22,17 +33,27 @@ export const PropertyCard = ({ p }: { p: Property }) => {
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-background/70 backdrop-blur-md border border-primary/30 text-[10px] font-semibold text-primary">
             <span aria-hidden>{p.emoji}</span> {p.type}
           </span>
-          {p.verified && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-success text-white text-[10px] font-bold">
-              ✓ Verified
-            </span>
-          )}
+          <button
+            type="button"
+            onClick={onHeart}
+            aria-label={saved ? "Remove from saved" : "Save property"}
+            className="w-9 h-9 rounded-full bg-background/80 backdrop-blur-md border border-border flex items-center justify-center hover:scale-110 transition-transform"
+          >
+            <Heart className={cn("w-4 h-4", saved ? "fill-primary text-primary" : "text-foreground")} />
+          </button>
         </div>
-        <div className="absolute bottom-3 left-3 right-3 flex items-end justify-between">
-          <div className="text-primary font-extrabold text-lg drop-shadow-lg">
+        {p.verified && (
+          <div className="absolute bottom-3 left-3">
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-success text-white text-[10px] font-bold shadow-lg">
+              ✓ Verified Host
+            </span>
+          </div>
+        )}
+        <div className="absolute bottom-3 right-3">
+          <div className="text-primary font-extrabold text-base drop-shadow-lg bg-background/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-primary/30">
             {p.price}
             {p.type === "Shortlet" && (
-              <span className="text-xs font-medium text-foreground/80"> /night</span>
+              <span className="text-[10px] font-medium text-foreground/80"> /night</span>
             )}
           </div>
         </div>
@@ -43,14 +64,15 @@ export const PropertyCard = ({ p }: { p: Property }) => {
           <span className="inline-flex items-center gap-0.5 text-xs font-medium shrink-0">
             <Star className="w-3 h-3 fill-primary text-primary" />
             {p.rating}
+            <span className="text-muted-foreground ml-0.5">({p.reviews})</span>
           </span>
         </div>
         <p className="text-xs text-muted-foreground mt-0.5 truncate">📍 {p.location}</p>
         {p.beds > 0 && (
           <div className="flex items-center gap-3 mt-2.5 text-[11px] text-muted-foreground">
-            <span>🛏️ {p.beds} bed</span>
-            <span>🛁 {p.baths} bath</span>
-            <span>📐 {p.area}</span>
+            <span className="inline-flex items-center gap-1"><BedDouble className="w-3 h-3" />{p.beds} bed</span>
+            <span className="inline-flex items-center gap-1"><Bath className="w-3 h-3" />{p.baths} bath</span>
+            {p.area && <span>📐 {p.area}</span>}
           </div>
         )}
       </div>

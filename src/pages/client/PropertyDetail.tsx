@@ -193,11 +193,14 @@ const PropertyDetail = () => {
           </div>
         </section>
 
+        <ReviewsSection listingId={p.id} rating={p.rating} reviewsCount={p.reviews} />
+
         <section className="mt-6">
           <h2 className="font-bold text-sm mb-3">Location</h2>
           <SinglePropertyMap p={p} height={220} />
           <p className="text-[11px] text-muted-foreground mt-2">📍 {p.location}</p>
         </section>
+
 
         <section className="mt-6 rounded-2xl bg-card border border-border p-4">
           <div className="flex items-center gap-2 mb-2">

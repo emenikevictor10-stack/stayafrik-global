@@ -50,10 +50,9 @@ export type ListingRow = {
 };
 
 export const rowToProperty = (r: ListingRow): Property => {
-  const firstImg = r.images?.[0];
-  const image = firstImg
-    ? seedImageMap[firstImg] || firstImg
-    : placeholderImg;
+  const mappedAll = (r.images || []).map((i) => seedImageMap[i] || i);
+  const images = mappedAll.length ? mappedAll : [placeholderImg];
+  const image = images[0];
   return {
     id: r.id,
     title: r.title,
@@ -70,6 +69,7 @@ export const rowToProperty = (r: ListingRow): Property => {
     agentEmoji: "🧑🏾‍💼",
     emoji: typeEmoji(r.type),
     image,
+    images,
     rating: Number(r.rating),
     reviews: r.reviews_count,
     desc: r.description || "",
@@ -78,6 +78,7 @@ export const rowToProperty = (r: ListingRow): Property => {
     lng: r.lng ?? 8.6753,
   };
 };
+
 
 export const useListings = () => {
   const [data, setData] = useState<Property[]>([]);

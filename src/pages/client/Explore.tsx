@@ -77,6 +77,35 @@ const Explore = () => {
           ))}
         </div>
 
+        {/* Platform stats */}
+        <section className="mt-5 grid grid-cols-3 gap-2">
+          {[
+            { n: "5,000+", l: "Verified Listings" },
+            { n: "10,000+", l: "Happy Guests" },
+            { n: "2,000+", l: "Verified Hosts" },
+          ].map((s) => (
+            <div key={s.l} className="rounded-2xl bg-card border border-border p-3 text-center">
+              <div className="text-primary font-extrabold text-base leading-none">{s.n}</div>
+              <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{s.l}</div>
+            </div>
+          ))}
+        </section>
+
+        {/* Trust badges */}
+        <section className="mt-3 grid grid-cols-3 gap-2">
+          {[
+            { e: "✓", t: "Verified Listings", c: "text-success" },
+            { e: "🔒", t: "Secure Paystack", c: "text-primary" },
+            { e: "💬", t: "24/7 Support", c: "text-primary" },
+          ].map((b) => (
+            <div key={b.t} className="rounded-2xl bg-card border border-border p-2.5 flex flex-col items-center text-center gap-1">
+              <div className={cn("text-base", b.c)}>{b.e}</div>
+              <div className="text-[10px] font-semibold leading-tight">{b.t}</div>
+            </div>
+          ))}
+        </section>
+
+
         {view === "map" ? (
           <div className="mt-5">
             <PropertiesMap list={list} height={520} />

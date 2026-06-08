@@ -23,6 +23,7 @@ export type Property = {
   agentEmoji: string;
   emoji: string;
   image: string;
+  images?: string[];
   rating: number;
   reviews: number;
   desc: string;
@@ -30,6 +31,7 @@ export type Property = {
   lat: number;
   lng: number;
 };
+
 
 const baseAmenities = [
   { emoji: "📶", label: "Fast Wi-Fi" },

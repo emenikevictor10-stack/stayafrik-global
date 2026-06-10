@@ -155,12 +155,12 @@ const Profile = () => {
               : "Explore stays and book trips as a client"}
           </p>
           <button
-            onClick={switchRole}
+            onClick={() => (role === "client" ? navigate("/become-host") : switchRole())}
             className="rounded-full bg-primary text-primary-foreground px-5 py-3 text-sm font-extrabold shadow-glow inline-flex items-center gap-2"
           >
             {role === "client" ? (
               <>
-                <Briefcase className="w-4 h-4" /> List your place
+                <Briefcase className="w-4 h-4" /> Start hosting
               </>
             ) : (
               <>

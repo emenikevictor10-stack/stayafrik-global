@@ -88,14 +88,14 @@ const BecomeHost = () => {
       );
       await supabase.from("profiles").update({ is_host: true }).eq("user_id", user.id);
 
-      // Save payout account (using existing payment_methods table as a generic store)
+      // Save payout details into payment_methods (re-using the table to store bank account fingerprint)
       await supabase.from("payment_methods").insert({
         user_id: user.id,
-        kind: "bank_account",
-        provider: bankName,
+        brand: bankName,
         last4: accountNumber.slice(-4),
-        details: { bank_name: bankName, account_number: accountNumber, account_name: accountName },
-      } as any);
+        holder_name: accountName,
+        is_default: true,
+      });
 
       setRole("agent");
       await refreshProfile();

@@ -254,6 +254,42 @@ export type Database = {
         }
         Relationships: []
       }
+      otp_codes: {
+        Row: {
+          attempts: number
+          channel: string
+          code_hash: string
+          consumed: boolean
+          created_at: string
+          expires_at: string
+          id: string
+          identifier: string
+          purpose: string
+        }
+        Insert: {
+          attempts?: number
+          channel: string
+          code_hash: string
+          consumed?: boolean
+          created_at?: string
+          expires_at: string
+          id?: string
+          identifier: string
+          purpose?: string
+        }
+        Update: {
+          attempts?: number
+          channel?: string
+          code_hash?: string
+          consumed?: boolean
+          created_at?: string
+          expires_at?: string
+          id?: string
+          identifier?: string
+          purpose?: string
+        }
+        Relationships: []
+      }
       payment_methods: {
         Row: {
           brand: string
@@ -295,10 +331,12 @@ export type Database = {
           avatar_url: string | null
           created_at: string
           email: string | null
+          email_verified: boolean
           full_name: string | null
           id: string
           is_host: boolean
           phone: string | null
+          phone_verified: boolean
           updated_at: string
           user_id: string
         }
@@ -306,10 +344,12 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          email_verified?: boolean
           full_name?: string | null
           id?: string
           is_host?: boolean
           phone?: string | null
+          phone_verified?: boolean
           updated_at?: string
           user_id: string
         }
@@ -317,10 +357,12 @@ export type Database = {
           avatar_url?: string | null
           created_at?: string
           email?: string | null
+          email_verified?: boolean
           full_name?: string | null
           id?: string
           is_host?: boolean
           phone?: string | null
+          phone_verified?: boolean
           updated_at?: string
           user_id?: string
         }

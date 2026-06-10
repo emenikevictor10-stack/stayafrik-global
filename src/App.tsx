@@ -17,6 +17,7 @@ import Bookings from "./pages/client/Bookings";
 import BookProperty from "./pages/client/BookProperty";
 import BookingConfirm from "./pages/client/BookingConfirm";
 import Listings from "./pages/agent/Listings";
+import BecomeHost from "./pages/agent/BecomeHost";
 import NewListing from "./pages/agent/NewListing";
 import EditListing from "./pages/agent/EditListing";
 import Escrow from "./pages/agent/Escrow";
@@ -84,6 +85,7 @@ const App = () => (
                 <Route element={<ProtectedRoute />}>
                   <Route element={<PinGate><MobileShell /></PinGate>}>
                     <Route path="/listings" element={<Listings />} />
+                    <Route path="/become-host" element={<BecomeHost />} />
                     <Route path="/listings/new" element={<NewListing />} />
                     <Route path="/listings/:id/edit" element={<EditListing />} />
                     <Route path="/bookings" element={<ThirdTab />} />

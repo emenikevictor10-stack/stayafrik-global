@@ -95,7 +95,7 @@ export const SplashSequence = ({ onDone }: { onDone: () => void }) => {
             <div className="flex items-center justify-between">
               <img src={logoMark} alt="" className="h-8 w-auto" />
               <button
-                onClick={finish}
+                onClick={() => finish(true)}
                 className="text-primary font-bold text-base inline-flex items-center gap-1"
                 aria-label="Skip"
               >

@@ -129,7 +129,7 @@ const Explore = () => {
         <section className="mt-3 grid grid-cols-3 gap-2">
           {[
             { e: "✓", t: "Verified Listings", c: "text-success" },
-            { e: "🔒", t: "Secure Paystack", c: "text-primary" },
+            { e: "🔒", t: "Secure Escrow", c: "text-primary" },
             { e: "💬", t: "24/7 Support", c: "text-primary" },
           ].map((b) => (
             <div key={b.t} className="rounded-2xl bg-card border border-border p-2.5 flex flex-col items-center text-center gap-1">

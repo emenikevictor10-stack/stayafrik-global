@@ -89,13 +89,15 @@ const BecomeHost = () => {
       await supabase.from("profiles").update({ is_host: true }).eq("user_id", user.id);
 
       // Save payout details into payment_methods (re-using the table to store bank account fingerprint)
-      await supabase.from("payment_methods").insert({
+      await supabase.from("payment_methods").insert([{
         user_id: user.id,
         brand: bankName,
         last4: accountNumber.slice(-4),
         holder_name: accountName,
+        exp_month: 12,
+        exp_year: 2099,
         is_default: true,
-      });
+      }]);
 
       setRole("agent");
       await refreshProfile();

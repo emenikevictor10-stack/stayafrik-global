@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import logoFull from "@/assets/stay-logo-2.png";
 import logoMark from "@/assets/stay-icon.png";
 import propLekki from "@/assets/prop-lekki.jpg";
@@ -13,6 +14,7 @@ export const hasSeenSplash = () =>
 
 export const SplashSequence = ({ onDone }: { onDone: () => void }) => {
   const [step, setStep] = useState(0);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (step === 0) {
@@ -25,11 +27,12 @@ export const SplashSequence = ({ onDone }: { onDone: () => void }) => {
     }
   }, [step]);
 
-  const finish = () => {
+  const finish = (goToSignup = true) => {
     try { localStorage.setItem(FLAG, "1"); } catch {}
     onDone();
+    if (goToSignup) navigate("/auth?mode=signup", { replace: true });
   };
-  const next = () => (step < 3 ? setStep(step + 1) : finish());
+  const next = () => (step < 3 ? setStep(step + 1) : finish(true));
 
   return (
     <div className="fixed inset-0 z-[100] bg-background text-foreground overflow-hidden flex items-center justify-center">

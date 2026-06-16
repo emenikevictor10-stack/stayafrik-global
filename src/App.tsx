@@ -27,6 +27,7 @@ import Verification from "./pages/agent/Verification";
 import Commission from "./pages/agent/Commission";
 import PayoutAccount from "./pages/agent/PayoutAccount";
 import Performance from "./pages/agent/Performance";
+import AdminListings from "./pages/admin/AdminListings";
 import Messages from "./pages/shared/Messages";
 import ChatThread from "./pages/shared/ChatThread";
 import Profile from "./pages/shared/Profile";

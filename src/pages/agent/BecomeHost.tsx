@@ -32,9 +32,50 @@ const BecomeHost = () => {
   const [resolving, setResolving] = useState(false);
   const [resolveErr, setResolveErr] = useState("");
 
+  const idx = ORDER.indexOf(step);
+  const pct = Math.round(((idx + 1) / ORDER.length) * 100);
+
   useEffect(() => {
     if (!user) navigate("/auth?mode=signin", { replace: true, state: { from: "/become-host" } });
   }, [user, navigate]);
+
+  // Load Nigerian bank list once we reach payout step
+  useEffect(() => {
+    if (step !== "payout" || banks.length) return;
+    supabase.functions
+      .invoke("verify-bank-account", { body: { list_banks: true, account_number: "0000000000", bank_code: "x" } })
+      .then(({ data }) => {
+        const list = (data?.data || []).map((b: any) => ({ name: b.name, code: b.code }));
+        setBanks(list);
+      })
+      .catch(() => {});
+  }, [step, banks.length]);
+
+  // Auto-resolve account holder name as the user fills bank + 10-digit number
+  useEffect(() => {
+    setAccountName("");
+    setResolveErr("");
+    if (!bankCode || !/^\d{10}$/.test(accountNumber)) return;
+    setResolving(true);
+    const t = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("verify-bank-account", {
+          body: { account_number: accountNumber, bank_code: bankCode },
+        });
+        if (error) throw error;
+        if (data?.account_name) setAccountName(data.account_name);
+        else setResolveErr(data?.error || "Could not verify");
+      } catch (e: any) {
+        setResolveErr(e.message || "Could not verify");
+      } finally {
+        setResolving(false);
+      }
+    }, 350);
+    return () => {
+      clearTimeout(t);
+      setResolving(false);
+    };
+  }, [bankCode, accountNumber]);
 
   const goNext = () => setStep(ORDER[Math.min(idx + 1, ORDER.length - 1)]);
   const goBack = () => (idx === 0 ? navigate(-1) : setStep(ORDER[idx - 1]));

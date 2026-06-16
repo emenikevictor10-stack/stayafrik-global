@@ -162,6 +162,6 @@ export const LocationPicker = ({
     }
   }, [lat, lng]);
 
-  if (err) return <Fallback height={height} />;
+  if (err) return <Fallback height={height} lat={lat} lng={lng} />;
   return <div ref={ref} className="rounded-2xl overflow-hidden border border-border" style={{ height }} />;
 };

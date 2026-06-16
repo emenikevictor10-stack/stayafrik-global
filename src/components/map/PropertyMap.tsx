@@ -22,11 +22,31 @@ export const loadMaps = () => {
   return mapsPromise;
 };
 
-const Fallback = ({ height }: { height: number }) => (
-  <div className="rounded-2xl border border-border bg-card flex items-center justify-center text-xs text-muted-foreground" style={{ height }}>
-    Map unavailable
-  </div>
-);
+// OpenStreetMap fallback used whenever Google Maps fails to load (missing key, blocked region, etc.)
+const osmEmbedUrl = (lat: number, lng: number, zoom = 14) => {
+  const d = 0.01 / Math.max(1, zoom / 14);
+  const bbox = `${lng - d},${lat - d},${lng + d},${lat + d}`;
+  return `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat},${lng}`;
+};
+
+const Fallback = ({ height, lat, lng }: { height: number; lat?: number; lng?: number }) => {
+  if (lat == null || lng == null) {
+    return (
+      <div className="rounded-2xl border border-border bg-card flex items-center justify-center text-xs text-muted-foreground" style={{ height }}>
+        Map unavailable
+      </div>
+    );
+  }
+  return (
+    <iframe
+      title="OpenStreetMap"
+      src={osmEmbedUrl(lat, lng)}
+      className="rounded-2xl border border-border w-full"
+      style={{ height }}
+      loading="lazy"
+    />
+  );
+};
 
 export const SinglePropertyMap = ({ p, height = 200 }: { p: Property; height?: number }) => {
   const ref = useRef<HTMLDivElement>(null);

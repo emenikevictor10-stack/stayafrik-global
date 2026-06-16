@@ -60,7 +60,7 @@ export const SinglePropertyMap = ({ p, height = 200 }: { p: Property; height?: n
     }).catch(() => setErr(true));
     return () => { cancelled = true; };
   }, [p.lat, p.lng, p.title]);
-  if (err) return <Fallback height={height} />;
+  if (err) return <Fallback height={height} lat={p.lat} lng={p.lng} />;
   return <div ref={ref} className="rounded-2xl overflow-hidden border border-border" style={{ height }} />;
 };
 

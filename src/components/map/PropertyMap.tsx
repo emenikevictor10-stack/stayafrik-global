@@ -124,7 +124,7 @@ export const PropertiesMap = ({
     }).catch(() => setErr(true));
     return () => { cancelled = true; };
   }, [list, onSelect]);
-  if (err) return <Fallback height={height} />;
+  if (err) return <Fallback height={height} lat={list[0]?.lat} lng={list[0]?.lng} />;
   return <div ref={ref} className="rounded-2xl overflow-hidden border border-border" style={{ height }} />;
 };
 

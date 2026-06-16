@@ -315,6 +315,31 @@ const NewListing = () => {
         )}
 
         {step === 4 && (
+          <div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Upload a short walkthrough video (max <span className="font-bold text-foreground">5MB</span>, about 1 minute). MP4 / MOV / WebM.
+            </p>
+            <input ref={videoInput} type="file" accept="video/*" className="hidden" onChange={(e) => handleVideo(e.target.files?.[0])} />
+            {videoUrl ? (
+              <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                <video src={videoUrl} controls className="w-full aspect-video object-cover bg-black" />
+                <div className="p-3 flex items-center justify-between">
+                  <span className="text-xs text-success font-bold inline-flex items-center gap-1.5"><Video className="w-3.5 h-3.5" /> Uploaded</span>
+                  <button onClick={() => setVideoUrl("")} className="text-xs text-muted-foreground hover:text-destructive">Replace</button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" disabled={uploadingVideo} onClick={() => videoInput.current?.click()}
+                className="w-full rounded-2xl border-2 border-dashed border-border bg-card aspect-video flex flex-col items-center justify-center gap-2 text-muted-foreground disabled:opacity-50">
+                {uploadingVideo ? <Loader2 className="w-7 h-7 animate-spin" /> : <Video className="w-8 h-8" />}
+                <span className="text-xs font-bold">{uploadingVideo ? "Uploading…" : "Tap to upload video"}</span>
+                <span className="text-[10px]">Max 5MB · ~1 minute</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {step === 5 && (
           <div className="flex flex-wrap gap-2">
             {AMENITIES.map((a) => (
               <button key={a} onClick={() => toggleAmen(a)}
@@ -325,7 +350,7 @@ const NewListing = () => {
           </div>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <div className="space-y-4">
             <label className="block">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase">Price per night (₦)</span>
@@ -340,7 +365,7 @@ const NewListing = () => {
           </div>
         )}
 
-        {step === 6 && (
+        {step === 7 && (
           <div className="space-y-3">
             <div className="rounded-2xl bg-card border border-border p-4">
               <div className="flex items-center gap-2 mb-2"><Home className="w-4 h-4 text-primary" /><h3 className="text-sm font-bold">{title || "Untitled"}</h3></div>
@@ -348,12 +373,13 @@ const NewListing = () => {
                 <div>Shortlet · {beds} bed · {baths} bath · {area || "—"}</div>
                 <div>{address || "—"}, {city || "—"}</div>
                 <div className="text-primary font-extrabold text-sm">₦{Number(price || 0).toLocaleString()} / night</div>
+                <div>{photos.length} photos · {videoUrl ? "video included" : "no video"} · {amen.length} amenities</div>
               </div>
             </div>
             <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4 flex gap-3">
               <Sparkles className="w-5 h-5 text-primary shrink-0" />
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Your listing will go through PropertyVerify™ within 24h. You'll be notified once it's live.
+                Your listing will be reviewed by our admin team and goes live once approved (usually within 24h). You'll get a notification the moment it's approved.
               </p>
             </div>
           </div>
@@ -362,9 +388,9 @@ const NewListing = () => {
 
       <div className="fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
         <div className="max-w-md mx-auto px-5 py-3 pb-20">
-          <button onClick={step === TOTAL ? publish : next} disabled={publishing}
+          <button onClick={step === TOTAL ? publish : tryNext} disabled={publishing}
             className="w-full bg-primary text-primary-foreground rounded-2xl h-12 font-bold text-sm disabled:opacity-50">
-            {step === TOTAL ? (publishing ? "Publishing…" : "Publish listing") : "Continue"}
+            {step === TOTAL ? (publishing ? "Submitting…" : "Submit for review") : "Continue"}
           </button>
         </div>
       </div>

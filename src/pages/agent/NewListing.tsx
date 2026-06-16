@@ -24,6 +24,7 @@ const NewListing = () => {
   const { user } = useAuth();
   const { setRole } = useRole();
   const fileInput = useRef<HTMLInputElement>(null);
+  const videoInput = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [city, setCity] = useState("");
@@ -35,10 +36,13 @@ const NewListing = () => {
   const [desc, setDesc] = useState("");
   const [amen, setAmen] = useState<string[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [videoUrl, setVideoUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number }>({ lat: 6.5244, lng: 3.3792 });
+  const [pinned, setPinned] = useState(false);
 
   const findOnMap = async () => {
     const q = [address, city].filter(Boolean).join(", ");

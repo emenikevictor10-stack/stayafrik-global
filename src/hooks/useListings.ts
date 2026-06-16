@@ -87,9 +87,11 @@ export const useListings = () => {
   useEffect(() => {
     let active = true;
     (async () => {
+      // Only show admin-approved listings to guests
       const { data, error } = await supabase
         .from("listings")
         .select("*")
+        .eq("verified", true)
         .order("created_at", { ascending: false });
       if (!active) return;
       if (!error && data) setData((data as ListingRow[]).map(rowToProperty));

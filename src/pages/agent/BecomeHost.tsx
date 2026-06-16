@@ -256,17 +256,41 @@ const BecomeHost = () => {
           <p className="text-sm text-muted-foreground mb-5">Add a Nigerian bank account for your escrow payouts.</p>
 
           <div className="space-y-3">
-            <input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Bank name (e.g. GTBank)"
-              className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm" />
-            <input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-              inputMode="numeric" placeholder="10-digit account number"
-              className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm" />
-            <input value={accountName} onChange={(e) => setAccountName(e.target.value)} placeholder="Account holder name"
-              className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm" />
+            <select
+              value={bankCode}
+              onChange={(e) => setBankCode(e.target.value)}
+              className="w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm"
+            >
+              <option value="">{banks.length ? "Select your bank…" : "Loading banks…"}</option>
+              {banks.map((b) => (
+                <option key={b.code} value={b.code}>{b.name}</option>
+              ))}
+            </select>
+            <input
+              value={accountNumber}
+              onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
+              inputMode="numeric"
+              placeholder="10-digit account number"
+              className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm tracking-wider"
+            />
+            <div className={`rounded-xl border p-3 text-sm font-bold flex items-center gap-2 ${accountName ? "border-success/40 bg-success/10 text-success" : resolveErr ? "border-destructive/40 bg-destructive/10 text-destructive" : "border-border bg-secondary text-muted-foreground"}`}>
+              {resolving ? (
+                <>⏳ Verifying account…</>
+              ) : accountName ? (
+                <>✓ {accountName}</>
+              ) : resolveErr ? (
+                <>⚠ {resolveErr}</>
+              ) : (
+                <>Account holder name appears here automatically</>
+              )}
+            </div>
           </div>
 
-          <button disabled={busy} onClick={savePayoutAndFinish}
-            className="mt-6 w-full rounded-xl bg-primary text-primary-foreground font-bold py-3.5 text-sm disabled:opacity-60">
+          <button
+            disabled={busy || !accountName}
+            onClick={savePayoutAndFinish}
+            className="mt-6 w-full rounded-xl bg-primary text-primary-foreground font-bold py-3.5 text-sm disabled:opacity-60"
+          >
             {busy ? "Saving…" : "Save & finish"}
           </button>
         </section>

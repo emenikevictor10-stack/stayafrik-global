@@ -27,6 +27,7 @@ import Verification from "./pages/agent/Verification";
 import Commission from "./pages/agent/Commission";
 import PayoutAccount from "./pages/agent/PayoutAccount";
 import Performance from "./pages/agent/Performance";
+import AdminListings from "./pages/admin/AdminListings";
 import Messages from "./pages/shared/Messages";
 import ChatThread from "./pages/shared/ChatThread";
 import Profile from "./pages/shared/Profile";
@@ -107,6 +108,7 @@ const App = () => (
                     <Route path="/notifications" element={<Notifications />} />
                     <Route path="/property/:id/book" element={<BookProperty />} />
                     <Route path="/booking/confirm" element={<BookingConfirm />} />
+                    <Route path="/admin/listings" element={<AdminListings />} />
                   </Route>
                 </Route>
                 <Route path="*" element={<NotFound />} />

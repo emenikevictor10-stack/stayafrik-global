@@ -152,11 +152,13 @@ const Auth = () => {
 
       setRole(pending.role);
       setIsNewUser(true);
+      const newRole = pending.role;
       setPending(null);
 
       if (data.session) {
         toast.success("Welcome to StayGlobal!");
-        navigate("/welcome");
+        // New agents → finish onboarding (profile + payout). Guests → welcome.
+        navigate(newRole === "agent" ? "/become-host" : "/welcome");
       } else {
         // Email confirmation still required by project settings — but user is verified by OTP.
         toast.success("Account created — please sign in.");

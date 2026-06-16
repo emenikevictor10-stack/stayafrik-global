@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ImagePlus, Home, Sparkles, X, Loader2, MapPin } from "lucide-react";
+import { ChevronLeft, ImagePlus, Home, Sparkles, X, Loader2, MapPin, Video } from "lucide-react";
 import { toast } from "sonner";
 import { LocationPicker, loadMaps } from "@/components/map/PropertyMap";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,6 +24,7 @@ const NewListing = () => {
   const { user } = useAuth();
   const { setRole } = useRole();
   const fileInput = useRef<HTMLInputElement>(null);
+  const videoInput = useRef<HTMLInputElement>(null);
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [city, setCity] = useState("");
@@ -35,10 +36,13 @@ const NewListing = () => {
   const [desc, setDesc] = useState("");
   const [amen, setAmen] = useState<string[]>([]);
   const [photos, setPhotos] = useState<string[]>([]);
+  const [videoUrl, setVideoUrl] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  const [uploadingVideo, setUploadingVideo] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
   const [coords, setCoords] = useState<{ lat: number; lng: number }>({ lat: 6.5244, lng: 3.3792 });
+  const [pinned, setPinned] = useState(false);
 
   const findOnMap = async () => {
     const q = [address, city].filter(Boolean).join(", ");
@@ -47,24 +51,88 @@ const NewListing = () => {
     try {
       const r = await geocode(q);
       setCoords({ lat: r.lat, lng: r.lng });
+      setPinned(true);
       toast.success("Pinned on map");
     } catch (err: any) {
       toast.error(err.message || "Could not find that address");
     } finally { setGeocoding(false); }
   };
 
-  // Force-lock to agent mode while in listing flow so role toggle bug can't bounce us out
   if (typeof window !== "undefined") {
-    // best-effort one-time set
     try { window.localStorage.setItem("stay:role", "agent"); } catch {}
   }
 
-  const TOTAL = 6;
-  const next = () => setStep((s) => Math.min(TOTAL, s + 1));
+  // Step order: 1 location, 2 details, 3 photos, 4 video, 5 amenities, 6 price, 7 review
+  const TOTAL = 7;
+
+  const stepError = (s: number): string | null => {
+    if (s === 1) {
+      if (!city.trim()) return "Add the city";
+      if (!address.trim()) return "Add the full address";
+      if (!pinned) return "Tap 'Find on map' or drag the pin to set the location";
+      return null;
+    }
+    if (s === 2) {
+      if (!title.trim() || title.trim().length < 5) return "Give your listing a clear title (min 5 chars)";
+      if (beds < 1) return "Add at least 1 bed";
+      if (baths < 1) return "Add at least 1 bath";
+      if (!desc.trim() || desc.trim().length < 30) return "Write a description (min 30 chars)";
+      return null;
+    }
+    if (s === 3) {
+      if (photos.length < 3) return `Add at least 3 photos (you have ${photos.length})`;
+      return null;
+    }
+    if (s === 4) {
+      if (!videoUrl) return "Upload a short property video (max 5MB, ~1 min)";
+      return null;
+    }
+    if (s === 5) {
+      if (amen.length < 2) return "Pick at least 2 amenities";
+      return null;
+    }
+    if (s === 6) {
+      const n = Number(price);
+      if (!n || n < 5000) return "Set a nightly price of at least ₦5,000";
+      return null;
+    }
+    return null;
+  };
+
+  const tryNext = () => {
+    const err = stepError(step);
+    if (err) { toast.error(err); return; }
+    setStep((s) => Math.min(TOTAL, s + 1));
+  };
   const back = () => (step === 1 ? nav(-1) : setStep((s) => s - 1));
 
   const toggleAmen = (a: string) =>
     setAmen((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]));
+
+  const handleVideo = async (file: File | undefined) => {
+    if (!file || !user) return;
+    if (!file.type.startsWith("video/")) return toast.error("Please upload a video file");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Video must be 5MB or less");
+    setUploadingVideo(true);
+    try {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
+      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("listing-videos").upload(path, file, {
+        cacheControl: "3600",
+        contentType: file.type,
+        upsert: false,
+      });
+      if (error) throw error;
+      const { data } = supabase.storage.from("listing-videos").getPublicUrl(path);
+      setVideoUrl(data.publicUrl);
+      toast.success("Video uploaded");
+    } catch (err: any) {
+      toast.error(err.message || "Video upload failed");
+    } finally {
+      setUploadingVideo(false);
+      if (videoInput.current) videoInput.current.value = "";
+    }
+  };
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || !user) return;
@@ -98,10 +166,11 @@ const NewListing = () => {
 
   const publish = async () => {
     if (!user) return toast.error("Please sign in");
-    if (!title.trim()) return toast.error("Add a listing title");
-    if (!city.trim() && !address.trim()) return toast.error("Add a city or address");
-    if (photos.length === 0) return toast.error("Add at least one photo");
-    if (!price) return toast.error("Set a nightly price");
+    // Final guard — run every step's validation before submitting
+    for (let s = 1; s <= TOTAL - 1; s++) {
+      const e = stepError(s);
+      if (e) { setStep(s); toast.error(e); return; }
+    }
     setPublishing(true);
     try {
       const { data, error } = await supabase.from("listings").insert({
@@ -114,19 +183,22 @@ const NewListing = () => {
         address,
         city,
         images: photos,
+        video_url: videoUrl || null,
         bedrooms: beds,
         bathrooms: baths,
         area,
         amenities: amen,
         lat: coords.lat,
         lng: coords.lng,
+        is_available: false, // hidden until admin approves
+        verified: false,     // admin approval required
       }).select("id").single();
       if (error) throw error;
-      toast.success("Listing submitted for verification");
+      toast.success("Submitted! Our team will review and approve within 24h.");
       setRole("agent");
-      nav(data?.id ? `/listings/${data.id}/edit` : "/listings");
+      nav("/listings");
     } catch (err: any) {
-      toast.error(err.message || "Could not publish");
+      toast.error(err.message || "Could not submit");
     } finally {
       setPublishing(false);
     }
@@ -136,9 +208,10 @@ const NewListing = () => {
     "Where is your shortlet?",
     "Property details",
     "Add photos",
+    "Add a short video tour",
     "What's included?",
     "Set your nightly price",
-    "Review & publish",
+    "Review & submit",
   ][step - 1];
 
   return (
@@ -179,7 +252,7 @@ const NewListing = () => {
             <LocationPicker
               lat={coords.lat}
               lng={coords.lng}
-              onChange={(lat, lng) => setCoords({ lat, lng })}
+              onChange={(lat, lng) => { setCoords({ lat, lng }); setPinned(true); }}
               height={220}
             />
             <p className="text-[11px] text-muted-foreground">Tap "Find on map" or drag the pin to set the exact location. Full address only shown to guests after booking.</p>
@@ -246,6 +319,31 @@ const NewListing = () => {
         )}
 
         {step === 4 && (
+          <div>
+            <p className="text-xs text-muted-foreground mb-3">
+              Upload a short walkthrough video (max <span className="font-bold text-foreground">5MB</span>, about 1 minute). MP4 / MOV / WebM.
+            </p>
+            <input ref={videoInput} type="file" accept="video/*" className="hidden" onChange={(e) => handleVideo(e.target.files?.[0])} />
+            {videoUrl ? (
+              <div className="rounded-2xl border border-border bg-card overflow-hidden">
+                <video src={videoUrl} controls className="w-full aspect-video object-cover bg-black" />
+                <div className="p-3 flex items-center justify-between">
+                  <span className="text-xs text-success font-bold inline-flex items-center gap-1.5"><Video className="w-3.5 h-3.5" /> Uploaded</span>
+                  <button onClick={() => setVideoUrl("")} className="text-xs text-muted-foreground hover:text-destructive">Replace</button>
+                </div>
+              </div>
+            ) : (
+              <button type="button" disabled={uploadingVideo} onClick={() => videoInput.current?.click()}
+                className="w-full rounded-2xl border-2 border-dashed border-border bg-card aspect-video flex flex-col items-center justify-center gap-2 text-muted-foreground disabled:opacity-50">
+                {uploadingVideo ? <Loader2 className="w-7 h-7 animate-spin" /> : <Video className="w-8 h-8" />}
+                <span className="text-xs font-bold">{uploadingVideo ? "Uploading…" : "Tap to upload video"}</span>
+                <span className="text-[10px]">Max 5MB · ~1 minute</span>
+              </button>
+            )}
+          </div>
+        )}
+
+        {step === 5 && (
           <div className="flex flex-wrap gap-2">
             {AMENITIES.map((a) => (
               <button key={a} onClick={() => toggleAmen(a)}
@@ -256,7 +354,7 @@ const NewListing = () => {
           </div>
         )}
 
-        {step === 5 && (
+        {step === 6 && (
           <div className="space-y-4">
             <label className="block">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase">Price per night (₦)</span>
@@ -271,7 +369,7 @@ const NewListing = () => {
           </div>
         )}
 
-        {step === 6 && (
+        {step === 7 && (
           <div className="space-y-3">
             <div className="rounded-2xl bg-card border border-border p-4">
               <div className="flex items-center gap-2 mb-2"><Home className="w-4 h-4 text-primary" /><h3 className="text-sm font-bold">{title || "Untitled"}</h3></div>
@@ -279,12 +377,13 @@ const NewListing = () => {
                 <div>Shortlet · {beds} bed · {baths} bath · {area || "—"}</div>
                 <div>{address || "—"}, {city || "—"}</div>
                 <div className="text-primary font-extrabold text-sm">₦{Number(price || 0).toLocaleString()} / night</div>
+                <div>{photos.length} photos · {videoUrl ? "video included" : "no video"} · {amen.length} amenities</div>
               </div>
             </div>
             <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4 flex gap-3">
               <Sparkles className="w-5 h-5 text-primary shrink-0" />
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Your listing will go through PropertyVerify™ within 24h. You'll be notified once it's live.
+                Your listing will be reviewed by our admin team and goes live once approved (usually within 24h). You'll get a notification the moment it's approved.
               </p>
             </div>
           </div>
@@ -293,9 +392,9 @@ const NewListing = () => {
 
       <div className="fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
         <div className="max-w-md mx-auto px-5 py-3 pb-20">
-          <button onClick={step === TOTAL ? publish : next} disabled={publishing}
+          <button onClick={step === TOTAL ? publish : tryNext} disabled={publishing}
             className="w-full bg-primary text-primary-foreground rounded-2xl h-12 font-bold text-sm disabled:opacity-50">
-            {step === TOTAL ? (publishing ? "Publishing…" : "Publish listing") : "Continue"}
+            {step === TOTAL ? (publishing ? "Submitting…" : "Submit for review") : "Continue"}
           </button>
         </div>
       </div>

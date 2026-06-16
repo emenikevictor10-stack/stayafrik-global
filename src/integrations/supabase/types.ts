@@ -127,6 +127,7 @@ export type Database = {
           type: string
           updated_at: string
           verified: boolean
+          video_url: string | null
         }
         Insert: {
           address?: string | null
@@ -151,6 +152,7 @@ export type Database = {
           type?: string
           updated_at?: string
           verified?: boolean
+          video_url?: string | null
         }
         Update: {
           address?: string | null
@@ -175,6 +177,7 @@ export type Database = {
           type?: string
           updated_at?: string
           verified?: boolean
+          video_url?: string | null
         }
         Relationships: [
           {
@@ -292,10 +295,11 @@ export type Database = {
       }
       payment_methods: {
         Row: {
+          bank_code: string | null
           brand: string
           created_at: string
-          exp_month: number
-          exp_year: number
+          exp_month: number | null
+          exp_year: number | null
           holder_name: string | null
           id: string
           is_default: boolean
@@ -303,10 +307,11 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          bank_code?: string | null
           brand: string
           created_at?: string
-          exp_month: number
-          exp_year: number
+          exp_month?: number | null
+          exp_year?: number | null
           holder_name?: string | null
           id?: string
           is_default?: boolean
@@ -314,10 +319,11 @@ export type Database = {
           user_id: string
         }
         Update: {
+          bank_code?: string | null
           brand?: string
           created_at?: string
-          exp_month?: number
-          exp_year?: number
+          exp_month?: number | null
+          exp_year?: number | null
           holder_name?: string | null
           id?: string
           is_default?: boolean
@@ -458,7 +464,7 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "client" | "agent"
+      app_role: "client" | "agent" | "admin"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -586,7 +592,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["client", "agent"],
+      app_role: ["client", "agent", "admin"],
     },
   },
 } as const

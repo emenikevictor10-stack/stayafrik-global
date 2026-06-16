@@ -23,10 +23,14 @@ const BecomeHost = () => {
   const [phoneSent, setPhoneSent] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(!!profile?.phone && (profile as any)?.phone_verified);
 
-  // Payout step state
-  const [bankName, setBankName] = useState("");
+  // Payout step state — auto-resolves account holder from bank + account number
+  type Bank = { name: string; code: string };
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [bankCode, setBankCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
+  const [resolving, setResolving] = useState(false);
+  const [resolveErr, setResolveErr] = useState("");
 
   const idx = ORDER.indexOf(step);
   const pct = Math.round(((idx + 1) / ORDER.length) * 100);
@@ -34,6 +38,44 @@ const BecomeHost = () => {
   useEffect(() => {
     if (!user) navigate("/auth?mode=signin", { replace: true, state: { from: "/become-host" } });
   }, [user, navigate]);
+
+  // Load Nigerian bank list once we reach payout step
+  useEffect(() => {
+    if (step !== "payout" || banks.length) return;
+    supabase.functions
+      .invoke("verify-bank-account", { body: { list_banks: true, account_number: "0000000000", bank_code: "x" } })
+      .then(({ data }) => {
+        const list = (data?.data || []).map((b: any) => ({ name: b.name, code: b.code }));
+        setBanks(list);
+      })
+      .catch(() => {});
+  }, [step, banks.length]);
+
+  // Auto-resolve account holder name as the user fills bank + 10-digit number
+  useEffect(() => {
+    setAccountName("");
+    setResolveErr("");
+    if (!bankCode || !/^\d{10}$/.test(accountNumber)) return;
+    setResolving(true);
+    const t = setTimeout(async () => {
+      try {
+        const { data, error } = await supabase.functions.invoke("verify-bank-account", {
+          body: { account_number: accountNumber, bank_code: bankCode },
+        });
+        if (error) throw error;
+        if (data?.account_name) setAccountName(data.account_name);
+        else setResolveErr(data?.error || "Could not verify");
+      } catch (e: any) {
+        setResolveErr(e.message || "Could not verify");
+      } finally {
+        setResolving(false);
+      }
+    }, 350);
+    return () => {
+      clearTimeout(t);
+      setResolving(false);
+    };
+  }, [bankCode, accountNumber]);
 
   const goNext = () => setStep(ORDER[Math.min(idx + 1, ORDER.length - 1)]);
   const goBack = () => (idx === 0 ? navigate(-1) : setStep(ORDER[idx - 1]));
@@ -76,26 +118,24 @@ const BecomeHost = () => {
 
   const savePayoutAndFinish = async () => {
     if (!user) return;
-    if (!bankName.trim() || !/^\d{10}$/.test(accountNumber) || !accountName.trim()) {
-      return toast.error("Fill bank name, 10-digit account number, and account name");
+    const bankLabel = banks.find((b) => b.code === bankCode)?.name || "";
+    if (!bankCode || !bankLabel || !/^\d{10}$/.test(accountNumber) || !accountName.trim()) {
+      return toast.error("Pick a bank and enter a 10-digit account number");
     }
     setBusy(true);
     try {
-      // Upgrade role to agent
       await supabase.from("user_roles").upsert(
         { user_id: user.id, role: "agent" },
         { onConflict: "user_id,role", ignoreDuplicates: true },
       );
       await supabase.from("profiles").update({ is_host: true }).eq("user_id", user.id);
 
-      // Save payout details into payment_methods (re-using the table to store bank account fingerprint)
       await supabase.from("payment_methods").insert([{
         user_id: user.id,
-        brand: bankName,
+        brand: bankLabel,
+        bank_code: bankCode,
         last4: accountNumber.slice(-4),
         holder_name: accountName,
-        exp_month: 12,
-        exp_year: 2099,
         is_default: true,
       }]);
 
@@ -216,17 +256,41 @@ const BecomeHost = () => {
           <p className="text-sm text-muted-foreground mb-5">Add a Nigerian bank account for your escrow payouts.</p>
 
           <div className="space-y-3">
-            <input value={bankName} onChange={(e) => setBankName(e.target.value)} placeholder="Bank name (e.g. GTBank)"
-              className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm" />
-            <input value={accountNumber} onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
-              inputMode="numeric" placeholder="10-digit account number"
-              className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm" />
-            <input value={accountName} onChange={(e) => setAccountName(e.target.value)} placeholder="Account holder name"
-              className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm" />
+            <select
+              value={bankCode}
+              onChange={(e) => setBankCode(e.target.value)}
+              className="w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm"
+            >
+              <option value="">{banks.length ? "Select your bank…" : "Loading banks…"}</option>
+              {banks.map((b) => (
+                <option key={b.code} value={b.code}>{b.name}</option>
+              ))}
+            </select>
+            <input
+              value={accountNumber}
+              onChange={(e) => setAccountNumber(e.target.value.replace(/\D/g, "").slice(0, 10))}
+              inputMode="numeric"
+              placeholder="10-digit account number"
+              className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm tracking-wider"
+            />
+            <div className={`rounded-xl border p-3 text-sm font-bold flex items-center gap-2 ${accountName ? "border-success/40 bg-success/10 text-success" : resolveErr ? "border-destructive/40 bg-destructive/10 text-destructive" : "border-border bg-secondary text-muted-foreground"}`}>
+              {resolving ? (
+                <>⏳ Verifying account…</>
+              ) : accountName ? (
+                <>✓ {accountName}</>
+              ) : resolveErr ? (
+                <>⚠ {resolveErr}</>
+              ) : (
+                <>Account holder name appears here automatically</>
+              )}
+            </div>
           </div>
 
-          <button disabled={busy} onClick={savePayoutAndFinish}
-            className="mt-6 w-full rounded-xl bg-primary text-primary-foreground font-bold py-3.5 text-sm disabled:opacity-60">
+          <button
+            disabled={busy || !accountName}
+            onClick={savePayoutAndFinish}
+            className="mt-6 w-full rounded-xl bg-primary text-primary-foreground font-bold py-3.5 text-sm disabled:opacity-60"
+          >
             {busy ? "Saving…" : "Save & finish"}
           </button>
         </section>

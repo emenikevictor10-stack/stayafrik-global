@@ -51,24 +51,88 @@ const NewListing = () => {
     try {
       const r = await geocode(q);
       setCoords({ lat: r.lat, lng: r.lng });
+      setPinned(true);
       toast.success("Pinned on map");
     } catch (err: any) {
       toast.error(err.message || "Could not find that address");
     } finally { setGeocoding(false); }
   };
 
-  // Force-lock to agent mode while in listing flow so role toggle bug can't bounce us out
   if (typeof window !== "undefined") {
-    // best-effort one-time set
     try { window.localStorage.setItem("stay:role", "agent"); } catch {}
   }
 
-  const TOTAL = 6;
-  const next = () => setStep((s) => Math.min(TOTAL, s + 1));
+  // Step order: 1 location, 2 details, 3 photos, 4 video, 5 amenities, 6 price, 7 review
+  const TOTAL = 7;
+
+  const stepError = (s: number): string | null => {
+    if (s === 1) {
+      if (!city.trim()) return "Add the city";
+      if (!address.trim()) return "Add the full address";
+      if (!pinned) return "Tap 'Find on map' or drag the pin to set the location";
+      return null;
+    }
+    if (s === 2) {
+      if (!title.trim() || title.trim().length < 5) return "Give your listing a clear title (min 5 chars)";
+      if (beds < 1) return "Add at least 1 bed";
+      if (baths < 1) return "Add at least 1 bath";
+      if (!desc.trim() || desc.trim().length < 30) return "Write a description (min 30 chars)";
+      return null;
+    }
+    if (s === 3) {
+      if (photos.length < 3) return `Add at least 3 photos (you have ${photos.length})`;
+      return null;
+    }
+    if (s === 4) {
+      if (!videoUrl) return "Upload a short property video (max 5MB, ~1 min)";
+      return null;
+    }
+    if (s === 5) {
+      if (amen.length < 2) return "Pick at least 2 amenities";
+      return null;
+    }
+    if (s === 6) {
+      const n = Number(price);
+      if (!n || n < 5000) return "Set a nightly price of at least ₦5,000";
+      return null;
+    }
+    return null;
+  };
+
+  const tryNext = () => {
+    const err = stepError(step);
+    if (err) { toast.error(err); return; }
+    setStep((s) => Math.min(TOTAL, s + 1));
+  };
   const back = () => (step === 1 ? nav(-1) : setStep((s) => s - 1));
 
   const toggleAmen = (a: string) =>
     setAmen((p) => (p.includes(a) ? p.filter((x) => x !== a) : [...p, a]));
+
+  const handleVideo = async (file: File | undefined) => {
+    if (!file || !user) return;
+    if (!file.type.startsWith("video/")) return toast.error("Please upload a video file");
+    if (file.size > 5 * 1024 * 1024) return toast.error("Video must be 5MB or less");
+    setUploadingVideo(true);
+    try {
+      const ext = (file.name.split(".").pop() || "mp4").toLowerCase().replace(/[^a-z0-9]/g, "") || "mp4";
+      const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+      const { error } = await supabase.storage.from("listing-videos").upload(path, file, {
+        cacheControl: "3600",
+        contentType: file.type,
+        upsert: false,
+      });
+      if (error) throw error;
+      const { data } = supabase.storage.from("listing-videos").getPublicUrl(path);
+      setVideoUrl(data.publicUrl);
+      toast.success("Video uploaded");
+    } catch (err: any) {
+      toast.error(err.message || "Video upload failed");
+    } finally {
+      setUploadingVideo(false);
+      if (videoInput.current) videoInput.current.value = "";
+    }
+  };
 
   const handleFiles = async (files: FileList | null) => {
     if (!files || !user) return;

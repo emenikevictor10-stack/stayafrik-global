@@ -1,12 +1,32 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { Link } from "react-router-dom";
-import { Plus } from "lucide-react";
+import { Plus, Eye, MessageSquare } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useMyListings } from "@/hooks/useListings";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/integrations/supabase/client";
 
 const Listings = () => {
   const { user } = useAuth();
   const { data: properties, loading } = useMyListings(user?.id);
+  const [leadCounts, setLeadCounts] = useState<Record<string, number>>({});
+
+  useEffect(() => {
+    if (!properties.length) return;
+    const ids = properties.map((p) => p.id);
+    (async () => {
+      const { data } = await supabase
+        .from("messages")
+        .select("listing_id")
+        .in("listing_id", ids);
+      const counts: Record<string, number> = {};
+      (data || []).forEach((m: any) => {
+        if (m.listing_id) counts[m.listing_id] = (counts[m.listing_id] || 0) + 1;
+      });
+      setLeadCounts(counts);
+    })();
+  }, [properties]);
+
   return (
     <>
       <TopBar title="My listings" />
@@ -45,7 +65,7 @@ const Listings = () => {
               No listings yet.
             </div>
           )}
-          {properties.map((p, i) => (
+          {properties.map((p) => (
             <Link
               key={p.id}
               to={`/listings/${p.id}/edit`}
@@ -62,17 +82,21 @@ const Listings = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold text-sm truncate">{p.title}</h3>
-                  {p.verified && (
+                  {p.verified ? (
                     <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/30 shrink-0">
                       ✓ Live
+                    </span>
+                  ) : (
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 shrink-0">
+                      Pending review
                     </span>
                   )}
                 </div>
                 <p className="text-[11px] text-muted-foreground truncate">📍 {p.location}</p>
                 <div className="text-primary font-extrabold text-sm mt-1.5">{p.price}</div>
                 <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
-                  <span>👁️ {1200 - i * 80}</span>
-                  <span>📩 {Math.max(0, 30 - i * 4)} leads</span>
+                  <span className="inline-flex items-center gap-1"><MessageSquare className="w-3 h-3" /> {leadCounts[p.id] || 0} leads</span>
+                  <span className="inline-flex items-center gap-1"><Eye className="w-3 h-3" /> {p.reviews} reviews</span>
                 </div>
               </div>
             </Link>

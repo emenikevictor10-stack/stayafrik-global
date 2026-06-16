@@ -166,10 +166,11 @@ const NewListing = () => {
 
   const publish = async () => {
     if (!user) return toast.error("Please sign in");
-    if (!title.trim()) return toast.error("Add a listing title");
-    if (!city.trim() && !address.trim()) return toast.error("Add a city or address");
-    if (photos.length === 0) return toast.error("Add at least one photo");
-    if (!price) return toast.error("Set a nightly price");
+    // Final guard — run every step's validation before submitting
+    for (let s = 1; s <= TOTAL - 1; s++) {
+      const e = stepError(s);
+      if (e) { setStep(s); toast.error(e); return; }
+    }
     setPublishing(true);
     try {
       const { data, error } = await supabase.from("listings").insert({
@@ -182,19 +183,22 @@ const NewListing = () => {
         address,
         city,
         images: photos,
+        video_url: videoUrl || null,
         bedrooms: beds,
         bathrooms: baths,
         area,
         amenities: amen,
         lat: coords.lat,
         lng: coords.lng,
+        is_available: false, // hidden until admin approves
+        verified: false,     // admin approval required
       }).select("id").single();
       if (error) throw error;
-      toast.success("Listing submitted for verification");
+      toast.success("Submitted! Our team will review and approve within 24h.");
       setRole("agent");
-      nav(data?.id ? `/listings/${data.id}/edit` : "/listings");
+      nav("/listings");
     } catch (err: any) {
-      toast.error(err.message || "Could not publish");
+      toast.error(err.message || "Could not submit");
     } finally {
       setPublishing(false);
     }

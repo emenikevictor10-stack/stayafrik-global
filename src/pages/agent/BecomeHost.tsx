@@ -118,26 +118,24 @@ const BecomeHost = () => {
 
   const savePayoutAndFinish = async () => {
     if (!user) return;
-    if (!bankName.trim() || !/^\d{10}$/.test(accountNumber) || !accountName.trim()) {
-      return toast.error("Fill bank name, 10-digit account number, and account name");
+    const bankLabel = banks.find((b) => b.code === bankCode)?.name || "";
+    if (!bankCode || !bankLabel || !/^\d{10}$/.test(accountNumber) || !accountName.trim()) {
+      return toast.error("Pick a bank and enter a 10-digit account number");
     }
     setBusy(true);
     try {
-      // Upgrade role to agent
       await supabase.from("user_roles").upsert(
         { user_id: user.id, role: "agent" },
         { onConflict: "user_id,role", ignoreDuplicates: true },
       );
       await supabase.from("profiles").update({ is_host: true }).eq("user_id", user.id);
 
-      // Save payout details into payment_methods (re-using the table to store bank account fingerprint)
       await supabase.from("payment_methods").insert([{
         user_id: user.id,
-        brand: bankName,
+        brand: bankLabel,
+        bank_code: bankCode,
         last4: accountNumber.slice(-4),
         holder_name: accountName,
-        exp_month: 12,
-        exp_year: 2099,
         is_default: true,
       }]);
 

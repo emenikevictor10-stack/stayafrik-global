@@ -1,6 +1,6 @@
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, ImagePlus, Home, Sparkles, X, Loader2, MapPin } from "lucide-react";
+import { ChevronLeft, ImagePlus, Home, Sparkles, X, Loader2, MapPin, Video } from "lucide-react";
 import { toast } from "sonner";
 import { LocationPicker, loadMaps } from "@/components/map/PropertyMap";
 import { supabase } from "@/integrations/supabase/client";

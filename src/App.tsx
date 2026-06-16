@@ -108,6 +108,7 @@ const App = () => (
                     <Route path="/notifications" element={<Notifications />} />
                     <Route path="/property/:id/book" element={<BookProperty />} />
                     <Route path="/booking/confirm" element={<BookingConfirm />} />
+                    <Route path="/admin/listings" element={<AdminListings />} />
                   </Route>
                 </Route>
                 <Route path="*" element={<NotFound />} />

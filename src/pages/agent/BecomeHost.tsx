@@ -23,13 +23,14 @@ const BecomeHost = () => {
   const [phoneSent, setPhoneSent] = useState(false);
   const [phoneVerified, setPhoneVerified] = useState(!!profile?.phone && (profile as any)?.phone_verified);
 
-  // Payout step state
-  const [bankName, setBankName] = useState("");
+  // Payout step state — auto-resolves account holder from bank + account number
+  type Bank = { name: string; code: string };
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [bankCode, setBankCode] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
   const [accountName, setAccountName] = useState("");
-
-  const idx = ORDER.indexOf(step);
-  const pct = Math.round(((idx + 1) / ORDER.length) * 100);
+  const [resolving, setResolving] = useState(false);
+  const [resolveErr, setResolveErr] = useState("");
 
   useEffect(() => {
     if (!user) navigate("/auth?mode=signin", { replace: true, state: { from: "/become-host" } });

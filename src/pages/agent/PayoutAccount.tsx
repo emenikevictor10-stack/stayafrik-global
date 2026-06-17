@@ -148,7 +148,17 @@ const PayoutAccount = () => {
         </Link>
 
         <section className="space-y-3">
-          {accounts.map((a) => (
+          {loadingAccounts ? (
+            <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading saved accounts…
+            </div>
+          ) : accounts.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-card p-5 text-center">
+              <Banknote className="w-6 h-6 text-primary mx-auto mb-2" />
+              <p className="text-sm font-bold">No payout account yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Add a verified bank account to receive escrow payouts.</p>
+            </div>
+          ) : accounts.map((a) => (
             <div key={a.id} className={`rounded-2xl border p-4 ${a.primary ? "border-primary bg-primary/5" : "border-border bg-card"}`}>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
@@ -163,7 +173,7 @@ const PayoutAccount = () => {
                     <CheckCircle2 className="w-3 h-3" /> Primary
                   </span>
                 ) : (
-                  <button onClick={() => setPrimary(a.id)} className="text-[10px] font-bold text-primary">Set primary</button>
+                  <button disabled={saving} onClick={() => setPrimary(a.id)} className="text-[10px] font-bold text-primary disabled:opacity-50">Set primary</button>
                 )}
               </div>
             </div>
@@ -200,10 +210,11 @@ const PayoutAccount = () => {
             )}
 
             <div className="flex gap-2">
-              <button onClick={() => { setAdding(false); setBankCode(""); setAcctNum(""); setResolvedName(""); }}
-                className="flex-1 rounded-xl border border-border py-3 text-sm font-bold">Cancel</button>
-              <button onClick={add} disabled={!resolvedName} className="flex-1 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-bold disabled:opacity-50">
-                Add
+              <button onClick={() => { setAdding(false); resetForm(); }} disabled={saving}
+                className="flex-1 rounded-xl border border-border py-3 text-sm font-bold disabled:opacity-50">Cancel</button>
+              <button onClick={add} disabled={!resolvedName || saving} className="flex-1 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-bold disabled:opacity-50 inline-flex items-center justify-center gap-2">
+                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                {saving ? "Saving…" : "Save account"}
               </button>
             </div>
           </section>

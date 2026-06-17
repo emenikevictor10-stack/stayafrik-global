@@ -17,11 +17,7 @@ const BecomeHost = () => {
   const [step, setStep] = useState<StepId>("intro");
   const [busy, setBusy] = useState(false);
 
-  // Verify step state
-  const [phone, setPhone] = useState(profile?.phone || "");
-  const [phoneCode, setPhoneCode] = useState("");
-  const [phoneSent, setPhoneSent] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(!!profile?.phone && (profile as any)?.phone_verified);
+  // (phone verification removed from onboarding)
 
   // Payout step state — auto-resolves account holder from bank + account number
   type Bank = { name: string; code: string };

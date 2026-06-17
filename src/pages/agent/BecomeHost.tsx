@@ -12,7 +12,7 @@ const ORDER: StepId[] = ["intro", "payout", "done"];
 
 const BecomeHost = () => {
   const navigate = useNavigate();
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const { setRole } = useRole();
   const [step, setStep] = useState<StepId>("intro");
   const [busy, setBusy] = useState(false);

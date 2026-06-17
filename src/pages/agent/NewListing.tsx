@@ -255,7 +255,7 @@ const NewListing = () => {
               onChange={(lat, lng) => { setCoords({ lat, lng }); setPinned(true); }}
               height={220}
             />
-            <p className="text-[11px] text-muted-foreground">Tap "Find on map" or drag the pin to set the exact location. Full address only shown to guests after booking.</p>
+            <p className="text-[11px] text-muted-foreground">Optional: tap "Find on map" or drag the pin for an exact location. Full address only shown to guests after booking.</p>
           </div>
         )}
 

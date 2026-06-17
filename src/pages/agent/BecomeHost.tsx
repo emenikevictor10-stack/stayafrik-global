@@ -76,41 +76,6 @@ const BecomeHost = () => {
   const goNext = () => setStep(ORDER[Math.min(idx + 1, ORDER.length - 1)]);
   const goBack = () => (idx === 0 ? navigate(-1) : setStep(ORDER[idx - 1]));
 
-  const sendPhoneOtp = async () => {
-    if (!/^\+?[1-9]\d{7,14}$/.test(phone)) return toast.error("Enter a valid phone, e.g. +2348012345678");
-    setBusy(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("send-otp", {
-        body: { identifier: phone, channel: "phone" },
-      });
-      if (error) throw error;
-      if (data?.dev_code) toast.info(`Dev SMS code: ${data.dev_code}`, { duration: 15000 });
-      setPhoneSent(true);
-      toast.success("Code sent");
-    } catch (e: any) {
-      toast.error(e.message || "Could not send code");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const verifyPhone = async () => {
-    if (phoneCode.length !== 6 || !user) return;
-    setBusy(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("verify-otp", {
-        body: { identifier: phone, channel: "phone", code: phoneCode, user_id: user.id },
-      });
-      if (error || data?.error) throw new Error("Wrong or expired code");
-      setPhoneVerified(true);
-      await refreshProfile();
-      toast.success("Phone verified");
-    } catch (e: any) {
-      toast.error(e.message || "Verification failed");
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const savePayoutAndFinish = async () => {
     if (!user) return;

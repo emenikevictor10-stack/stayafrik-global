@@ -156,57 +156,6 @@ const BecomeHost = () => {
         </section>
       )}
 
-      {step === "verify" && (
-        <section>
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center mb-4">
-            <ShieldCheck className="w-7 h-7 text-primary" />
-          </div>
-          <h1 className="text-2xl font-extrabold mb-2">Verify your phone</h1>
-          <p className="text-sm text-muted-foreground mb-5">Guests trust hosts with verified contact details.</p>
-
-          <input
-            type="tel"
-            value={phone}
-            disabled={phoneSent}
-            onChange={(e) => setPhone(e.target.value.replace(/\s/g, ""))}
-            placeholder="+2348012345678"
-            className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm mb-3 disabled:opacity-60"
-          />
-
-          {!phoneSent ? (
-            <button disabled={busy} onClick={sendPhoneOtp} className="w-full rounded-xl bg-primary text-primary-foreground font-bold py-3.5 text-sm disabled:opacity-60">
-              {busy ? "Sending…" : "Send code"}
-            </button>
-          ) : (
-            <>
-              <input
-                inputMode="numeric"
-                maxLength={6}
-                value={phoneCode}
-                disabled={phoneVerified}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/\D/g, "").slice(0, 6);
-                  setPhoneCode(v);
-                  if (v.length === 6) verifyPhone();
-                }}
-                placeholder="6-digit code"
-                className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-base text-center tracking-[0.4em] font-bold mb-3 disabled:opacity-60"
-              />
-              {phoneVerified ? (
-                <button onClick={goNext} className="w-full rounded-xl bg-primary text-primary-foreground font-bold py-3.5 text-sm">
-                  Continue
-                </button>
-              ) : (
-                <button onClick={() => setPhoneSent(false)} className="text-xs text-muted-foreground">Use different number</button>
-              )}
-            </>
-          )}
-
-          <button onClick={goNext} className="mt-5 w-full text-center text-xs text-muted-foreground">
-            Skip for now — verify later
-          </button>
-        </section>
-      )}
 
       {step === "payout" && (
         <section>

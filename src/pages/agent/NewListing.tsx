@@ -69,7 +69,7 @@ const NewListing = () => {
     if (s === 1) {
       if (!city.trim()) return "Add the city";
       if (!address.trim()) return "Add the full address";
-      if (!pinned) return "Tap 'Find on map' or drag the pin to set the location";
+      // Map pin is optional — we'll geocode from the address if not set
       return null;
     }
     if (s === 2) {

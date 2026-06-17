@@ -4,20 +4,59 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Bank = { name: string; code: string };
-type Account = { id: number; bank: string; bank_code: string; num: string; name: string; primary: boolean };
+type Account = { id: string; bank: string; bank_code: string; num: string; name: string; primary: boolean };
 
 const PayoutAccount = () => {
+  const { user } = useAuth();
   const [banks, setBanks] = useState<Bank[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([
-    { id: 1, bank: "GTBank", bank_code: "058", num: "•••• 4419", name: "Emeka Ihejirika", primary: true },
-  ]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [adding, setAdding] = useState(false);
   const [bankCode, setBankCode] = useState("");
   const [acctNum, setAcctNum] = useState("");
   const [resolvedName, setResolvedName] = useState("");
   const [verifying, setVerifying] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const resetForm = () => {
+    setBankCode("");
+    setAcctNum("");
+    setResolvedName("");
+  };
+
+  const loadAccounts = async () => {
+    if (!user) return;
+    setLoadingAccounts(true);
+    try {
+      const { data, error } = await supabase
+        .from("payment_methods")
+        .select("id, brand, bank_code, last4, holder_name, is_default")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setAccounts((data || []).map((method) => ({
+        id: method.id,
+        bank: method.brand,
+        bank_code: method.bank_code || "",
+        num: "•••• " + method.last4,
+        name: method.holder_name || "Account holder",
+        primary: method.is_default,
+      })));
+    } catch (err: any) {
+      toast.error(err.message || "Could not load payout accounts");
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) loadAccounts();
+  }, [user]);
 
   useEffect(() => {
     if (!adding || banks.length) return;
@@ -51,18 +90,53 @@ const PayoutAccount = () => {
     return () => { clearTimeout(t); setVerifying(false); };
   }, [bankCode, acctNum]);
 
-  const add = () => {
+  const add = async () => {
+    if (!user) return toast.error("Please sign in again");
     if (!resolvedName) return toast.error("Verify the account first");
     const bankName = banks.find((b) => b.code === bankCode)?.name || "Bank";
-    setAccounts((a) => [...a, { id: Date.now(), bank: bankName, bank_code: bankCode, num: "•••• " + acctNum.slice(-4), name: resolvedName, primary: false }]);
-    setBankCode(""); setAcctNum(""); setResolvedName("");
-    setAdding(false);
-    toast.success("Bank account added");
+    setSaving(true);
+    try {
+      const shouldBePrimary = accounts.length === 0;
+      if (shouldBePrimary) {
+        await supabase.from("payment_methods").update({ is_default: false }).eq("user_id", user.id);
+      }
+
+      const { error } = await supabase.from("payment_methods").insert({
+        user_id: user.id,
+        brand: bankName,
+        bank_code: bankCode,
+        last4: acctNum.slice(-4),
+        holder_name: resolvedName,
+        is_default: shouldBePrimary,
+      });
+
+      if (error) throw error;
+      resetForm();
+      setAdding(false);
+      await loadAccounts();
+      toast.success("Bank account saved");
+    } catch (err: any) {
+      toast.error(err.message || "Could not save bank account");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const setPrimary = (id: number) => {
-    setAccounts((a) => a.map((x) => ({ ...x, primary: x.id === id })));
-    toast.success("Primary account updated");
+  const setPrimary = async (id: string) => {
+    if (!user) return toast.error("Please sign in again");
+    setSaving(true);
+    try {
+      const { error: clearError } = await supabase.from("payment_methods").update({ is_default: false }).eq("user_id", user.id);
+      if (clearError) throw clearError;
+      const { error } = await supabase.from("payment_methods").update({ is_default: true }).eq("id", id).eq("user_id", user.id);
+      if (error) throw error;
+      setAccounts((a) => a.map((x) => ({ ...x, primary: x.id === id })));
+      toast.success("Primary account saved");
+    } catch (err: any) {
+      toast.error(err.message || "Could not update primary account");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -74,7 +148,17 @@ const PayoutAccount = () => {
         </Link>
 
         <section className="space-y-3">
-          {accounts.map((a) => (
+          {loadingAccounts ? (
+            <div className="rounded-2xl border border-border bg-card p-4 flex items-center gap-3 text-sm text-muted-foreground">
+              <Loader2 className="w-4 h-4 animate-spin" /> Loading saved accounts…
+            </div>
+          ) : accounts.length === 0 ? (
+            <div className="rounded-2xl border border-dashed border-border bg-card p-5 text-center">
+              <Banknote className="w-6 h-6 text-primary mx-auto mb-2" />
+              <p className="text-sm font-bold">No payout account yet</p>
+              <p className="text-xs text-muted-foreground mt-1">Add a verified bank account to receive escrow payouts.</p>
+            </div>
+          ) : accounts.map((a) => (
             <div key={a.id} className={`rounded-2xl border p-4 ${a.primary ? "border-primary bg-primary/5" : "border-border bg-card"}`}>
               <div className="flex items-center gap-3">
                 <div className="w-11 h-11 rounded-xl bg-primary/15 border border-primary/30 flex items-center justify-center">
@@ -89,7 +173,7 @@ const PayoutAccount = () => {
                     <CheckCircle2 className="w-3 h-3" /> Primary
                   </span>
                 ) : (
-                  <button onClick={() => setPrimary(a.id)} className="text-[10px] font-bold text-primary">Set primary</button>
+                  <button disabled={saving} onClick={() => setPrimary(a.id)} className="text-[10px] font-bold text-primary disabled:opacity-50">Set primary</button>
                 )}
               </div>
             </div>
@@ -126,10 +210,11 @@ const PayoutAccount = () => {
             )}
 
             <div className="flex gap-2">
-              <button onClick={() => { setAdding(false); setBankCode(""); setAcctNum(""); setResolvedName(""); }}
-                className="flex-1 rounded-xl border border-border py-3 text-sm font-bold">Cancel</button>
-              <button onClick={add} disabled={!resolvedName} className="flex-1 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-bold disabled:opacity-50">
-                Add
+              <button onClick={() => { setAdding(false); resetForm(); }} disabled={saving}
+                className="flex-1 rounded-xl border border-border py-3 text-sm font-bold disabled:opacity-50">Cancel</button>
+              <button onClick={add} disabled={!resolvedName || saving} className="flex-1 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-bold disabled:opacity-50 inline-flex items-center justify-center gap-2">
+                {saving && <Loader2 className="w-4 h-4 animate-spin" />}
+                {saving ? "Saving…" : "Save account"}
               </button>
             </div>
           </section>

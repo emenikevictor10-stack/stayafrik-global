@@ -6,7 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRole, Role } from "@/contexts/RoleContext";
 import { toast } from "sonner";
 import icon from "@/assets/stay-logo-2.png";
-import { ChevronLeft, ShieldCheck, User, Briefcase, Phone, Mail } from "lucide-react";
+import { ChevronLeft, ShieldCheck, User, Briefcase, Mail } from "lucide-react";
 import { GoogleIcon } from "@/lib/google-icon";
 import { Seo } from "@/components/seo/Seo";
 
@@ -37,12 +37,10 @@ const Auth = () => {
   const [pickedRole, setPickedRole] = useState<Role>("client");
   const [loading, setLoading] = useState(false);
 
-  // OTP step
+  // OTP step (email only)
   const [pending, setPending] = useState<PendingSignup | null>(null);
   const [emailOtp, setEmailOtp] = useState("");
-  const [phoneOtp, setPhoneOtp] = useState("");
   const [emailVerified, setEmailVerified] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
 
   const { setIsNewUser, session } = useAuth();
@@ -67,19 +65,13 @@ const Auth = () => {
     return () => clearTimeout(t);
   }, [resendCooldown]);
 
-  const sendOtps = async (p: PendingSignup) => {
-    const calls = await Promise.all([
-      supabase.functions.invoke("send-otp", { body: { identifier: p.email, channel: "email" } }),
-      supabase.functions.invoke("send-otp", { body: { identifier: p.phone, channel: "phone" } }),
-    ]);
-    calls.forEach((c, i) => {
-      const ch = i === 0 ? "email" : "phone";
-      if (c.error) {
-        toast.error(`Could not send ${ch} code`);
-      } else if (c.data?.dev_code) {
-        toast.info(`Dev ${ch} code: ${c.data.dev_code}`, { duration: 15000 });
-      }
-    });
+  const sendEmailOtp = async (p: PendingSignup) => {
+    const r = await supabase.functions.invoke("send-otp", { body: { identifier: p.email, channel: "email" } });
+    if (r.error) {
+      toast.error("Could not send email code");
+    } else if (r.data?.dev_code) {
+      toast.info(`Dev email code: ${r.data.dev_code}`, { duration: 15000 });
+    }
     setResendCooldown(30);
   };
 
@@ -88,11 +80,11 @@ const Auth = () => {
     setLoading(true);
     try {
       if (mode === "signup") {
-        if (!PHONE_RE.test(phone)) throw new Error("Enter a valid phone number with country code, e.g. +2348012345678");
+        if (phone && !PHONE_RE.test(phone)) throw new Error("Enter a valid phone number with country code, e.g. +2348012345678");
         const p: PendingSignup = { fullName, email, phone, password, role: pickedRole };
         setPending(p);
-        await sendOtps(p);
-        toast.success("Codes sent. Check your phone and email.");
+        await sendEmailOtp(p);
+        toast.success("Code sent. Check your email.");
       } else if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
@@ -123,15 +115,8 @@ const Auth = () => {
         if (r.error || r.data?.error) throw new Error("Email code is incorrect or expired");
         setEmailVerified(true);
       }
-      if (!phoneVerified) {
-        const r = await supabase.functions.invoke("verify-otp", {
-          body: { identifier: pending.phone, channel: "phone", code: phoneOtp },
-        });
-        if (r.error || r.data?.error) throw new Error("Phone code is incorrect or expired");
-        setPhoneVerified(true);
-      }
 
-      // Both verified -> create account
+      // Create account
       const { data, error } = await supabase.auth.signUp({
         email: pending.email,
         password: pending.password,
@@ -146,7 +131,7 @@ const Auth = () => {
       if (userId) {
         await supabase
           .from("profiles")
-          .update({ phone: pending.phone, phone_verified: true, email_verified: true })
+          .update({ phone: pending.phone || null, email_verified: true })
           .eq("user_id", userId);
       }
 
@@ -157,10 +142,8 @@ const Auth = () => {
 
       if (data.session) {
         toast.success("Welcome to StayGlobal!");
-        // New agents → finish onboarding (profile + payout). Guests → welcome.
         navigate(newRole === "agent" ? "/become-host" : "/welcome");
       } else {
-        // Email confirmation still required by project settings — but user is verified by OTP.
         toast.success("Account created — please sign in.");
         setMode("signin");
         setPassword("");
@@ -172,17 +155,16 @@ const Auth = () => {
     }
   };
 
-  const verifyOne = async (channel: "email" | "phone") => {
-    if (!pending) return;
-    const code = channel === "email" ? emailOtp : phoneOtp;
-    if (code.length !== 6) return;
-    const id = channel === "email" ? pending.email : pending.phone;
-    const r = await supabase.functions.invoke("verify-otp", { body: { identifier: id, channel, code } });
+  const verifyEmailNow = async (code: string) => {
+    if (!pending || code.length !== 6) return;
+    const r = await supabase.functions.invoke("verify-otp", {
+      body: { identifier: pending.email, channel: "email", code },
+    });
     if (r.error || r.data?.error) {
-      toast.error(`${channel === "email" ? "Email" : "Phone"} code is incorrect`);
+      toast.error("Email code is incorrect");
     } else {
-      channel === "email" ? setEmailVerified(true) : setPhoneVerified(true);
-      toast.success(`${channel === "email" ? "Email" : "Phone"} verified`);
+      setEmailVerified(true);
+      toast.success("Email verified");
     }
   };
 
@@ -193,7 +175,6 @@ const Auth = () => {
 
   // ====== OTP STEP UI ======
   if (pending) {
-    const ready = emailVerified && phoneVerified;
     return (
       <main className="min-h-screen bg-background text-foreground px-6 pt-10 pb-12 max-w-md mx-auto flex flex-col">
         <button onClick={() => setPending(null)} className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center mb-6">
@@ -203,8 +184,8 @@ const Auth = () => {
           <div className="mx-auto w-16 h-16 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mb-4">
             <ShieldCheck className="w-7 h-7 text-primary" />
           </div>
-          <h1 className="text-2xl font-extrabold">Verify it's you</h1>
-          <p className="text-sm text-muted-foreground mt-2">We sent a 6-digit code to your phone and email.</p>
+          <h1 className="text-2xl font-extrabold">Verify your email</h1>
+          <p className="text-sm text-muted-foreground mt-2">We sent a 6-digit code to your email.</p>
         </div>
 
         <div className="space-y-4">
@@ -221,36 +202,16 @@ const Auth = () => {
               onChange={(e) => {
                 const v = e.target.value.replace(/\D/g, "").slice(0, 6);
                 setEmailOtp(v);
-                if (v.length === 6 && !emailVerified) verifyOne("email");
+                if (v.length === 6 && !emailVerified) verifyEmailNow(v);
               }}
               placeholder="Enter email code"
-              className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-base tracking-[0.4em] font-bold text-center disabled:opacity-60"
-            />
-          </div>
-
-          <div className="rounded-2xl border border-border bg-card p-4">
-            <div className="flex items-center gap-2 text-xs text-muted-foreground mb-2">
-              <Phone className="w-3.5 h-3.5" /> {pending.phone}
-              {phoneVerified && <span className="ml-auto text-success font-bold text-[11px]">VERIFIED</span>}
-            </div>
-            <input
-              inputMode="numeric"
-              maxLength={6}
-              value={phoneOtp}
-              disabled={phoneVerified}
-              onChange={(e) => {
-                const v = e.target.value.replace(/\D/g, "").slice(0, 6);
-                setPhoneOtp(v);
-                if (v.length === 6 && !phoneVerified) verifyOne("phone");
-              }}
-              placeholder="Enter SMS code"
               className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-base tracking-[0.4em] font-bold text-center disabled:opacity-60"
             />
           </div>
         </div>
 
         <button
-          disabled={loading || !ready}
+          disabled={loading || !emailVerified}
           onClick={verifyAndFinish}
           className="w-full mt-6 rounded-xl bg-primary text-primary-foreground font-bold py-3.5 text-sm disabled:opacity-50"
         >
@@ -259,10 +220,10 @@ const Auth = () => {
 
         <button
           disabled={resendCooldown > 0 || loading}
-          onClick={() => pending && sendOtps(pending)}
+          onClick={() => pending && sendEmailOtp(pending)}
           className="mt-4 text-xs text-muted-foreground disabled:opacity-60"
         >
-          {resendCooldown > 0 ? `Resend codes in ${resendCooldown}s` : "Resend codes"}
+          {resendCooldown > 0 ? `Resend code in ${resendCooldown}s` : "Resend code"}
         </button>
       </main>
     );
@@ -314,8 +275,7 @@ const Auth = () => {
             type="tel"
             value={phone}
             onChange={(e) => setPhone(e.target.value.replace(/\s/g, ""))}
-            placeholder="Phone, e.g. +2348012345678"
-            required
+            placeholder="Phone (optional), e.g. +2348012345678"
             className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm"
           />
         )}
@@ -332,7 +292,7 @@ const Auth = () => {
         )}
         <button disabled={loading} type="submit"
           className="w-full rounded-xl bg-primary text-primary-foreground font-bold py-3.5 text-sm disabled:opacity-60">
-          {loading ? "Please wait…" : mode === "signup" ? "Send verification codes" : mode === "forgot" ? "Send reset link" : "Sign in"}
+          {loading ? "Please wait…" : mode === "signup" ? "Send verification code" : mode === "forgot" ? "Send reset link" : "Sign in"}
         </button>
       </form>
 

@@ -1,27 +1,23 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { ChevronLeft, Sparkles, ShieldCheck, Banknote, CheckCircle2, Home } from "lucide-react";
+import { ChevronLeft, Sparkles, Banknote, CheckCircle2, Home } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/contexts/RoleContext";
 import { Seo } from "@/components/seo/Seo";
 
-type StepId = "intro" | "verify" | "payout" | "done";
-const ORDER: StepId[] = ["intro", "verify", "payout", "done"];
+type StepId = "intro" | "payout" | "done";
+const ORDER: StepId[] = ["intro", "payout", "done"];
 
 const BecomeHost = () => {
   const navigate = useNavigate();
-  const { user, profile, refreshProfile } = useAuth();
+  const { user, refreshProfile } = useAuth();
   const { setRole } = useRole();
   const [step, setStep] = useState<StepId>("intro");
   const [busy, setBusy] = useState(false);
 
-  // Verify step state
-  const [phone, setPhone] = useState(profile?.phone || "");
-  const [phoneCode, setPhoneCode] = useState("");
-  const [phoneSent, setPhoneSent] = useState(false);
-  const [phoneVerified, setPhoneVerified] = useState(!!profile?.phone && (profile as any)?.phone_verified);
+  // (phone verification removed from onboarding)
 
   // Payout step state — auto-resolves account holder from bank + account number
   type Bank = { name: string; code: string };
@@ -80,41 +76,6 @@ const BecomeHost = () => {
   const goNext = () => setStep(ORDER[Math.min(idx + 1, ORDER.length - 1)]);
   const goBack = () => (idx === 0 ? navigate(-1) : setStep(ORDER[idx - 1]));
 
-  const sendPhoneOtp = async () => {
-    if (!/^\+?[1-9]\d{7,14}$/.test(phone)) return toast.error("Enter a valid phone, e.g. +2348012345678");
-    setBusy(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("send-otp", {
-        body: { identifier: phone, channel: "phone" },
-      });
-      if (error) throw error;
-      if (data?.dev_code) toast.info(`Dev SMS code: ${data.dev_code}`, { duration: 15000 });
-      setPhoneSent(true);
-      toast.success("Code sent");
-    } catch (e: any) {
-      toast.error(e.message || "Could not send code");
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const verifyPhone = async () => {
-    if (phoneCode.length !== 6 || !user) return;
-    setBusy(true);
-    try {
-      const { data, error } = await supabase.functions.invoke("verify-otp", {
-        body: { identifier: phone, channel: "phone", code: phoneCode, user_id: user.id },
-      });
-      if (error || data?.error) throw new Error("Wrong or expired code");
-      setPhoneVerified(true);
-      await refreshProfile();
-      toast.success("Phone verified");
-    } catch (e: any) {
-      toast.error(e.message || "Verification failed");
-    } finally {
-      setBusy(false);
-    }
-  };
 
   const savePayoutAndFinish = async () => {
     if (!user) return;
@@ -195,57 +156,6 @@ const BecomeHost = () => {
         </section>
       )}
 
-      {step === "verify" && (
-        <section>
-          <div className="w-14 h-14 rounded-2xl bg-primary/10 border border-primary/30 flex items-center justify-center mb-4">
-            <ShieldCheck className="w-7 h-7 text-primary" />
-          </div>
-          <h1 className="text-2xl font-extrabold mb-2">Verify your phone</h1>
-          <p className="text-sm text-muted-foreground mb-5">Guests trust hosts with verified contact details.</p>
-
-          <input
-            type="tel"
-            value={phone}
-            disabled={phoneSent}
-            onChange={(e) => setPhone(e.target.value.replace(/\s/g, ""))}
-            placeholder="+2348012345678"
-            className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-sm mb-3 disabled:opacity-60"
-          />
-
-          {!phoneSent ? (
-            <button disabled={busy} onClick={sendPhoneOtp} className="w-full rounded-xl bg-primary text-primary-foreground font-bold py-3.5 text-sm disabled:opacity-60">
-              {busy ? "Sending…" : "Send code"}
-            </button>
-          ) : (
-            <>
-              <input
-                inputMode="numeric"
-                maxLength={6}
-                value={phoneCode}
-                disabled={phoneVerified}
-                onChange={(e) => {
-                  const v = e.target.value.replace(/\D/g, "").slice(0, 6);
-                  setPhoneCode(v);
-                  if (v.length === 6) verifyPhone();
-                }}
-                placeholder="6-digit code"
-                className="w-full rounded-xl bg-secondary border border-border px-4 py-3 text-base text-center tracking-[0.4em] font-bold mb-3 disabled:opacity-60"
-              />
-              {phoneVerified ? (
-                <button onClick={goNext} className="w-full rounded-xl bg-primary text-primary-foreground font-bold py-3.5 text-sm">
-                  Continue
-                </button>
-              ) : (
-                <button onClick={() => setPhoneSent(false)} className="text-xs text-muted-foreground">Use different number</button>
-              )}
-            </>
-          )}
-
-          <button onClick={goNext} className="mt-5 w-full text-center text-xs text-muted-foreground">
-            Skip for now — verify later
-          </button>
-        </section>
-      )}
 
       {step === "payout" && (
         <section>

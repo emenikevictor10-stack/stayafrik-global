@@ -5,8 +5,17 @@ const BROWSER_KEY = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_K
 const TRACKING_ID = import.meta.env.VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_TRACKING_ID as string | undefined;
 
 let mapsPromise: Promise<any> | null = null;
+let authFailed = false;
+const authListeners = new Set<() => void>();
+if (typeof window !== "undefined") {
+  (window as any).gm_authFailure = () => {
+    authFailed = true;
+    authListeners.forEach((fn) => { try { fn(); } catch {} });
+  };
+}
 export const loadMaps = () => {
   if (typeof window === "undefined") return Promise.reject(new Error("no window"));
+  if (authFailed) return Promise.reject(new Error("Google Maps auth failed"));
   if ((window as any).google?.maps) return Promise.resolve((window as any).google);
   if (mapsPromise) return mapsPromise;
   mapsPromise = new Promise((resolve, reject) => {
@@ -20,6 +29,10 @@ export const loadMaps = () => {
     document.head.appendChild(s);
   });
   return mapsPromise;
+};
+const onAuthFailure = (cb: () => void) => {
+  authListeners.add(cb);
+  return () => authListeners.delete(cb);
 };
 
 // OpenStreetMap fallback used whenever Google Maps fails to load (missing key, blocked region, etc.)

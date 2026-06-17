@@ -4,20 +4,59 @@ import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 type Bank = { name: string; code: string };
-type Account = { id: number; bank: string; bank_code: string; num: string; name: string; primary: boolean };
+type Account = { id: string; bank: string; bank_code: string; num: string; name: string; primary: boolean };
 
 const PayoutAccount = () => {
+  const { user } = useAuth();
   const [banks, setBanks] = useState<Bank[]>([]);
-  const [accounts, setAccounts] = useState<Account[]>([
-    { id: 1, bank: "GTBank", bank_code: "058", num: "•••• 4419", name: "Emeka Ihejirika", primary: true },
-  ]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [loadingAccounts, setLoadingAccounts] = useState(true);
   const [adding, setAdding] = useState(false);
   const [bankCode, setBankCode] = useState("");
   const [acctNum, setAcctNum] = useState("");
   const [resolvedName, setResolvedName] = useState("");
   const [verifying, setVerifying] = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const resetForm = () => {
+    setBankCode("");
+    setAcctNum("");
+    setResolvedName("");
+  };
+
+  const loadAccounts = async () => {
+    if (!user) return;
+    setLoadingAccounts(true);
+    try {
+      const { data, error } = await supabase
+        .from("payment_methods")
+        .select("id, brand, bank_code, last4, holder_name, is_default")
+        .eq("user_id", user.id)
+        .order("is_default", { ascending: false })
+        .order("created_at", { ascending: false });
+
+      if (error) throw error;
+      setAccounts((data || []).map((method) => ({
+        id: method.id,
+        bank: method.brand,
+        bank_code: method.bank_code || "",
+        num: "•••• " + method.last4,
+        name: method.holder_name || "Account holder",
+        primary: method.is_default,
+      })));
+    } catch (err: any) {
+      toast.error(err.message || "Could not load payout accounts");
+    } finally {
+      setLoadingAccounts(false);
+    }
+  };
+
+  useEffect(() => {
+    if (user) loadAccounts();
+  }, [user]);
 
   useEffect(() => {
     if (!adding || banks.length) return;
@@ -51,18 +90,53 @@ const PayoutAccount = () => {
     return () => { clearTimeout(t); setVerifying(false); };
   }, [bankCode, acctNum]);
 
-  const add = () => {
+  const add = async () => {
+    if (!user) return toast.error("Please sign in again");
     if (!resolvedName) return toast.error("Verify the account first");
     const bankName = banks.find((b) => b.code === bankCode)?.name || "Bank";
-    setAccounts((a) => [...a, { id: Date.now(), bank: bankName, bank_code: bankCode, num: "•••• " + acctNum.slice(-4), name: resolvedName, primary: false }]);
-    setBankCode(""); setAcctNum(""); setResolvedName("");
-    setAdding(false);
-    toast.success("Bank account added");
+    setSaving(true);
+    try {
+      const shouldBePrimary = accounts.length === 0;
+      if (shouldBePrimary) {
+        await supabase.from("payment_methods").update({ is_default: false }).eq("user_id", user.id);
+      }
+
+      const { error } = await supabase.from("payment_methods").insert({
+        user_id: user.id,
+        brand: bankName,
+        bank_code: bankCode,
+        last4: acctNum.slice(-4),
+        holder_name: resolvedName,
+        is_default: shouldBePrimary,
+      });
+
+      if (error) throw error;
+      resetForm();
+      setAdding(false);
+      await loadAccounts();
+      toast.success("Bank account saved");
+    } catch (err: any) {
+      toast.error(err.message || "Could not save bank account");
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const setPrimary = (id: number) => {
-    setAccounts((a) => a.map((x) => ({ ...x, primary: x.id === id })));
-    toast.success("Primary account updated");
+  const setPrimary = async (id: string) => {
+    if (!user) return toast.error("Please sign in again");
+    setSaving(true);
+    try {
+      const { error: clearError } = await supabase.from("payment_methods").update({ is_default: false }).eq("user_id", user.id);
+      if (clearError) throw clearError;
+      const { error } = await supabase.from("payment_methods").update({ is_default: true }).eq("id", id).eq("user_id", user.id);
+      if (error) throw error;
+      setAccounts((a) => a.map((x) => ({ ...x, primary: x.id === id })));
+      toast.success("Primary account saved");
+    } catch (err: any) {
+      toast.error(err.message || "Could not update primary account");
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (

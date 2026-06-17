@@ -7,8 +7,8 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/contexts/RoleContext";
 import { Seo } from "@/components/seo/Seo";
 
-type StepId = "intro" | "verify" | "payout" | "done";
-const ORDER: StepId[] = ["intro", "verify", "payout", "done"];
+type StepId = "intro" | "payout" | "done";
+const ORDER: StepId[] = ["intro", "payout", "done"];
 
 const BecomeHost = () => {
   const navigate = useNavigate();

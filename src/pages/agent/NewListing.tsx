@@ -69,7 +69,7 @@ const NewListing = () => {
     if (s === 1) {
       if (!city.trim()) return "Add the city";
       if (!address.trim()) return "Add the full address";
-      if (!pinned) return "Tap 'Find on map' or drag the pin to set the location";
+      // Map pin is optional — we'll geocode from the address if not set
       return null;
     }
     if (s === 2) {
@@ -255,7 +255,7 @@ const NewListing = () => {
               onChange={(lat, lng) => { setCoords({ lat, lng }); setPinned(true); }}
               height={220}
             />
-            <p className="text-[11px] text-muted-foreground">Tap "Find on map" or drag the pin to set the exact location. Full address only shown to guests after booking.</p>
+            <p className="text-[11px] text-muted-foreground">Optional: tap "Find on map" or drag the pin for an exact location. Full address only shown to guests after booking.</p>
           </div>
         )}
 

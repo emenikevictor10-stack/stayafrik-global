@@ -71,7 +71,8 @@ export const SinglePropertyMap = ({ p, height = 200 }: { p: Property; height?: n
       const map = new g.maps.Map(ref.current, { center: { lat: p.lat, lng: p.lng }, zoom: 14, disableDefaultUI: true, zoomControl: true });
       new g.maps.Marker({ map, position: { lat: p.lat, lng: p.lng }, title: p.title });
     }).catch(() => setErr(true));
-    return () => { cancelled = true; };
+    const off = onAuthFailure(() => setErr(true));
+    return () => { cancelled = true; off(); };
   }, [p.lat, p.lng, p.title]);
   if (err) return <Fallback height={height} lat={p.lat} lng={p.lng} />;
   return <div ref={ref} className="rounded-2xl overflow-hidden border border-border" style={{ height }} />;
@@ -135,7 +136,8 @@ export const PropertiesMap = ({
       });
       if (list.length > 1) map.fitBounds(bounds);
     }).catch(() => setErr(true));
-    return () => { cancelled = true; };
+    const off = onAuthFailure(() => setErr(true));
+    return () => { cancelled = true; off(); };
   }, [list, onSelect]);
   if (err) return <Fallback height={height} lat={list[0]?.lat} lng={list[0]?.lng} />;
   return <div ref={ref} className="rounded-2xl overflow-hidden border border-border" style={{ height }} />;
@@ -165,7 +167,8 @@ export const LocationPicker = ({
       });
       mapRef.current = map; markerRef.current = m;
     }).catch(() => setErr(true));
-    return () => { cancelled = true; };
+    const off = onAuthFailure(() => setErr(true));
+    return () => { cancelled = true; off(); };
   }, []); // init once
 
   useEffect(() => {

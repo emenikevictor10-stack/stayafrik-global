@@ -14,6 +14,36 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_audit_log: {
+        Row: {
+          action: string
+          actor_id: string
+          created_at: string
+          entity_id: string | null
+          entity_type: string | null
+          id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action: string
+          actor_id: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Update: {
+          action?: string
+          actor_id?: string
+          created_at?: string
+          entity_id?: string | null
+          entity_type?: string | null
+          id?: string
+          metadata?: Json | null
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           check_in_date: string
@@ -331,6 +361,72 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      payouts: {
+        Row: {
+          amount: number
+          batch_id: string | null
+          booking_id: string | null
+          created_at: string
+          currency: string
+          failure_reason: string | null
+          host_id: string
+          id: string
+          payment_method_id: string | null
+          paystack_transfer_code: string | null
+          processed_at: string | null
+          processed_by: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          batch_id?: string | null
+          booking_id?: string | null
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          host_id: string
+          id?: string
+          payment_method_id?: string | null
+          paystack_transfer_code?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          batch_id?: string | null
+          booking_id?: string | null
+          created_at?: string
+          currency?: string
+          failure_reason?: string | null
+          host_id?: string
+          id?: string
+          payment_method_id?: string | null
+          paystack_transfer_code?: string | null
+          processed_at?: string | null
+          processed_by?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payouts_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payouts_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       profiles: {
         Row: {

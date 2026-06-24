@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import { Search, ShieldCheck, ShieldOff } from "lucide-react";
+import { Link } from "react-router-dom";
+import { Search, ShieldCheck, ShieldOff, ChevronRight } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/seo/Seo";
@@ -113,12 +114,20 @@ const AdminUsers = () => {
                   </td>
                   <td className="px-4 py-2.5 text-muted-foreground text-xs">{new Date(r.created_at).toLocaleDateString()}</td>
                   <td className="px-4 py-2.5 text-right">
-                    <button
-                      onClick={() => toggleAdmin(r)}
-                      className={`text-xs font-semibold inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border ${isAdmin ? "border-destructive/40 text-destructive hover:bg-destructive/10" : "border-primary/40 text-primary hover:bg-primary/10"}`}
-                    >
-                      {isAdmin ? <><ShieldOff className="w-3.5 h-3.5" /> Revoke admin</> : <><ShieldCheck className="w-3.5 h-3.5" /> Make admin</>}
-                    </button>
+                    <div className="inline-flex items-center gap-1.5">
+                      <button
+                        onClick={() => toggleAdmin(r)}
+                        className={`text-xs font-semibold inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border ${isAdmin ? "border-destructive/40 text-destructive hover:bg-destructive/10" : "border-primary/40 text-primary hover:bg-primary/10"}`}
+                      >
+                        {isAdmin ? <><ShieldOff className="w-3.5 h-3.5" /> Revoke admin</> : <><ShieldCheck className="w-3.5 h-3.5" /> Make admin</>}
+                      </button>
+                      <Link
+                        to={`/admin/users/${r.user_id}`}
+                        className="text-xs font-semibold inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-border text-foreground hover:bg-secondary"
+                      >
+                        View more <ChevronRight className="w-3.5 h-3.5" />
+                      </Link>
+                    </div>
                   </td>
                 </tr>
               );

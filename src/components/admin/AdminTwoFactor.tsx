@@ -25,17 +25,37 @@ export const AdminTwoFactor = () => {
     setVerified(sessionStorage.getItem(STORAGE_KEY) === token);
   }, [token]);
 
-  const sendCode = async () => {
+  const LAST_SENT_KEY = "admin:2fa-last-sent";
+
+  const sendCode = async (auto = false) => {
     if (!email) return;
+    // Client-side cooldown guard (survives StrictMode remounts)
+    const last = Number(sessionStorage.getItem(LAST_SENT_KEY) || 0);
+    const elapsed = Date.now() - last;
+    if (elapsed < 30_000) {
+      const remaining = Math.ceil((30_000 - elapsed) / 1000);
+      setCooldown(remaining);
+      if (!auto) toast.info(`Please wait ${remaining}s before requesting a new code`);
+      return;
+    }
     setSending(true);
     try {
       const r = await supabase.functions.invoke("send-otp", { body: { identifier: email, channel: "email" } });
+      const retryMs = (r.data as any)?.retry_in_ms ?? (r.error as any)?.context?.retry_in_ms;
+      if (retryMs) {
+        const s = Math.ceil(retryMs / 1000);
+        setCooldown(s);
+        sessionStorage.setItem(LAST_SENT_KEY, String(Date.now() - (30_000 - retryMs)));
+        if (!auto) toast.info(`A code was just sent. Try again in ${s}s`);
+        return;
+      }
       if (r.error) throw new Error("Could not send code");
+      sessionStorage.setItem(LAST_SENT_KEY, String(Date.now()));
       if (r.data?.dev_code) toast.info(`Dev code: ${r.data.dev_code}`, { duration: 15000 });
       else toast.success("Code sent. Check your email.");
       setCooldown(30);
     } catch (e: any) {
-      toast.error(e.message || "Failed to send code");
+      if (!auto) toast.error(e.message || "Failed to send code");
     } finally {
       setSending(false);
     }
@@ -45,7 +65,7 @@ export const AdminTwoFactor = () => {
   useEffect(() => {
     if (!verified && email && !sentRef.current) {
       sentRef.current = true;
-      sendCode();
+      sendCode(true);
     }
   }, [verified, email]);
 

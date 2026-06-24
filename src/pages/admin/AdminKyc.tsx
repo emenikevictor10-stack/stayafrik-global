@@ -22,8 +22,8 @@ const AdminKyc = () => {
 
   const load = async () => {
     setLoading(true);
-    let q = supabase.from("kyc_submissions").select("*").order("created_at", { ascending: false }).limit(200);
-    if (filter !== "all") q = q.eq("status" as any, filter);
+    let q: any = supabase.from("kyc_submissions").select("*").order("created_at", { ascending: false }).limit(200);
+    if (filter !== "all") q = q.eq("status", filter);
     const { data } = await q;
     setRows(((data as any) || []) as Row[]);
     setLoading(false);

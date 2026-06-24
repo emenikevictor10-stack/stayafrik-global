@@ -40,32 +40,66 @@ async function sendSmsTwilio(to: string, body: string) {
   return { ok: true };
 }
 
-async function sendEmailMailgun(to: string, subject: string, text: string) {
-  const lovableKey = Deno.env.get("LOVABLE_API_KEY");
-  const mgKey = Deno.env.get("MAILGUN_CONNECTION_KEY") || Deno.env.get("MAILGUN_API_KEY");
-  const domain = Deno.env.get("MAILGUN_DOMAIN");
-  if (!lovableKey || !mgKey || !domain) {
-    return { ok: false, reason: "email_not_configured" as const };
-  }
-  const res = await fetch(`https://connector-gateway.lovable.dev/mailgun/${domain}/messages`, {
-    method: "POST",
-    headers: {
-      "Authorization": `Bearer ${lovableKey}`,
-      "X-Connection-Api-Key": mgKey,
-      "Content-Type": "application/x-www-form-urlencoded",
-    },
-    body: new URLSearchParams({
-      from: `StayGlobal <noreply@${domain}>`,
-      to,
-      subject,
-      text,
-    }),
+function escapeHtml(value: string) {
+  return value
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#39;");
+}
+
+async function enqueueOtpEmail(to: string, code: string) {
+  const senderDomain = "notify.stayglobal.app";
+  const subject = "Your StayGlobal verification code";
+  const text = `Your StayGlobal verification code is ${code}\n\nIt expires in 10 minutes. If you didn't request this, ignore this email.`;
+  const safeCode = escapeHtml(code);
+  const html = `<!doctype html>
+<html>
+  <body style="margin:0;background:#f8fafc;font-family:Arial,sans-serif;color:#111827;">
+    <div style="max-width:520px;margin:0 auto;padding:32px 20px;">
+      <div style="background:#ffffff;border:1px solid #e5e7eb;border-radius:12px;padding:28px;">
+        <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;color:#111827;">StayGlobal verification code</h1>
+        <p style="margin:0 0 20px;font-size:15px;line-height:1.6;color:#4b5563;">Use this code to finish signing in to your admin account.</p>
+        <div style="letter-spacing:6px;font-size:30px;font-weight:700;background:#f1f5f9;border-radius:10px;padding:18px 20px;text-align:center;color:#111827;">${safeCode}</div>
+        <p style="margin:20px 0 0;font-size:13px;line-height:1.5;color:#6b7280;">This code expires in 10 minutes. If you didn't request it, you can ignore this email.</p>
+      </div>
+    </div>
+  </body>
+</html>`;
+
+  const messageId = crypto.randomUUID();
+  const payload = {
+    message_id: messageId,
+    to,
+    from: `StayGlobal <noreply@${senderDomain}>`,
+    sender_domain: senderDomain,
+    subject,
+    html,
+    text,
+    purpose: "transactional",
+    label: "admin_otp",
+    idempotency_key: `admin-otp-${messageId}`,
+    queued_at: new Date().toISOString(),
+  };
+
+  const { error } = await supabase.rpc("enqueue_email", {
+    queue_name: "transactional_emails",
+    payload,
   });
-  if (!res.ok) {
-    const txt = await res.text();
-    return { ok: false, reason: "email_error" as const, detail: txt };
+
+  if (error) {
+    return { ok: false, reason: "email_queue_error" as const, detail: error.message };
   }
-  return { ok: true };
+
+  await supabase.from("email_send_log").insert({
+    message_id: messageId,
+    template_name: "admin_otp",
+    recipient_email: to,
+    status: "pending",
+  });
+
+  return { ok: true, reason: "queued" as const };
 }
 
 Deno.serve(async (req) => {
@@ -112,11 +146,7 @@ Deno.serve(async (req) => {
     if (channel === "phone") {
       delivery = await sendSmsTwilio(identifier, `Your StayGlobal verification code is ${code}. It expires in 10 minutes.`);
     } else {
-      delivery = await sendEmailMailgun(
-        identifier,
-        "Your StayGlobal verification code",
-        `Your StayGlobal verification code is ${code}\n\nIt expires in 10 minutes. If you didn't request this, ignore this email.`,
-      );
+      delivery = await enqueueOtpEmail(identifier, code);
     }
 
     // In dev / not configured: return the code so the UI can show it (toast).

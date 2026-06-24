@@ -36,7 +36,7 @@ const EMAIL_TEMPLATES: Record<string, React.ComponentType<any>> = {
 }
 
 // Configuration
-const SITE_NAME = "Stay"
+const SITE_NAME = "Stayglobal Comfy"
 const SENDER_DOMAIN = "notify.stayglobal.app"
 const ROOT_DOMAIN = "stayglobal.app"
 const FROM_DOMAIN = "stayglobal.app" // Domain shown in From address (may be root or sender subdomain)

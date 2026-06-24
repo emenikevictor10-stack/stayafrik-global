@@ -21,7 +21,7 @@ const AdminDashboard = () => {
         supabase.from("profiles").select("user_id", { count: "exact", head: true }),
         supabase.from("bookings").select("total_amount").eq("status", "confirmed" as any),
         supabase.from("payouts" as any).select("amount").eq("status", "pending"),
-        supabase.from("kyc_submissions").select("id", { count: "exact", head: true }).eq("status" as any, "pending"),
+        (supabase.from("kyc_submissions") as any).select("id", { count: "exact", head: true }).eq("status", "pending"),
       ]);
       const escrowHeld = (escrowAgg.data || []).reduce((s: number, r: any) => s + Number(r.total_amount || 0), 0);
       const payoutsDue = ((pendingPayouts.data as any[]) || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);

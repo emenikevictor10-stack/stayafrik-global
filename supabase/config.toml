@@ -1,13 +1,13 @@
 project_id = "esdamopsmblyknfnwrou"
 
-[functions.aria-chat]
-verify_jwt = false
-
-[functions.send-otp]
-verify_jwt = false
-
-[functions.verify-otp]
-verify_jwt = false
-
-[functions.process-email-queue]
-verify_jwt = true
+[functions]
+  [functions.aria-chat]
+    verify_jwt = false
+  [functions.auth-email-hook]
+    verify_jwt = false
+  [functions.process-email-queue]
+    verify_jwt = true
+  [functions.send-otp]
+    verify_jwt = false
+  [functions.verify-otp]
+    verify_jwt = false

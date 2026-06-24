@@ -36,7 +36,7 @@ export const TopBar = ({ title, subtitle }: { title: string; subtitle?: string }
           </div>
         </div>
         <button
-          onClick={() => setRole(role === "client" ? "agent" : "client")}
+          onClick={toggleRole}
           className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1.5 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors inline-flex items-center gap-1"
           aria-label="Switch role"
         >

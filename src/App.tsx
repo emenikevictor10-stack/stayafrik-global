@@ -116,7 +116,7 @@ const App = () => (
                     <Route path="/notifications" element={<Notifications />} />
                     <Route path="/property/:id/book" element={<BookProperty />} />
                     <Route path="/booking/confirm" element={<BookingConfirm />} />
-                    <Route path="/admin/listings" element={<AdminListings />} />
+                    
                   </Route>
                 </Route>
 
@@ -124,6 +124,7 @@ const App = () => (
                 <Route element={<RequireAdmin />}>
                   <Route element={<AdminLayout />}>
                     <Route path="/admin" element={<AdminDashboard />} />
+                    <Route path="/admin/listings" element={<AdminListings />} />
                     <Route path="/admin/users" element={<AdminUsers />} />
                     <Route path="/admin/bookings" element={<AdminBookings />} />
                     <Route path="/admin/payouts" element={<AdminPayouts />} />

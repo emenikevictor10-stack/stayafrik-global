@@ -325,6 +325,7 @@ export type Database = {
       }
       payment_methods: {
         Row: {
+          account_number: string | null
           bank_code: string | null
           brand: string
           created_at: string
@@ -337,6 +338,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          account_number?: string | null
           bank_code?: string | null
           brand: string
           created_at?: string
@@ -349,6 +351,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          account_number?: string | null
           bank_code?: string | null
           brand?: string
           created_at?: string

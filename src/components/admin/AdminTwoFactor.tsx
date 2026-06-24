@@ -130,7 +130,7 @@ export const AdminTwoFactor = () => {
         <div className="flex items-center justify-between mt-4 text-xs">
           <button
             disabled={cooldown > 0 || sending}
-            onClick={sendCode}
+            onClick={() => sendCode(false)}
             className="text-primary font-semibold disabled:opacity-50"
           >
             {sending ? "Sending…" : cooldown > 0 ? `Resend in ${cooldown}s` : "Resend code"}

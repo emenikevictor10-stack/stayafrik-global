@@ -12,6 +12,8 @@ const supabase = createClient(
   Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!,
 );
 
+type DeliveryResult = { ok: true; reason?: string } | { ok: false; reason?: string; detail?: string };
+
 async function sha256(input: string) {
   const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(input));
   return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
@@ -142,7 +144,7 @@ Deno.serve(async (req) => {
       expires_at,
     });
 
-    let delivery: any = { ok: false };
+    let delivery: DeliveryResult = { ok: false };
     if (channel === "phone") {
       delivery = await sendSmsTwilio(identifier, `Your StayGlobal verification code is ${code}. It expires in 10 minutes.`);
     } else {
@@ -151,7 +153,7 @@ Deno.serve(async (req) => {
 
     // In dev / not configured: return the code so the UI can show it (toast).
     // We never include it when delivery succeeded.
-    const body: any = { sent: !!delivery.ok };
+    const body: { sent: boolean; dev_code?: string; delivery_status?: string } = { sent: !!delivery.ok };
     if (!delivery.ok) {
       body.dev_code = code;
       body.delivery_status = delivery.reason ?? "unknown";
@@ -161,8 +163,9 @@ Deno.serve(async (req) => {
     return new Response(JSON.stringify(body), {
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });
-  } catch (e: any) {
-    return new Response(JSON.stringify({ error: e?.message ?? "unknown" }), {
+  } catch (e: unknown) {
+    const message = e instanceof Error ? e.message : "unknown";
+    return new Response(JSON.stringify({ error: message }), {
       status: 500,
       headers: { ...corsHeaders, "Content-Type": "application/json" },
     });

@@ -9,7 +9,9 @@ export const RequireAdmin = () => {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
 
   useEffect(() => {
+    if (loading) return;
     if (!user) { setIsAdmin(false); return; }
+    setIsAdmin(null);
     supabase
       .from("user_roles")
       .select("role")
@@ -17,7 +19,7 @@ export const RequireAdmin = () => {
       .eq("role", "admin" as any)
       .maybeSingle()
       .then(({ data }) => setIsAdmin(!!data));
-  }, [user]);
+  }, [user, loading]);
 
   if (loading || isAdmin === null) {
     return (

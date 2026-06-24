@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
-import { Navigate, Outlet, useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
+import { AdminTwoFactor } from "./AdminTwoFactor";
 
 export const RequireAdmin = () => {
   const { user, loading } = useAuth();
@@ -30,5 +31,5 @@ export const RequireAdmin = () => {
   }
   if (!user) return <Navigate to="/auth" state={{ from: location }} replace />;
   if (!isAdmin) return <Navigate to="/" replace />;
-  return <Outlet />;
+  return <AdminTwoFactor />;
 };

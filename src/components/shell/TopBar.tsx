@@ -1,16 +1,30 @@
 import { useRole } from "@/contexts/RoleContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { Bell, User, Briefcase } from "lucide-react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import icon from "@/assets/stay-icon-white.png";
 import iconAlt from "@/assets/stay-icon-white.png";
 import { useNotifications } from "@/hooks/useNotifications";
 
 export const TopBar = ({ title, subtitle }: { title: string; subtitle?: string }) => {
   const { user, role, setRole } = useRole();
+  const { profile, session } = useAuth();
   const { unread } = useNotifications();
   const location = useLocation();
+  const navigate = useNavigate();
   const isHome = location.pathname === "/";
   const RoleIcon = role === "client" ? User : Briefcase;
+  const toggleRole = () => {
+    if (role === "client") {
+      if (!session) return navigate("/auth?mode=signin", { state: { from: "/become-host" } });
+      if (!profile?.is_host) return navigate("/become-host");
+      setRole("agent");
+      navigate("/listings");
+    } else {
+      setRole("client");
+      navigate("/");
+    }
+  };
   return (
     <header className="sticky top-0 z-30 bg-background/90 backdrop-blur-xl border-b border-border">
       <div className="px-5 pt-4 pb-3 flex items-center gap-3">
@@ -22,7 +36,7 @@ export const TopBar = ({ title, subtitle }: { title: string; subtitle?: string }
           </div>
         </div>
         <button
-          onClick={() => setRole(role === "client" ? "agent" : "client")}
+          onClick={toggleRole}
           className="text-[10px] font-semibold uppercase tracking-wider px-2.5 py-1.5 rounded-full bg-secondary border border-border text-muted-foreground hover:text-primary hover:border-primary/50 transition-colors inline-flex items-center gap-1"
           aria-label="Switch role"
         >

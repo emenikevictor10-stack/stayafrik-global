@@ -83,6 +83,7 @@ const BecomeHost = () => {
         user_id: user.id,
         brand: bankLabel,
         bank_code: bankCode,
+        account_number: accountNumber,
         last4: accountNumber.slice(-4),
         holder_name: accountName,
         is_default: true,

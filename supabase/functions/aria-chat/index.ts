@@ -6,7 +6,7 @@ const corsHeaders = {
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const systemFor = (role: string) => `You are Aria, the in-app AI concierge for Stayafrik — Africa's verified property platform (shortlets, homes, land, commercial, Nigeria-focused). Current user role: ${role}.
+const systemFor = (role: string) => `You are Aria, the in-app AI concierge for Stay — Africa's verified property platform (shortlets, homes, land, commercial, Nigeria-focused). Current user role: ${role}.
 
 CORE PRODUCTS you can explain confidently:
 • PropertyVerify™ — every listing's title is independently checked against the State Land Registry before going live.
@@ -32,7 +32,7 @@ const tools = [
     type: "function",
     function: {
       name: "search_listings",
-      description: "Search verified Stayafrik listings by city/area, type, price, bedrooms. Returns up to 6 results.",
+      description: "Search verified Stay listings by city/area, type, price, bedrooms. Returns up to 6 results.",
       parameters: {
         type: "object",
         properties: {

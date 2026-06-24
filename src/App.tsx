@@ -130,7 +130,6 @@ const App = () => (
                     <Route path="/admin/kyc" element={<AdminKyc />} />
                     <Route path="/admin/audit" element={<AdminAudit />} />
                   </Route>
-                  </Route>
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>

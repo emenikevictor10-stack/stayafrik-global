@@ -1,0 +1,1 @@
+ALTER TABLE public.payment_methods ADD COLUMN IF NOT EXISTS account_number TEXT;

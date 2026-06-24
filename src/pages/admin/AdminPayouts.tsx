@@ -57,6 +57,18 @@ const AdminPayouts = () => {
     load();
   };
 
+  const processPayout = async (id: string) => {
+    const t = toast.loading("Initiating Paystack transfer…");
+    const { data, error } = await supabase.functions.invoke("process-payout", { body: { payout_id: id } });
+    toast.dismiss(t);
+    if (error || (data as any)?.error) {
+      toast.error((data as any)?.error || error?.message || "Transfer failed");
+    } else {
+      toast.success("Transfer queued at Paystack");
+    }
+    load();
+  };
+
   const totalDue = rows.filter((r) => r.status === "pending").reduce((s, r) => s + Number(r.amount), 0);
 
   return (
@@ -102,6 +114,7 @@ const AdminPayouts = () => {
                 <td className="px-4 py-2.5 text-right space-x-1">
                   {r.status === "pending" && (
                     <>
+                      <button onClick={() => processPayout(r.id)} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90">Send via Paystack</button>
                       <button onClick={() => mark(r.id, "paid")} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-success/40 text-success hover:bg-success/10">Mark paid</button>
                       <button onClick={() => mark(r.id, "cancelled")} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-border text-muted-foreground hover:bg-secondary">Cancel</button>
                     </>

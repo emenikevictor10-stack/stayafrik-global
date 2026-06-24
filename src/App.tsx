@@ -28,6 +28,14 @@ import Commission from "./pages/agent/Commission";
 import PayoutAccount from "./pages/agent/PayoutAccount";
 import Performance from "./pages/agent/Performance";
 import AdminListings from "./pages/admin/AdminListings";
+import AdminDashboard from "./pages/admin/AdminDashboard";
+import AdminUsers from "./pages/admin/AdminUsers";
+import AdminBookings from "./pages/admin/AdminBookings";
+import AdminPayouts from "./pages/admin/AdminPayouts";
+import AdminKyc from "./pages/admin/AdminKyc";
+import AdminAudit from "./pages/admin/AdminAudit";
+import { RequireAdmin } from "@/components/admin/RequireAdmin";
+import { AdminLayout } from "@/components/admin/AdminLayout";
 import Messages from "./pages/shared/Messages";
 import ChatThread from "./pages/shared/ChatThread";
 import Profile from "./pages/shared/Profile";
@@ -108,7 +116,20 @@ const App = () => (
                     <Route path="/notifications" element={<Notifications />} />
                     <Route path="/property/:id/book" element={<BookProperty />} />
                     <Route path="/booking/confirm" element={<BookingConfirm />} />
+                    
+                  </Route>
+                </Route>
+
+                {/* Admin console — separate desktop-first shell */}
+                <Route element={<RequireAdmin />}>
+                  <Route element={<AdminLayout />}>
+                    <Route path="/admin" element={<AdminDashboard />} />
                     <Route path="/admin/listings" element={<AdminListings />} />
+                    <Route path="/admin/users" element={<AdminUsers />} />
+                    <Route path="/admin/bookings" element={<AdminBookings />} />
+                    <Route path="/admin/payouts" element={<AdminPayouts />} />
+                    <Route path="/admin/kyc" element={<AdminKyc />} />
+                    <Route path="/admin/audit" element={<AdminAudit />} />
                   </Route>
                 </Route>
                 <Route path="*" element={<NotFound />} />

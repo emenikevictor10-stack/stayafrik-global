@@ -60,6 +60,24 @@ const BookProperty = () => {
     }
   };
 
+  const loadPaystackInline = () =>
+    new Promise<void>((resolve, reject) => {
+      if ((window as any).PaystackPop) return resolve();
+      const existing = document.querySelector<HTMLScriptElement>('script[data-paystack-inline]');
+      if (existing) {
+        existing.addEventListener("load", () => resolve());
+        existing.addEventListener("error", () => reject(new Error("Failed to load Paystack")));
+        return;
+      }
+      const s = document.createElement("script");
+      s.src = "https://js.paystack.co/v2/inline.js";
+      s.async = true;
+      s.dataset.paystackInline = "true";
+      s.onload = () => resolve();
+      s.onerror = () => reject(new Error("Failed to load Paystack"));
+      document.head.appendChild(s);
+    });
+
   const pay = async () => {
     if (!user) return toast.error("Please sign in");
     if (!datesValid) return toast.error("Pick valid dates");
@@ -76,13 +94,32 @@ const BookProperty = () => {
         },
       });
       if (error) throw new Error(error.message);
-      if (!data?.authorization_url) throw new Error(data?.error || "Could not start payment");
-      window.location.href = data.authorization_url;
+      if (!data?.access_code || !data?.reference) {
+        throw new Error(data?.error || "Could not start payment");
+      }
+
+      await loadPaystackInline();
+      const PaystackPop = (window as any).PaystackPop;
+      const popup = new PaystackPop();
+      popup.resumeTransaction(data.access_code, {
+        onSuccess: (tx: { reference: string }) => {
+          window.location.href = `/booking/confirm?reference=${encodeURIComponent(tx.reference || data.reference)}`;
+        },
+        onCancel: () => {
+          setPaying(false);
+          toast.message("Payment cancelled");
+        },
+        onError: (err: any) => {
+          setPaying(false);
+          toast.error(err?.message || "Payment failed");
+        },
+      });
     } catch (e: any) {
       toast.error(e.message || "Payment failed to start");
       setPaying(false);
     }
   };
+
 
   const stepLabel =
     step === 1 ? "When are you staying?" :

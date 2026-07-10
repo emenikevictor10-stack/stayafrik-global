@@ -124,6 +124,7 @@ Deno.serve(async (req) => {
 
     return json(200, {
       authorization_url: j.data.authorization_url,
+      access_code: j.data.access_code,
       reference: j.data.reference,
       total,
       nights,

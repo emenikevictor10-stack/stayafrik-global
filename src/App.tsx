@@ -9,6 +9,7 @@ import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Auth from "./pages/auth/Auth";
 import Welcome from "./pages/auth/Welcome";
 import ResetPassword from "./pages/auth/ResetPassword";
+import OAuthConsent from "./pages/auth/OAuthConsent";
 import { MobileShell } from "@/components/shell/MobileShell";
 import Index from "./pages/Index";
 import Explore from "./pages/client/Explore";
@@ -81,6 +82,7 @@ const App = () => (
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
                 <Route path="/welcome" element={<Welcome />} />
+                <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
 
                 {/* Public routes — explore is the default page, browsable without login */}
                 <Route element={<PinGate><MobileShell /></PinGate>}>

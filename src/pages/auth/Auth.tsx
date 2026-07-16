@@ -45,7 +45,9 @@ const Auth = () => {
 
   const { setIsNewUser, session } = useAuth();
   const { setRole } = useRole();
-  const fromPath = (location.state as { from?: string } | null)?.from;
+  const rawNext = params.get("next");
+  const safeNext = rawNext && rawNext.startsWith("/") && !rawNext.startsWith("//") ? rawNext : null;
+  const fromPath = safeNext ?? (location.state as { from?: string } | null)?.from ?? null;
 
   useEffect(() => {
     const routeByRole = async () => {
@@ -121,7 +123,7 @@ const Auth = () => {
         email: pending.email,
         password: pending.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}${safeNext ?? "/"}`,
           data: { full_name: pending.fullName, role: pending.role, phone: pending.phone },
         },
       });
@@ -169,7 +171,8 @@ const Auth = () => {
   };
 
   const google = async () => {
-    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: window.location.origin });
+    const redirectUri = safeNext ? `${window.location.origin}${safeNext}` : window.location.origin;
+    const result = await lovable.auth.signInWithOAuth("google", { redirect_uri: redirectUri });
     if (result.error) toast.error("Google sign-in failed");
   };
 

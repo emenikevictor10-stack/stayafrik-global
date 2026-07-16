@@ -123,7 +123,7 @@ const Auth = () => {
         email: pending.email,
         password: pending.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}${safeNext ?? "/"}`,
           data: { full_name: pending.fullName, role: pending.role, phone: pending.phone },
         },
       });

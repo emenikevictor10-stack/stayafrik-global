@@ -101,23 +101,44 @@ const AdminListings = () => {
     if (isAdmin) load();
   }, [isAdmin]);
 
-  const approve = async (id: string) => {
+  const doApprove = async (id: string) => {
+    setSubmitting(true);
     const { error } = await supabase
       .from("listings")
       .update({ verified: true, is_available: true })
       .eq("id", id);
+    setSubmitting(false);
     if (error) return toast.error(error.message);
     toast.success("Listing approved and live");
     setRows((r) => r.filter((x) => x.id !== id));
+    setConfirmAction(null);
   };
 
-  const reject = async (id: string) => {
-    if (!confirm("Reject and delete this listing?")) return;
-    const { error } = await supabase.from("listings").delete().eq("id", id);
+  const doReject = async (row: ListingRow, reason: string) => {
+    setSubmitting(true);
+    // Notify host with optional reason before deleting
+    try {
+      await supabase.from("notifications").insert({
+        user_id: row.host_id,
+        type: "listing_rejected",
+        title: "Listing rejected",
+        body: reason
+          ? `Your listing "${row.title}" was not approved. Reason: ${reason}`
+          : `Your listing "${row.title}" was not approved.`,
+        metadata: { listing_id: row.id, reason: reason || null },
+      } as any);
+    } catch {
+      /* non-blocking */
+    }
+    const { error } = await supabase.from("listings").delete().eq("id", row.id);
+    setSubmitting(false);
     if (error) return toast.error(error.message);
     toast.success("Listing removed");
-    setRows((r) => r.filter((x) => x.id !== id));
+    setRows((r) => r.filter((x) => x.id !== row.id));
+    setConfirmAction(null);
+    setRejectReason("");
   };
+
 
   if (loading || isAdmin === null) {
     return <main className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></main>;

@@ -119,9 +119,10 @@ const AdminUsers = () => {
                     <div className="inline-flex items-center gap-1.5">
                       <button
                         onClick={() => toggleAdmin(r)}
-                        className={`text-xs font-semibold inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border ${isAdmin ? "border-destructive/40 text-destructive hover:bg-destructive/10" : "border-primary/40 text-primary hover:bg-primary/10"}`}
+                        disabled={pendingId === r.user_id}
+                        className={`text-xs font-semibold inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border disabled:opacity-50 ${isAdmin ? "border-destructive/40 text-destructive hover:bg-destructive/10" : "border-primary/40 text-primary hover:bg-primary/10"}`}
                       >
-                        {isAdmin ? <><ShieldOff className="w-3.5 h-3.5" /> Revoke admin</> : <><ShieldCheck className="w-3.5 h-3.5" /> Make admin</>}
+                        {pendingId === r.user_id ? "Working…" : isAdmin ? <><ShieldOff className="w-3.5 h-3.5" /> Revoke admin</> : <><ShieldCheck className="w-3.5 h-3.5" /> Make admin</>}
                       </button>
                       <Link
                         to={`/admin/users/${r.user_id}`}

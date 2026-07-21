@@ -42,19 +42,21 @@ const AdminUsers = () => {
 
   useEffect(() => { load(); }, []);
 
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
   const toggleAdmin = async (row: Row) => {
     const isAdmin = row.roles.includes("admin");
-    if (isAdmin) {
-      const { error } = await supabase.from("user_roles").delete().eq("user_id", row.user_id).eq("role", "admin" as any);
-      if (error) return toast.error(error.message);
-      await logAdminAction({ action: "revoke_admin", entityType: "user", entityId: row.user_id });
-      toast.success("Admin revoked");
-    } else {
-      const { error } = await supabase.from("user_roles").insert({ user_id: row.user_id, role: "admin" as any });
-      if (error) return toast.error(error.message);
-      await logAdminAction({ action: "grant_admin", entityType: "user", entityId: row.user_id });
-      toast.success("Admin granted");
+    const action = isAdmin ? "revoke" : "grant";
+    if (!confirm(`${isAdmin ? "Revoke admin from" : "Grant admin to"} ${row.full_name || row.email}?`)) return;
+    setPendingId(row.user_id);
+    const { data, error } = await supabase.functions.invoke("admin-set-role", {
+      body: { user_id: row.user_id, role: "admin", action },
+    });
+    setPendingId(null);
+    if (error || (data as any)?.error) {
+      return toast.error((data as any)?.error || error?.message || "Failed");
     }
+    toast.success(isAdmin ? "Admin revoked" : "Admin granted");
     load();
   };
 

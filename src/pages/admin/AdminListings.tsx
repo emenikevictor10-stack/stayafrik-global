@@ -58,6 +58,9 @@ const AdminListings = () => {
   const [hosts, setHosts] = useState<Record<string, HostProfile>>({});
   const [busy, setBusy] = useState(false);
   const [lightbox, setLightbox] = useState<{ images: string[]; start: number } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ kind: "approve" | "reject"; row: ListingRow } | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -98,23 +101,44 @@ const AdminListings = () => {
     if (isAdmin) load();
   }, [isAdmin]);
 
-  const approve = async (id: string) => {
+  const doApprove = async (id: string) => {
+    setSubmitting(true);
     const { error } = await supabase
       .from("listings")
       .update({ verified: true, is_available: true })
       .eq("id", id);
+    setSubmitting(false);
     if (error) return toast.error(error.message);
     toast.success("Listing approved and live");
     setRows((r) => r.filter((x) => x.id !== id));
+    setConfirmAction(null);
   };
 
-  const reject = async (id: string) => {
-    if (!confirm("Reject and delete this listing?")) return;
-    const { error } = await supabase.from("listings").delete().eq("id", id);
+  const doReject = async (row: ListingRow, reason: string) => {
+    setSubmitting(true);
+    // Notify host with optional reason before deleting
+    try {
+      await supabase.from("notifications").insert({
+        user_id: row.host_id,
+        type: "listing_rejected",
+        title: "Listing rejected",
+        body: reason
+          ? `Your listing "${row.title}" was not approved. Reason: ${reason}`
+          : `Your listing "${row.title}" was not approved.`,
+        metadata: { listing_id: row.id, reason: reason || null },
+      } as any);
+    } catch {
+      /* non-blocking */
+    }
+    const { error } = await supabase.from("listings").delete().eq("id", row.id);
+    setSubmitting(false);
     if (error) return toast.error(error.message);
     toast.success("Listing removed");
-    setRows((r) => r.filter((x) => x.id !== id));
+    setRows((r) => r.filter((x) => x.id !== row.id));
+    setConfirmAction(null);
+    setRejectReason("");
   };
+
 
   if (loading || isAdmin === null) {
     return <main className="min-h-screen flex items-center justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></main>;
@@ -280,8 +304,8 @@ const AdminListings = () => {
 
                 {/* Actions */}
                 <div className="flex flex-col-reverse sm:flex-row gap-2 pt-1 sticky bottom-2">
-                  <button onClick={() => reject(r.id)} className="flex-1 rounded-xl border border-destructive/40 text-destructive py-3 text-sm font-bold hover:bg-destructive/5">Reject</button>
-                  <button onClick={() => approve(r.id)} className="flex-1 rounded-xl bg-success text-white py-3 text-sm font-bold hover:opacity-90">Approve & publish</button>
+                  <button onClick={() => { setRejectReason(""); setConfirmAction({ kind: "reject", row: r }); }} className="flex-1 rounded-xl border border-destructive/40 text-destructive py-3 text-sm font-bold hover:bg-destructive/5">Reject</button>
+                  <button onClick={() => setConfirmAction({ kind: "approve", row: r })} className="flex-1 rounded-xl bg-success text-white py-3 text-sm font-bold hover:opacity-90">Approve & publish</button>
                 </div>
               </div>
             </article>
@@ -290,6 +314,64 @@ const AdminListings = () => {
       </div>
 
       {lightbox && <Lightbox images={lightbox.images} start={lightbox.start} onClose={() => setLightbox(null)} />}
+
+      {confirmAction && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={() => !submitting && setConfirmAction(null)}>
+          <div className="w-full max-w-md bg-card border border-border rounded-3xl shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
+            <div className="p-5 border-b border-border">
+              <h3 className="text-lg font-extrabold">
+                {confirmAction.kind === "approve" ? "Approve this listing?" : "Reject this listing?"}
+              </h3>
+              <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{confirmAction.row.title}</p>
+            </div>
+            <div className="p-5 space-y-3">
+              {confirmAction.kind === "approve" ? (
+                <p className="text-sm text-muted-foreground">
+                  It will go live immediately and be visible to guests. Make sure photos, price, and details look right.
+                </p>
+              ) : (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    The listing will be permanently removed. The host will be notified with your reason (optional).
+                  </p>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold">Reason (optional)</label>
+                    <textarea
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      rows={3}
+                      maxLength={500}
+                      placeholder="e.g. Photos are low quality, address unclear, price seems incorrect…"
+                      className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1 text-right">{rejectReason.length}/500</p>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="p-4 flex gap-2 border-t border-border bg-secondary/30">
+              <button
+                disabled={submitting}
+                onClick={() => setConfirmAction(null)}
+                className="flex-1 rounded-xl border border-border bg-card py-2.5 text-sm font-bold disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={submitting}
+                onClick={() =>
+                  confirmAction.kind === "approve"
+                    ? doApprove(confirmAction.row.id)
+                    : doReject(confirmAction.row, rejectReason.trim())
+                }
+                className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-white disabled:opacity-50 ${confirmAction.kind === "approve" ? "bg-success" : "bg-destructive"}`}
+              >
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : confirmAction.kind === "approve" ? "Approve & publish" : "Reject listing"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </main>
   );
 };

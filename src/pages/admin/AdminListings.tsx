@@ -58,6 +58,9 @@ const AdminListings = () => {
   const [hosts, setHosts] = useState<Record<string, HostProfile>>({});
   const [busy, setBusy] = useState(false);
   const [lightbox, setLightbox] = useState<{ images: string[]; start: number } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ kind: "approve" | "reject"; row: ListingRow } | null>(null);
+  const [rejectReason, setRejectReason] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!user) return;

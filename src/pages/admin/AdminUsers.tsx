@@ -42,19 +42,21 @@ const AdminUsers = () => {
 
   useEffect(() => { load(); }, []);
 
+  const [pendingId, setPendingId] = useState<string | null>(null);
+
   const toggleAdmin = async (row: Row) => {
     const isAdmin = row.roles.includes("admin");
-    if (isAdmin) {
-      const { error } = await supabase.from("user_roles").delete().eq("user_id", row.user_id).eq("role", "admin" as any);
-      if (error) return toast.error(error.message);
-      await logAdminAction({ action: "revoke_admin", entityType: "user", entityId: row.user_id });
-      toast.success("Admin revoked");
-    } else {
-      const { error } = await supabase.from("user_roles").insert({ user_id: row.user_id, role: "admin" as any });
-      if (error) return toast.error(error.message);
-      await logAdminAction({ action: "grant_admin", entityType: "user", entityId: row.user_id });
-      toast.success("Admin granted");
+    const action = isAdmin ? "revoke" : "grant";
+    if (!confirm(`${isAdmin ? "Revoke admin from" : "Grant admin to"} ${row.full_name || row.email}?`)) return;
+    setPendingId(row.user_id);
+    const { data, error } = await supabase.functions.invoke("admin-set-role", {
+      body: { user_id: row.user_id, role: "admin", action },
+    });
+    setPendingId(null);
+    if (error || (data as any)?.error) {
+      return toast.error((data as any)?.error || error?.message || "Failed");
     }
+    toast.success(isAdmin ? "Admin revoked" : "Admin granted");
     load();
   };
 
@@ -117,9 +119,10 @@ const AdminUsers = () => {
                     <div className="inline-flex items-center gap-1.5">
                       <button
                         onClick={() => toggleAdmin(r)}
-                        className={`text-xs font-semibold inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border ${isAdmin ? "border-destructive/40 text-destructive hover:bg-destructive/10" : "border-primary/40 text-primary hover:bg-primary/10"}`}
+                        disabled={pendingId === r.user_id}
+                        className={`text-xs font-semibold inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border disabled:opacity-50 ${isAdmin ? "border-destructive/40 text-destructive hover:bg-destructive/10" : "border-primary/40 text-primary hover:bg-primary/10"}`}
                       >
-                        {isAdmin ? <><ShieldOff className="w-3.5 h-3.5" /> Revoke admin</> : <><ShieldCheck className="w-3.5 h-3.5" /> Make admin</>}
+                        {pendingId === r.user_id ? "Working…" : isAdmin ? <><ShieldOff className="w-3.5 h-3.5" /> Revoke admin</> : <><ShieldCheck className="w-3.5 h-3.5" /> Make admin</>}
                       </button>
                       <Link
                         to={`/admin/users/${r.user_id}`}

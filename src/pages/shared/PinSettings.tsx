@@ -27,6 +27,7 @@ const PinInput = ({
 
 const PinSettings = () => {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const [current, setCurrent] = useState("");
   const [next, setNext] = useState("");
   const [confirm, setConfirm] = useState("");
@@ -42,8 +43,13 @@ const PinSettings = () => {
     if (next !== confirm) return toast.error("PINs do not match");
     try {
       await setPin(user.id, next);
-      toast.success(exists ? "PIN updated" : "PIN set");
       setCurrent(""); setNext(""); setConfirm("");
+      if (exists) {
+        toast.success("PIN updated");
+      } else {
+        toast.success("PIN set! 🎉 You're all secure. Taking you to explore…", { duration: 3000 });
+        navigate("/explore", { replace: true });
+      }
     } catch (err: any) { toast.error(err.message); }
   };
 

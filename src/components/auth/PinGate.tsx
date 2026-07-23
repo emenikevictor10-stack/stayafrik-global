@@ -12,6 +12,7 @@ type Mode = "verify" | "create" | "confirm" | null;
  */
 export const PinGate = ({ children }: { children: React.ReactNode }) => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>(null);
   const [pin, setPin] = useState("");
   const [firstPin, setFirstPin] = useState("");

@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { hasPin, isUnlocked, verifyPin, setPin as savePin, clearPin, PIN_LENGTH } from "@/lib/pin";
 import { Delete, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 type Mode = "verify" | "create" | "confirm" | null;
 

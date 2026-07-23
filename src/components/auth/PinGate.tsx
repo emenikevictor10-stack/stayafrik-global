@@ -121,7 +121,7 @@ export const PinGate = ({ children }: { children: React.ReactNode }) => {
               onClick={async () => {
                 if (user) clearPin(user.id);
                 await signOut();
-                toast.success("PIN reset. Sign in to set a new one.");
+                toast.success("PIN reset. Sign in with Google to set a new one.");
               }}
               className="text-[13px] text-muted-foreground underline underline-offset-4 hover:text-foreground"
             >
@@ -132,9 +132,25 @@ export const PinGate = ({ children }: { children: React.ReactNode }) => {
               onClick={signOut}
               className="text-[13px] text-primary font-semibold underline underline-offset-4"
             >
-              Continue with email
+              Sign out
             </button>
           </div>
+        )}
+
+        {(mode === "create" || mode === "confirm") && (
+          <button
+            onClick={() => {
+              if (!user) return;
+              localStorage.removeItem(`stay:pin-prompt:${user.id}`);
+              localStorage.setItem(`stay:pin-prompt-skipped:${user.id}`, "1");
+              setPin("");
+              setFirstPin("");
+              setMode(null);
+            }}
+            className="mt-8 text-[13px] text-muted-foreground underline underline-offset-4 hover:text-foreground"
+          >
+            Skip for now
+          </button>
         )}
       </div>
 

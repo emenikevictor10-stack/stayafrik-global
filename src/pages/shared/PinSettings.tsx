@@ -4,6 +4,7 @@ import { hasPin, setPin, clearPin, verifyPin, PIN_LENGTH } from "@/lib/pin";
 import { useState } from "react";
 import { toast } from "sonner";
 import { ShieldCheck, ShieldOff } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const PinInput = ({
   value, onChange, label, autoFocus,

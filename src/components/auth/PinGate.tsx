@@ -56,7 +56,8 @@ export const PinGate = ({ children }: { children: React.ReactNode }) => {
           } else {
             await savePin(user.id, pin);
             localStorage.removeItem(`stay:pin-prompt:${user.id}`);
-            toast.success("PIN set");
+            toast.success("PIN set! 🎉 You're all secure. Taking you to explore…", { duration: 3000 });
+            navigate("/explore", { replace: true });
             setMode(null);
             setPin("");
             setFirstPin("");

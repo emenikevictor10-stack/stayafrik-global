@@ -3,6 +3,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { hasPin, isUnlocked, verifyPin, setPin as savePin, clearPin, PIN_LENGTH } from "@/lib/pin";
 import { Delete, Lock, ShieldCheck } from "lucide-react";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 type Mode = "verify" | "create" | "confirm" | null;
 
@@ -11,6 +12,7 @@ type Mode = "verify" | "create" | "confirm" | null;
  */
 export const PinGate = ({ children }: { children: React.ReactNode }) => {
   const { user, signOut } = useAuth();
+  const navigate = useNavigate();
   const [mode, setMode] = useState<Mode>(null);
   const [pin, setPin] = useState("");
   const [firstPin, setFirstPin] = useState("");
@@ -54,7 +56,8 @@ export const PinGate = ({ children }: { children: React.ReactNode }) => {
           } else {
             await savePin(user.id, pin);
             localStorage.removeItem(`stay:pin-prompt:${user.id}`);
-            toast.success("PIN set");
+            toast.success("PIN set! 🎉 You're all secure. Taking you to explore…", { duration: 3000 });
+            navigate("/explore", { replace: true });
             setMode(null);
             setPin("");
             setFirstPin("");

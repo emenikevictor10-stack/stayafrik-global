@@ -351,8 +351,16 @@ const AdminListings = () => {
 
                 {/* Actions */}
                 <div className="flex flex-col-reverse sm:flex-row gap-2 pt-1 sticky bottom-2">
-                  <button onClick={() => { setRejectReason(""); setConfirmAction({ kind: "reject", row: r }); }} className="flex-1 rounded-xl border border-destructive/40 text-destructive py-3 text-sm font-bold hover:bg-destructive/5">Reject</button>
-                  <button onClick={() => setConfirmAction({ kind: "approve", row: r })} className="flex-1 rounded-xl bg-success text-white py-3 text-sm font-bold hover:opacity-90">Approve & publish</button>
+                  {tab === "pending" ? (
+                    <>
+                      <button onClick={() => { setRejectReason(""); setConfirmAction({ kind: "reject", row: r }); }} className="flex-1 rounded-xl border border-destructive/40 text-destructive py-3 text-sm font-bold hover:bg-destructive/5">Reject</button>
+                      <button onClick={() => setConfirmAction({ kind: "approve", row: r })} className="flex-1 rounded-xl bg-success text-white py-3 text-sm font-bold hover:opacity-90">Approve & publish</button>
+                    </>
+                  ) : (
+                    <button onClick={() => { setRejectReason(""); setConfirmAction({ kind: "revoke", row: r }); }} className="flex-1 rounded-xl border border-destructive/40 text-destructive py-3 text-sm font-bold hover:bg-destructive/5">
+                      Revoke approval (move to pending)
+                    </button>
+                  )}
                 </div>
               </div>
             </article>

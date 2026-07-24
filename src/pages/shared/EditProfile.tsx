@@ -6,6 +6,7 @@ import { ChevronLeft, Camera } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { toWebp } from "@/lib/media";
 
 const EditProfile = () => {
   const { user } = useRole();
@@ -14,27 +15,32 @@ const EditProfile = () => {
   const [name, setName] = useState(user.name);
   const [email, setEmail] = useState(authUser?.email || "");
   const [phone, setPhone] = useState(profile?.phone || "");
+  const [whatsapp, setWhatsapp] = useState<string>("");
+  const [bio, setBio] = useState<string>("");
   const [saving, setSaving] = useState(false);
   const [uploading, setUploading] = useState(false);
   const fileRef = useRef<HTMLInputElement>(null);
+  const isHost = !!profile?.is_host;
 
   useEffect(() => {
     setName(user.name);
     setEmail(profile?.email || authUser?.email || "");
     setPhone(profile?.phone || "");
-  }, [authUser?.email, profile?.email, profile?.phone, user.name]);
+    setWhatsapp(((profile as any)?.whatsapp as string) || "");
+    setBio(((profile as any)?.bio as string) || "");
+  }, [authUser?.email, profile?.email, profile?.phone, (profile as any)?.whatsapp, (profile as any)?.bio, user.name]);
 
   const uploadAvatar = async (file: File) => {
     if (!authUser) return;
-    if (file.size > 5 * 1024 * 1024) return toast.error("Image must be under 5MB");
+    if (file.size > 10 * 1024 * 1024) return toast.error("Image must be under 10MB");
     setUploading(true);
     try {
-      const ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
-      const path = `${authUser.id}/avatar-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("avatars").upload(path, file, {
+      const light = await toWebp(file);
+      const path = `${authUser.id}/avatar-${Date.now()}.webp`;
+      const { error: upErr } = await supabase.storage.from("avatars").upload(path, light, {
         cacheControl: "3600",
         upsert: true,
-        contentType: file.type,
+        contentType: light.type,
       });
       if (upErr) throw upErr;
       const { data: pub } = supabase.storage.from("avatars").getPublicUrl(path);
@@ -54,10 +60,16 @@ const EditProfile = () => {
 
   const save = async () => {
     if (!authUser) return;
+    if (isHost && !whatsapp.trim()) {
+      return toast.error("WhatsApp number is required for hosts");
+    }
     setSaving(true);
     const { error } = await supabase
       .from("profiles")
-      .upsert({ user_id: authUser.id, full_name: name.trim(), email, phone }, { onConflict: "user_id" });
+      .upsert(
+        { user_id: authUser.id, full_name: name.trim(), email, phone, whatsapp: whatsapp.trim() || null, bio: bio.trim() || null } as any,
+        { onConflict: "user_id" },
+      );
     setSaving(false);
     if (error) return toast.error(error.message);
     await refreshProfile();
@@ -120,6 +132,37 @@ const EditProfile = () => {
                 className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm" />
             </label>
           ))}
+
+          <label className="block">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              WhatsApp number {isHost && <span className="text-destructive">*</span>}
+            </span>
+            <input
+              type="tel"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              placeholder="+234…"
+              className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm"
+            />
+            <span className="text-[10px] text-muted-foreground mt-1 block">
+              {isHost
+                ? "Required so guests and support can reach you quickly."
+                : "Optional — lets hosts and support reach you on WhatsApp."}
+            </span>
+          </label>
+
+          <label className="block">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              About you
+            </span>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              rows={3}
+              placeholder="Tell guests a little about yourself…"
+              className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm"
+            />
+          </label>
         </section>
 
         <button onClick={save} disabled={saving} className="mt-6 w-full rounded-2xl bg-primary text-primary-foreground py-3.5 font-bold text-sm shadow-glow disabled:opacity-60">

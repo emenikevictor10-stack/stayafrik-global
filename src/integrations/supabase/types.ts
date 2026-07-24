@@ -521,6 +521,7 @@ export type Database = {
       profiles: {
         Row: {
           avatar_url: string | null
+          bio: string | null
           created_at: string
           email: string | null
           email_verified: boolean
@@ -531,9 +532,11 @@ export type Database = {
           phone_verified: boolean
           updated_at: string
           user_id: string
+          whatsapp: string | null
         }
         Insert: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
           email_verified?: boolean
@@ -544,9 +547,11 @@ export type Database = {
           phone_verified?: boolean
           updated_at?: string
           user_id: string
+          whatsapp?: string | null
         }
         Update: {
           avatar_url?: string | null
+          bio?: string | null
           created_at?: string
           email?: string | null
           email_verified?: boolean
@@ -557,6 +562,7 @@ export type Database = {
           phone_verified?: boolean
           updated_at?: string
           user_id?: string
+          whatsapp?: string | null
         }
         Relationships: []
       }
@@ -672,6 +678,7 @@ export type Database = {
           full_name: string
           is_host: boolean
           user_id: string
+          whatsapp: string
         }[]
       }
       has_role: {

@@ -158,21 +158,53 @@ const PropertyDetail = () => {
           </div>
         )}
 
-        {/* Agent */}
-        <section className="mt-6 rounded-2xl bg-card border border-border p-4 flex items-center gap-3">
-          <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center">
-            <User className="w-6 h-6 text-primary" />
+        {/* Host */}
+        <section className="mt-6 rounded-2xl bg-card border border-border p-4">
+          <div className="flex items-center gap-3">
+            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center overflow-hidden shrink-0">
+              {p.hostAvatar ? (
+                <img src={p.hostAvatar} alt={p.agent} className="w-full h-full object-cover" />
+              ) : (
+                <User className="w-6 h-6 text-primary" />
+              )}
+            </div>
+            <div className="flex-1 min-w-0">
+              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Hosted by</div>
+              <div className="font-bold text-sm truncate">{p.agent}</div>
+              <div className="text-[11px] text-success font-medium inline-flex items-center gap-1">
+                <BadgeCheck className="w-3 h-3" /> {p.agentTag}
+              </div>
+            </div>
           </div>
-          <div className="flex-1 min-w-0">
-            <div className="font-semibold text-sm truncate">{p.agent}</div>
-            <div className="text-[11px] text-success font-medium inline-flex items-center gap-1"><BadgeCheck className="w-3 h-3" /> {p.agentTag}</div>
+          <div className="mt-3 flex gap-2">
+            {p.hostId && (
+              <Link
+                to={`/messages/${p.hostId}?listing=${p.id}`}
+                onClick={(e) => {
+                  if (!session) {
+                    e.preventDefault();
+                    toast.message("Sign in to message the host");
+                    navigate(`/auth?mode=signin`, { state: { from: `/messages/${p.hostId}?listing=${p.id}` } });
+                  }
+                }}
+                className="flex-1 text-center text-xs font-bold text-primary px-3 py-2.5 rounded-xl bg-primary/10 border border-primary/30"
+              >
+                💬 Message host
+              </Link>
+            )}
+            {p.hostWhatsapp && (
+              <a
+                href={`https://wa.me/${p.hostWhatsapp.replace(/[^\d]/g, "")}?text=${encodeURIComponent(
+                  `Hi! I'm interested in your listing: ${p.title}`,
+                )}`}
+                target="_blank"
+                rel="noreferrer"
+                className="flex-1 text-center text-xs font-bold text-white px-3 py-2.5 rounded-xl bg-[#25D366]"
+              >
+                WhatsApp
+              </a>
+            )}
           </div>
-          <Link
-            to={`/messages/${p.agent.toLowerCase().replace(/\s+/g, "-")}?prop=${p.id}`}
-            className="text-xs font-semibold text-primary px-3 py-2 rounded-full bg-primary/10 border border-primary/30"
-          >
-            💬 Chat
-          </Link>
         </section>
 
         <section className="mt-6">

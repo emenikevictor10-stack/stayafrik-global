@@ -6,6 +6,7 @@ import { LocationPicker, loadMaps } from "@/components/map/PropertyMap";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/contexts/RoleContext";
+import { toWebp } from "@/lib/media";
 
 const AMENITIES = ["Wi-Fi", "AC", "Generator", "Pool", "Gym", "Parking", "Security", "Kitchen", "Hot water", "Pet-friendly"];
 
@@ -139,10 +140,10 @@ const NewListing = () => {
     setUploading(true);
     try {
       const uploaded: string[] = [];
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith("image/")) throw new Error("Please upload image files only");
-        const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
-        const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
+      for (const raw of Array.from(files)) {
+        if (!raw.type.startsWith("image/")) throw new Error("Please upload image files only");
+        const file = await toWebp(raw);
+        const path = `${user.id}/${crypto.randomUUID()}.webp`;
         const { error } = await supabase.storage.from("listing-images").upload(path, file, {
           cacheControl: "3600",
           contentType: file.type,

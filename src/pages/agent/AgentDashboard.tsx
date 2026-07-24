@@ -17,6 +17,7 @@ import {
   Sparkles,
   type LucideIcon,
 } from "lucide-react";
+import { HostProfileProgress } from "@/components/agent/HostProfileProgress";
 
 const formatNaira = (n: number) =>
   n >= 1_000_000 ? `₦${(n / 1_000_000).toFixed(1)}M` : `₦${n.toLocaleString()}`;
@@ -81,6 +82,7 @@ export const AgentDashboard = () => {
     <>
       <TopBar title="​" subtitle="​" />
       <main className="px-5 pt-5 pb-8">
+        <HostProfileProgress />
         {/* Hero earnings card */}
         <section className="relative overflow-hidden rounded-3xl border border-primary/40 bg-gradient-to-br from-primary/25 via-primary/5 to-transparent p-5">
           <div className="absolute -right-10 -top-10 w-48 h-48 bg-primary/30 blur-3xl rounded-full pointer-events-none" />

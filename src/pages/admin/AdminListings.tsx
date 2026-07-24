@@ -51,14 +51,17 @@ const Lightbox = ({ images, start, onClose }: { images: string[]; start: number;
   );
 };
 
+type Tab = "pending" | "approved";
+
 const AdminListings = () => {
   const { user, loading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [tab, setTab] = useState<Tab>("pending");
   const [rows, setRows] = useState<ListingRow[]>([]);
   const [hosts, setHosts] = useState<Record<string, HostProfile>>({});
   const [busy, setBusy] = useState(false);
   const [lightbox, setLightbox] = useState<{ images: string[]; start: number } | null>(null);
-  const [confirmAction, setConfirmAction] = useState<{ kind: "approve" | "reject"; row: ListingRow } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ kind: "approve" | "reject" | "revoke"; row: ListingRow } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -80,7 +83,7 @@ const AdminListings = () => {
     const { data } = await supabase
       .from("listings")
       .select("*")
-      .eq("verified", false)
+      .eq("verified", tab === "approved")
       .order("created_at", { ascending: false });
     const list = (data as ListingRow[]) || [];
     setRows(list);
@@ -93,13 +96,16 @@ const AdminListings = () => {
       const map: Record<string, HostProfile> = {};
       (profs as HostProfile[] | null)?.forEach((p) => (map[p.id] = p));
       setHosts(map);
+    } else {
+      setHosts({});
     }
     setBusy(false);
   };
 
   useEffect(() => {
     if (isAdmin) load();
-  }, [isAdmin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, tab]);
 
   const doApprove = async (id: string) => {
     setSubmitting(true);
@@ -114,9 +120,35 @@ const AdminListings = () => {
     setConfirmAction(null);
   };
 
+  const doRevoke = async (row: ListingRow, reason: string) => {
+    setSubmitting(true);
+    const { error } = await supabase
+      .from("listings")
+      .update({ verified: false, is_available: false })
+      .eq("id", row.id);
+    if (!error) {
+      try {
+        await supabase.from("notifications").insert({
+          user_id: row.host_id,
+          type: "listing_revoked",
+          title: "Listing moved back to pending",
+          body: reason
+            ? `Your listing "${row.title}" was moved back to pending review. Reason: ${reason}`
+            : `Your listing "${row.title}" was moved back to pending review.`,
+          metadata: { listing_id: row.id, reason: reason || null },
+        } as any);
+      } catch { /* non-blocking */ }
+    }
+    setSubmitting(false);
+    if (error) return toast.error(error.message);
+    toast.success("Listing reverted to pending");
+    setRows((r) => r.filter((x) => x.id !== row.id));
+    setConfirmAction(null);
+    setRejectReason("");
+  };
+
   const doReject = async (row: ListingRow, reason: string) => {
     setSubmitting(true);
-    // Notify host with optional reason before deleting
     try {
       await supabase.from("notifications").insert({
         user_id: row.host_id,
@@ -127,9 +159,7 @@ const AdminListings = () => {
           : `Your listing "${row.title}" was not approved.`,
         metadata: { listing_id: row.id, reason: reason || null },
       } as any);
-    } catch {
-      /* non-blocking */
-    }
+    } catch { /* non-blocking */ }
     const { error } = await supabase.from("listings").delete().eq("id", row.id);
     setSubmitting(false);
     if (error) return toast.error(error.message);
@@ -157,22 +187,39 @@ const AdminListings = () => {
 
   return (
     <main className="min-h-screen bg-background pb-12">
-      <Seo title="Admin · listing approvals" description="Approve or reject host listings before they go live." noindex />
+      <Seo title="Admin · listings" description="Approve, reject or revoke host listings." noindex />
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border px-5 py-3 flex items-center gap-3">
         <Link to="/admin" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center">
           <ChevronLeft className="w-4 h-4" />
         </Link>
-        <div>
-          <h1 className="text-base font-extrabold">Listing approvals</h1>
-          <p className="text-[11px] text-muted-foreground">{rows.length} pending review</p>
+        <div className="flex-1">
+          <h1 className="text-base font-extrabold">Listings</h1>
+          <p className="text-[11px] text-muted-foreground">{rows.length} {tab === "pending" ? "pending review" : "approved & live"}</p>
         </div>
       </header>
+
+      <div className="max-w-5xl mx-auto px-4 md:px-6 pt-4">
+        <div className="inline-flex p-1 rounded-xl bg-secondary border border-border">
+          {(["pending", "approved"] as Tab[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${
+                tab === t ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t === "pending" ? "Pending" : "Approved"}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 pt-5 space-y-6">
         {busy && <div className="text-center py-8 text-sm text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>}
         {!busy && rows.length === 0 && (
           <div className="text-center py-16 text-sm text-muted-foreground">
-            <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" /> All caught up.
+            <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" />
+            {tab === "pending" ? "All caught up." : "No approved listings yet."}
           </div>
         )}
         {rows.map((r) => {
@@ -304,8 +351,16 @@ const AdminListings = () => {
 
                 {/* Actions */}
                 <div className="flex flex-col-reverse sm:flex-row gap-2 pt-1 sticky bottom-2">
-                  <button onClick={() => { setRejectReason(""); setConfirmAction({ kind: "reject", row: r }); }} className="flex-1 rounded-xl border border-destructive/40 text-destructive py-3 text-sm font-bold hover:bg-destructive/5">Reject</button>
-                  <button onClick={() => setConfirmAction({ kind: "approve", row: r })} className="flex-1 rounded-xl bg-success text-white py-3 text-sm font-bold hover:opacity-90">Approve & publish</button>
+                  {tab === "pending" ? (
+                    <>
+                      <button onClick={() => { setRejectReason(""); setConfirmAction({ kind: "reject", row: r }); }} className="flex-1 rounded-xl border border-destructive/40 text-destructive py-3 text-sm font-bold hover:bg-destructive/5">Reject</button>
+                      <button onClick={() => setConfirmAction({ kind: "approve", row: r })} className="flex-1 rounded-xl bg-success text-white py-3 text-sm font-bold hover:opacity-90">Approve & publish</button>
+                    </>
+                  ) : (
+                    <button onClick={() => { setRejectReason(""); setConfirmAction({ kind: "revoke", row: r }); }} className="flex-1 rounded-xl border border-destructive/40 text-destructive py-3 text-sm font-bold hover:bg-destructive/5">
+                      Revoke approval (move to pending)
+                    </button>
+                  )}
                 </div>
               </div>
             </article>
@@ -320,16 +375,38 @@ const AdminListings = () => {
           <div className="w-full max-w-md bg-card border border-border rounded-3xl shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="p-5 border-b border-border">
               <h3 className="text-lg font-extrabold">
-                {confirmAction.kind === "approve" ? "Approve this listing?" : "Reject this listing?"}
+                {confirmAction.kind === "approve" ? "Approve this listing?"
+                  : confirmAction.kind === "revoke" ? "Revoke approval?"
+                  : "Reject this listing?"}
               </h3>
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{confirmAction.row.title}</p>
             </div>
             <div className="p-5 space-y-3">
-              {confirmAction.kind === "approve" ? (
+              {confirmAction.kind === "approve" && (
                 <p className="text-sm text-muted-foreground">
                   It will go live immediately and be visible to guests. Make sure photos, price, and details look right.
                 </p>
-              ) : (
+              )}
+              {confirmAction.kind === "revoke" && (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    The listing will be hidden from guests and moved back to pending review. You can approve it again later.
+                  </p>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold">Reason (optional)</label>
+                    <textarea
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      rows={3}
+                      maxLength={500}
+                      placeholder="e.g. Reported issue, outdated photos, price needs review…"
+                      className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1 text-right">{rejectReason.length}/500</p>
+                  </div>
+                </>
+              )}
+              {confirmAction.kind === "reject" && (
                 <>
                   <p className="text-sm text-muted-foreground">
                     The listing will be permanently removed. The host will be notified with your reason (optional).
@@ -362,11 +439,16 @@ const AdminListings = () => {
                 onClick={() =>
                   confirmAction.kind === "approve"
                     ? doApprove(confirmAction.row.id)
+                    : confirmAction.kind === "revoke"
+                    ? doRevoke(confirmAction.row, rejectReason.trim())
                     : doReject(confirmAction.row, rejectReason.trim())
                 }
                 className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-white disabled:opacity-50 ${confirmAction.kind === "approve" ? "bg-success" : "bg-destructive"}`}
               >
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : confirmAction.kind === "approve" ? "Approve & publish" : "Reject listing"}
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                  : confirmAction.kind === "approve" ? "Approve & publish"
+                  : confirmAction.kind === "revoke" ? "Revoke & move to pending"
+                  : "Reject listing"}
               </button>
             </div>
           </div>

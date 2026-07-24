@@ -375,16 +375,38 @@ const AdminListings = () => {
           <div className="w-full max-w-md bg-card border border-border rounded-3xl shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="p-5 border-b border-border">
               <h3 className="text-lg font-extrabold">
-                {confirmAction.kind === "approve" ? "Approve this listing?" : "Reject this listing?"}
+                {confirmAction.kind === "approve" ? "Approve this listing?"
+                  : confirmAction.kind === "revoke" ? "Revoke approval?"
+                  : "Reject this listing?"}
               </h3>
               <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{confirmAction.row.title}</p>
             </div>
             <div className="p-5 space-y-3">
-              {confirmAction.kind === "approve" ? (
+              {confirmAction.kind === "approve" && (
                 <p className="text-sm text-muted-foreground">
                   It will go live immediately and be visible to guests. Make sure photos, price, and details look right.
                 </p>
-              ) : (
+              )}
+              {confirmAction.kind === "revoke" && (
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    The listing will be hidden from guests and moved back to pending review. You can approve it again later.
+                  </p>
+                  <div>
+                    <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold">Reason (optional)</label>
+                    <textarea
+                      value={rejectReason}
+                      onChange={(e) => setRejectReason(e.target.value)}
+                      rows={3}
+                      maxLength={500}
+                      placeholder="e.g. Reported issue, outdated photos, price needs review…"
+                      className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-1 text-right">{rejectReason.length}/500</p>
+                  </div>
+                </>
+              )}
+              {confirmAction.kind === "reject" && (
                 <>
                   <p className="text-sm text-muted-foreground">
                     The listing will be permanently removed. The host will be notified with your reason (optional).
@@ -417,11 +439,16 @@ const AdminListings = () => {
                 onClick={() =>
                   confirmAction.kind === "approve"
                     ? doApprove(confirmAction.row.id)
+                    : confirmAction.kind === "revoke"
+                    ? doRevoke(confirmAction.row, rejectReason.trim())
                     : doReject(confirmAction.row, rejectReason.trim())
                 }
                 className={`flex-1 rounded-xl py-2.5 text-sm font-bold text-white disabled:opacity-50 ${confirmAction.kind === "approve" ? "bg-success" : "bg-destructive"}`}
               >
-                {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" /> : confirmAction.kind === "approve" ? "Approve & publish" : "Reject listing"}
+                {submitting ? <Loader2 className="w-4 h-4 animate-spin mx-auto" />
+                  : confirmAction.kind === "approve" ? "Approve & publish"
+                  : confirmAction.kind === "revoke" ? "Revoke & move to pending"
+                  : "Reject listing"}
               </button>
             </div>
           </div>

@@ -51,14 +51,17 @@ const Lightbox = ({ images, start, onClose }: { images: string[]; start: number;
   );
 };
 
+type Tab = "pending" | "approved";
+
 const AdminListings = () => {
   const { user, loading } = useAuth();
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [tab, setTab] = useState<Tab>("pending");
   const [rows, setRows] = useState<ListingRow[]>([]);
   const [hosts, setHosts] = useState<Record<string, HostProfile>>({});
   const [busy, setBusy] = useState(false);
   const [lightbox, setLightbox] = useState<{ images: string[]; start: number } | null>(null);
-  const [confirmAction, setConfirmAction] = useState<{ kind: "approve" | "reject"; row: ListingRow } | null>(null);
+  const [confirmAction, setConfirmAction] = useState<{ kind: "approve" | "reject" | "revoke"; row: ListingRow } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
@@ -80,7 +83,7 @@ const AdminListings = () => {
     const { data } = await supabase
       .from("listings")
       .select("*")
-      .eq("verified", false)
+      .eq("verified", tab === "approved")
       .order("created_at", { ascending: false });
     const list = (data as ListingRow[]) || [];
     setRows(list);
@@ -93,13 +96,16 @@ const AdminListings = () => {
       const map: Record<string, HostProfile> = {};
       (profs as HostProfile[] | null)?.forEach((p) => (map[p.id] = p));
       setHosts(map);
+    } else {
+      setHosts({});
     }
     setBusy(false);
   };
 
   useEffect(() => {
     if (isAdmin) load();
-  }, [isAdmin]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isAdmin, tab]);
 
   const doApprove = async (id: string) => {
     setSubmitting(true);
@@ -114,9 +120,35 @@ const AdminListings = () => {
     setConfirmAction(null);
   };
 
+  const doRevoke = async (row: ListingRow, reason: string) => {
+    setSubmitting(true);
+    const { error } = await supabase
+      .from("listings")
+      .update({ verified: false, is_available: false })
+      .eq("id", row.id);
+    if (!error) {
+      try {
+        await supabase.from("notifications").insert({
+          user_id: row.host_id,
+          type: "listing_revoked",
+          title: "Listing moved back to pending",
+          body: reason
+            ? `Your listing "${row.title}" was moved back to pending review. Reason: ${reason}`
+            : `Your listing "${row.title}" was moved back to pending review.`,
+          metadata: { listing_id: row.id, reason: reason || null },
+        } as any);
+      } catch { /* non-blocking */ }
+    }
+    setSubmitting(false);
+    if (error) return toast.error(error.message);
+    toast.success("Listing reverted to pending");
+    setRows((r) => r.filter((x) => x.id !== row.id));
+    setConfirmAction(null);
+    setRejectReason("");
+  };
+
   const doReject = async (row: ListingRow, reason: string) => {
     setSubmitting(true);
-    // Notify host with optional reason before deleting
     try {
       await supabase.from("notifications").insert({
         user_id: row.host_id,
@@ -127,9 +159,7 @@ const AdminListings = () => {
           : `Your listing "${row.title}" was not approved.`,
         metadata: { listing_id: row.id, reason: reason || null },
       } as any);
-    } catch {
-      /* non-blocking */
-    }
+    } catch { /* non-blocking */ }
     const { error } = await supabase.from("listings").delete().eq("id", row.id);
     setSubmitting(false);
     if (error) return toast.error(error.message);

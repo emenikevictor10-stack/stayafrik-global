@@ -132,6 +132,37 @@ const EditProfile = () => {
                 className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm" />
             </label>
           ))}
+
+          <label className="block">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              WhatsApp number {isHost && <span className="text-destructive">*</span>}
+            </span>
+            <input
+              type="tel"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+              placeholder="+234…"
+              className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm"
+            />
+            <span className="text-[10px] text-muted-foreground mt-1 block">
+              {isHost
+                ? "Required so guests and support can reach you quickly."
+                : "Optional — lets hosts and support reach you on WhatsApp."}
+            </span>
+          </label>
+
+          <label className="block">
+            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+              About you
+            </span>
+            <textarea
+              value={bio}
+              onChange={(e) => setBio(e.target.value)}
+              rows={3}
+              placeholder="Tell guests a little about yourself…"
+              className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm"
+            />
+          </label>
         </section>
 
         <button onClick={save} disabled={saving} className="mt-6 w-full rounded-2xl bg-primary text-primary-foreground py-3.5 font-bold text-sm shadow-glow disabled:opacity-60">

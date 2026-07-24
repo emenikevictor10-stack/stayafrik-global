@@ -49,7 +49,9 @@ export type ListingRow = {
   created_at: string;
 };
 
-export const rowToProperty = (r: ListingRow): Property => {
+type HostInfo = { full_name?: string | null; avatar_url?: string | null; whatsapp?: string | null };
+
+export const rowToProperty = (r: ListingRow, host?: HostInfo): Property => {
   const mappedAll = (r.images || []).map((i) => seedImageMap[i] || i);
   const images = mappedAll.length ? mappedAll : [placeholderImg];
   const image = images[0];
@@ -64,8 +66,8 @@ export const rowToProperty = (r: ListingRow): Property => {
     baths: r.bathrooms,
     area: r.area || "",
     verified: r.verified,
-    agent: "Verified host",
-    agentTag: "Verified",
+    agent: host?.full_name?.trim() || "Verified host",
+    agentTag: "Verified host",
     agentEmoji: "🧑🏾‍💼",
     emoji: typeEmoji(r.type),
     image,
@@ -76,7 +78,21 @@ export const rowToProperty = (r: ListingRow): Property => {
     amenities: (r.amenities || []).map((a) => ({ emoji: "✓", label: a })),
     lat: r.lat ?? 9.082,
     lng: r.lng ?? 8.6753,
+    hostId: r.host_id,
+    hostAvatar: host?.avatar_url ?? null,
+    hostWhatsapp: host?.whatsapp ?? null,
   };
+};
+
+const fetchHosts = async (ids: string[]): Promise<Map<string, HostInfo>> => {
+  const map = new Map<string, HostInfo>();
+  if (!ids.length) return map;
+  const unique = Array.from(new Set(ids));
+  const { data } = await supabase.rpc("get_public_profiles", { _user_ids: unique });
+  for (const p of ((data as any[]) || [])) {
+    map.set(p.user_id, { full_name: p.full_name, avatar_url: p.avatar_url, whatsapp: p.whatsapp });
+  }
+  return map;
 };
 
 
@@ -94,7 +110,12 @@ export const useListings = () => {
         .eq("verified", true)
         .order("created_at", { ascending: false });
       if (!active) return;
-      if (!error && data) setData((data as ListingRow[]).map(rowToProperty));
+      if (!error && data) {
+        const rows = data as ListingRow[];
+        const hosts = await fetchHosts(rows.map((r) => r.host_id));
+        if (!active) return;
+        setData(rows.map((r) => rowToProperty(r, hosts.get(r.host_id))));
+      }
       setLoading(false);
     })();
     return () => {
@@ -122,7 +143,12 @@ export const useListing = (id: string | undefined) => {
         .eq("id", id)
         .maybeSingle();
       if (!active) return;
-      if (!error && data) setData(rowToProperty(data as ListingRow));
+      if (!error && data) {
+        const row = data as ListingRow;
+        const hosts = await fetchHosts([row.host_id]);
+        if (!active) return;
+        setData(rowToProperty(row, hosts.get(row.host_id)));
+      }
       setLoading(false);
     })();
     return () => {
@@ -150,7 +176,12 @@ export const useMyListings = (hostId: string | undefined) => {
         .eq("host_id", hostId)
         .order("created_at", { ascending: false });
       if (!active) return;
-      if (!error && data) setData((data as ListingRow[]).map(rowToProperty));
+      if (!error && data) {
+        const rows = data as ListingRow[];
+        const hosts = await fetchHosts(rows.map((r) => r.host_id));
+        if (!active) return;
+        setData(rows.map((r) => rowToProperty(r, hosts.get(r.host_id))));
+      }
       setLoading(false);
     })();
     return () => {

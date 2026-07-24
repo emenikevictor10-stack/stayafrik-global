@@ -30,6 +30,9 @@ export type Property = {
   amenities: { emoji: string; label: string }[];
   lat: number;
   lng: number;
+  hostId?: string;
+  hostAvatar?: string | null;
+  hostWhatsapp?: string | null;
 };
 
 

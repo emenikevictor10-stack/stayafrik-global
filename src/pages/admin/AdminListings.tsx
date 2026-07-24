@@ -187,22 +187,39 @@ const AdminListings = () => {
 
   return (
     <main className="min-h-screen bg-background pb-12">
-      <Seo title="Admin · listing approvals" description="Approve or reject host listings before they go live." noindex />
+      <Seo title="Admin · listings" description="Approve, reject or revoke host listings." noindex />
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border px-5 py-3 flex items-center gap-3">
         <Link to="/admin" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center">
           <ChevronLeft className="w-4 h-4" />
         </Link>
-        <div>
-          <h1 className="text-base font-extrabold">Listing approvals</h1>
-          <p className="text-[11px] text-muted-foreground">{rows.length} pending review</p>
+        <div className="flex-1">
+          <h1 className="text-base font-extrabold">Listings</h1>
+          <p className="text-[11px] text-muted-foreground">{rows.length} {tab === "pending" ? "pending review" : "approved & live"}</p>
         </div>
       </header>
+
+      <div className="max-w-5xl mx-auto px-4 md:px-6 pt-4">
+        <div className="inline-flex p-1 rounded-xl bg-secondary border border-border">
+          {(["pending", "approved"] as Tab[]).map((t) => (
+            <button
+              key={t}
+              onClick={() => setTab(t)}
+              className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${
+                tab === t ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              {t === "pending" ? "Pending" : "Approved"}
+            </button>
+          ))}
+        </div>
+      </div>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 pt-5 space-y-6">
         {busy && <div className="text-center py-8 text-sm text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>}
         {!busy && rows.length === 0 && (
           <div className="text-center py-16 text-sm text-muted-foreground">
-            <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" /> All caught up.
+            <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" />
+            {tab === "pending" ? "All caught up." : "No approved listings yet."}
           </div>
         )}
         {rows.map((r) => {

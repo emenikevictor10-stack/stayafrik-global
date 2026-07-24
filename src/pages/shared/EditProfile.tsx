@@ -6,6 +6,7 @@ import { ChevronLeft, Camera } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
+import { toWebp } from "@/lib/media";
 
 const EditProfile = () => {
   const { user } = useRole();

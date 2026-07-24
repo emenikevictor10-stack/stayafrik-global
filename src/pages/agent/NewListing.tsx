@@ -6,6 +6,7 @@ import { LocationPicker, loadMaps } from "@/components/map/PropertyMap";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/contexts/RoleContext";
+import { toWebp } from "@/lib/media";
 
 const AMENITIES = ["Wi-Fi", "AC", "Generator", "Pool", "Gym", "Parking", "Security", "Kitchen", "Hot water", "Pet-friendly"];
 

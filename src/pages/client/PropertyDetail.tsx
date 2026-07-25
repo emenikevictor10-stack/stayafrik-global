@@ -10,6 +10,8 @@ import { Seo } from "@/components/seo/Seo";
 import { ImageGallery } from "@/components/property/ImageGallery";
 import { ReviewsSection } from "@/components/property/ReviewsSection";
 import { NearbyServices } from "@/components/property/NearbyServices";
+import { ReserveDialog } from "@/components/property/ReserveDialog";
+import { useState } from "react";
 
 import { useWishlist } from "@/hooks/useWishlist";
 import { cn } from "@/lib/utils";
@@ -23,6 +25,8 @@ const PropertyDetail = () => {
   const { session } = useAuth();
   const { data: p, loading } = useListing(id);
   const { has, toggle } = useWishlist();
+  const [reserveOpen, setReserveOpen] = useState(false);
+
 
 
   const handleBook = () => {
@@ -250,6 +254,31 @@ const PropertyDetail = () => {
         </section>
 
 
+        {role !== "agent" && p.type === "Shortlet" && p.hostId && (
+          <section className="mt-6 rounded-2xl bg-primary/5 border border-primary/20 p-4">
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-xl">🕓</span>
+              <h3 className="font-bold text-sm">Coming to town? Reserve for viewing</h3>
+            </div>
+            <p className="text-xs text-muted-foreground leading-relaxed mb-3">
+              Request a 4-hour hold so you can visit the apartment before booking. The host must approve — you'll be notified instantly.
+            </p>
+            <Button
+              onClick={() => {
+                if (!session) {
+                  toast.message("Sign in to reserve for viewing");
+                  navigate(`/auth?mode=signin`, { state: { from: location.pathname } });
+                  return;
+                }
+                setReserveOpen(true);
+              }}
+              variant="outline"
+              className="w-full rounded-xl h-11 font-bold border-primary/40 text-primary hover:bg-primary/10"
+            >
+              Reserve for viewing (4h hold)
+            </Button>
+          </section>
+        )}
 
         <section className="mt-6 rounded-2xl bg-card border border-border p-4">
           <div className="flex items-center gap-2 mb-2">
@@ -261,6 +290,18 @@ const PropertyDetail = () => {
           </p>
         </section>
       </div>
+
+      {session && p.hostId && (
+        <ReserveDialog
+          open={reserveOpen}
+          onOpenChange={setReserveOpen}
+          listingId={p.id}
+          hostId={p.hostId}
+          guestId={session.user.id}
+          title={p.title}
+        />
+      )}
+
 
       {/* Sticky CTA */}
       <div className="fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">

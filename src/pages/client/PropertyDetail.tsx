@@ -25,6 +25,8 @@ const PropertyDetail = () => {
   const { session } = useAuth();
   const { data: p, loading } = useListing(id);
   const { has, toggle } = useWishlist();
+  const [reserveOpen, setReserveOpen] = useState(false);
+
 
 
   const handleBook = () => {

@@ -12,6 +12,7 @@ import {
   Heart,
   Globe,
   LifeBuoy,
+  Clock,
   Wallet,
   Banknote,
   TrendingUp,
@@ -31,6 +32,7 @@ type Item = { Icon: LucideIcon; title: string; subtitle: string; to: string };
 const clientItems: Item[] = [
   { Icon: Heart, title: "Saved properties", subtitle: "Your favourite stays", to: "/explore" },
   { Icon: CreditCard, title: "Payment methods", subtitle: "Cards & escrow", to: "/profile/payments" },
+  { Icon: Clock, title: "Reservations", subtitle: "Viewing holds (4h)", to: "/reservations" },
   { Icon: ShieldCheck, title: "Escrow history", subtitle: "Past protected payments", to: "/bookings" },
   { Icon: Lock, title: "Unlock PIN", subtitle: "App lock & security", to: "/profile/pin" },
   { Icon: Globe, title: "Language & currency", subtitle: "Regional preferences", to: "/profile/language" },
@@ -42,6 +44,7 @@ const agentItems: Item[] = [
   { Icon: Home, title: "My Listings", subtitle: "Manage your properties", to: "/listings" },
   { Icon: Star, title: "Reviews", subtitle: "See your reviews", to: "/profile/performance" },
   { Icon: TrendingUp, title: "Performance", subtitle: "Bookings & insights", to: "/profile/performance" },
+  { Icon: Clock, title: "Viewing requests", subtitle: "Approve 4h holds", to: "/reservations" },
   { Icon: Wallet, title: "Commission & payouts", subtitle: "Earnings overview", to: "/profile/commission" },
   { Icon: Banknote, title: "Payout accounts", subtitle: "Bank details", to: "/profile/payout" },
   { Icon: Lock, title: "Unlock PIN", subtitle: "App lock & security", to: "/profile/pin" },

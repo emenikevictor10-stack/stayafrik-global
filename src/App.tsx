@@ -50,6 +50,7 @@ import Notifications from "./pages/shared/Notifications";
 import Reservations from "./pages/shared/Reservations";
 import PaymentMethods from "./pages/client/PaymentMethods";
 import PinSettings from "./pages/shared/PinSettings";
+import DeleteAccount from "./pages/shared/DeleteAccount";
 import { PinGate } from "@/components/auth/PinGate";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import { SplashSequence, hasSeenSplash } from "@/components/splash/SplashSequence";
@@ -121,6 +122,7 @@ const App = () => (
                     <Route path="/property/:id/book" element={<BookProperty />} />
                     <Route path="/booking/confirm" element={<BookingConfirm />} />
                     <Route path="/reservations" element={<Reservations />} />
+                    <Route path="/profile/delete" element={<DeleteAccount />} />
                     
                   </Route>
                 </Route>

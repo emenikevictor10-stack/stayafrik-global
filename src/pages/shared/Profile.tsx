@@ -205,6 +205,13 @@ const Profile = () => {
         <LogOut className="w-4 h-4" /> Log out
       </button>
 
+      <Link
+        to="/profile/delete"
+        className="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl border border-border/60 bg-card text-destructive py-3 text-xs font-bold"
+      >
+        Delete account
+      </Link>
+
       <div className="mt-6 flex items-center justify-center gap-3 text-[10px] text-muted-foreground flex-wrap">
         <span>Stay · v0.1 · Africa 🌍</span>
         <Link to="/privacy-policy" className="hover:text-primary transition-colors underline">Privacy</Link>

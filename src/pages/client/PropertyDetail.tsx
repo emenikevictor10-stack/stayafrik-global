@@ -10,6 +10,8 @@ import { Seo } from "@/components/seo/Seo";
 import { ImageGallery } from "@/components/property/ImageGallery";
 import { ReviewsSection } from "@/components/property/ReviewsSection";
 import { NearbyServices } from "@/components/property/NearbyServices";
+import { ReserveDialog } from "@/components/property/ReserveDialog";
+import { useState } from "react";
 
 import { useWishlist } from "@/hooks/useWishlist";
 import { cn } from "@/lib/utils";

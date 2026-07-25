@@ -47,6 +47,7 @@ import Help from "./pages/shared/Help";
 import PrivacyPolicy from "./pages/shared/PrivacyPolicy";
 import TermsConditions from "./pages/shared/TermsConditions";
 import Notifications from "./pages/shared/Notifications";
+import Reservations from "./pages/shared/Reservations";
 import PaymentMethods from "./pages/client/PaymentMethods";
 import PinSettings from "./pages/shared/PinSettings";
 import { PinGate } from "@/components/auth/PinGate";
@@ -119,6 +120,7 @@ const App = () => (
                     <Route path="/notifications" element={<Notifications />} />
                     <Route path="/property/:id/book" element={<BookProperty />} />
                     <Route path="/booking/confirm" element={<BookingConfirm />} />
+                    <Route path="/reservations" element={<Reservations />} />
                     
                   </Route>
                 </Route>

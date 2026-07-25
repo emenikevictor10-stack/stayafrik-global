@@ -60,7 +60,7 @@ export const updateReservationStatus = async (
   status: Reservation["status"],
   rejection_reason?: string,
 ) => {
-  const patch: Record<string, unknown> = { status };
+  const patch: { status: Reservation["status"]; rejection_reason?: string } = { status };
   if (rejection_reason !== undefined) patch.rejection_reason = rejection_reason;
   const { error } = await supabase.from("reservations").update(patch).eq("id", id);
   return { error };

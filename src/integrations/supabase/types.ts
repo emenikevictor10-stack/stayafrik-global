@@ -566,6 +566,59 @@ export type Database = {
         }
         Relationships: []
       }
+      reservations: {
+        Row: {
+          approved_at: string | null
+          created_at: string
+          expires_at: string | null
+          guest_id: string
+          host_id: string
+          id: string
+          listing_id: string
+          note: string | null
+          rejection_reason: string | null
+          status: string
+          updated_at: string
+          visit_at: string | null
+        }
+        Insert: {
+          approved_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          guest_id: string
+          host_id: string
+          id?: string
+          listing_id: string
+          note?: string | null
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          visit_at?: string | null
+        }
+        Update: {
+          approved_at?: string | null
+          created_at?: string
+          expires_at?: string | null
+          guest_id?: string
+          host_id?: string
+          id?: string
+          listing_id?: string
+          note?: string | null
+          rejection_reason?: string | null
+          status?: string
+          updated_at?: string
+          visit_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reservations_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           booking_id: string

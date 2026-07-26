@@ -4,11 +4,13 @@
 const MAX_DIM = 1920;
 const QUALITY = 0.82;
 
-export const isImage = (file: File) => file.type.startsWith("image/");
+export const isImage = (file: File) =>
+  file.type.startsWith("image/") || /\.(jpe?g|png|webp|gif|bmp|heic|heif|avif|tiff?)$/i.test(file.name);
 
 /**
- * Convert any browser-supported image (jpg, png, heic-in-jpg wrapper, webp…) to WebP.
- * Falls back to the original file if conversion isn't supported.
+ * Convert any browser-supported image to WebP. Falls back to the original
+ * file (with its real extension preserved) when the browser can't decode it —
+ * that way HEIC/AVIF still get uploaded and previewed with a valid mime.
  */
 export const toWebp = async (file: File, quality = QUALITY): Promise<File> => {
   if (!isImage(file)) return file;
@@ -41,3 +43,26 @@ export const toWebp = async (file: File, quality = QUALITY): Promise<File> => {
     return file;
   }
 };
+
+/** Guess a safe mime-type + extension for storage upload from a File. */
+export const inferUpload = (file: File) => {
+  const nameExt = (file.name.split(".").pop() || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const typeExt = (file.type.split("/")[1] || "").toLowerCase();
+  const ext = nameExt || typeExt || "bin";
+  const contentType =
+    file.type && file.type !== "application/octet-stream"
+      ? file.type
+      : ext === "heic" || ext === "heif"
+      ? "image/heic"
+      : ext === "avif"
+      ? "image/avif"
+      : ext === "jpg" || ext === "jpeg"
+      ? "image/jpeg"
+      : ext === "png"
+      ? "image/png"
+      : ext === "webp"
+      ? "image/webp"
+      : "application/octet-stream";
+  return { ext, contentType };
+};
+

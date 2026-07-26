@@ -51,6 +51,23 @@ const ChatThread = () => {
         .order("created_at", { ascending: true });
       setMsgs((data as Msg[]) || []);
 
+      // Fetch the listing this thread is about — prefer ?listing= param, fall back to newest message with listing_id
+      const lid =
+        listingId ||
+        ((data as Msg[] | null) || []).slice().reverse().find((m) => m.listing_id)?.listing_id ||
+        null;
+      if (lid) {
+        const { data: l } = await supabase
+          .from("listings")
+          .select("id,title,images,location,price_per_night")
+          .eq("id", lid)
+          .maybeSingle();
+        setListing((l as ListingLite | null) || null);
+      } else {
+        setListing(null);
+      }
+
+
       // Mark related notifications as read
       await supabase
         .from("notifications")

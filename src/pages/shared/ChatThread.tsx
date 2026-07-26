@@ -19,6 +19,8 @@ type Profile = { user_id: string; full_name: string | null; avatar_url: string |
 const isUuid = (s: string | undefined) =>
   !!s && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
+type ListingLite = { id: string; title: string; images: string[] | null; location: string | null; price_per_night: number | null };
+
 const ChatThread = () => {
   const { agentId } = useParams();
   const [params] = useSearchParams();
@@ -26,12 +28,14 @@ const ChatThread = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [other, setOther] = useState<Profile | null>(null);
+  const [listing, setListing] = useState<ListingLite | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   const otherId = agentId;
+
 
   useEffect(() => {
     if (!user || !isUuid(otherId)) return;
@@ -46,6 +50,23 @@ const ChatThread = () => {
         .or(`and(sender_id.eq.${user.id},receiver_id.eq.${otherId}),and(sender_id.eq.${otherId},receiver_id.eq.${user.id})`)
         .order("created_at", { ascending: true });
       setMsgs((data as Msg[]) || []);
+
+      // Fetch the listing this thread is about — prefer ?listing= param, fall back to newest message with listing_id
+      const lid =
+        listingId ||
+        ((data as Msg[] | null) || []).slice().reverse().find((m) => m.listing_id)?.listing_id ||
+        null;
+      if (lid) {
+        const { data: l } = await supabase
+          .from("listings")
+          .select("id,title,images,location,price_per_night")
+          .eq("id", lid)
+          .maybeSingle();
+        setListing((l as ListingLite | null) || null);
+      } else {
+        setListing(null);
+      }
+
 
       // Mark related notifications as read
       await supabase
@@ -120,6 +141,34 @@ const ChatThread = () => {
           </div>
         </div>
       </header>
+
+      {listing && (
+        <a
+          href={`/property/${listing.id}`}
+          className="mx-3 mt-3 flex items-center gap-3 rounded-2xl bg-card border border-border p-2.5"
+        >
+          <div className="w-14 h-14 rounded-lg overflow-hidden bg-muted shrink-0">
+            {listing.images?.[0] ? (
+              <img src={listing.images[0]} alt="" className="w-full h-full object-cover" />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-xl">🏠</div>
+            )}
+          </div>
+          <div className="min-w-0 flex-1">
+            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Chatting about</div>
+            <div className="text-xs font-bold truncate">{listing.title}</div>
+            {listing.location && (
+              <div className="text-[10px] text-muted-foreground truncate">📍 {listing.location}</div>
+            )}
+          </div>
+          {listing.price_per_night != null && (
+            <div className="text-primary text-xs font-extrabold shrink-0">
+              ₦{listing.price_per_night.toLocaleString()}
+            </div>
+          )}
+        </a>
+      )}
+
 
       <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 pb-40">
         {msgs.length === 0 && (

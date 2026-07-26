@@ -3,6 +3,16 @@ import { Link, useNavigate } from "react-router-dom";
 import { ChevronLeft, AlertTriangle, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,11 +21,22 @@ const DeleteAccount = () => {
   const navigate = useNavigate();
   const { user, signOut } = useAuth();
   const [confirm, setConfirm] = useState("");
+  const [finalOpen, setFinalOpen] = useState(false);
+  const [finalConfirm, setFinalConfirm] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleDelete = async () => {
+  const openFinal = () => {
     if (confirm !== "DELETE") {
       toast.error('Please type "DELETE" to confirm');
+      return;
+    }
+    setFinalConfirm("");
+    setFinalOpen(true);
+  };
+
+  const handleDelete = async () => {
+    if (finalConfirm !== "DELETE") {
+      toast.error('Type "DELETE" one more time to permanently remove your account');
       return;
     }
     setLoading(true);
@@ -29,6 +50,7 @@ const DeleteAccount = () => {
       toast.error(e.message || "Failed to delete account");
     } finally {
       setLoading(false);
+      setFinalOpen(false);
     }
   };
 
@@ -71,12 +93,12 @@ const DeleteAccount = () => {
       />
 
       <Button
-        onClick={handleDelete}
+        onClick={openFinal}
         disabled={loading || confirm !== "DELETE"}
         className="w-full bg-destructive text-destructive-foreground hover:bg-destructive/90 rounded-2xl h-12 font-bold"
       >
         <Trash2 className="w-4 h-4 mr-2" />
-        {loading ? "Deleting…" : "Permanently delete my account"}
+        Continue to permanent deletion
       </Button>
 
       <button
@@ -85,6 +107,41 @@ const DeleteAccount = () => {
       >
         Cancel
       </button>
+
+      <AlertDialog open={finalOpen} onOpenChange={setFinalOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="w-5 h-5" /> Final confirmation
+            </AlertDialogTitle>
+            <AlertDialogDescription className="space-y-2 pt-2">
+              <span className="block">
+                This is <strong>irreversible</strong>. Once you continue, your account and all
+                associated data will be permanently deleted and cannot be recovered.
+              </span>
+              <span className="block">
+                Type <strong className="text-destructive">DELETE</strong> below to confirm.
+              </span>
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <Input
+            autoFocus
+            value={finalConfirm}
+            onChange={(e) => setFinalConfirm(e.target.value)}
+            placeholder="DELETE"
+          />
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={loading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={(e) => { e.preventDefault(); handleDelete(); }}
+              disabled={loading || finalConfirm !== "DELETE"}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {loading ? "Deleting…" : "Delete forever"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </main>
   );
 };

@@ -19,6 +19,8 @@ type Profile = { user_id: string; full_name: string | null; avatar_url: string |
 const isUuid = (s: string | undefined) =>
   !!s && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(s);
 
+type ListingLite = { id: string; title: string; images: string[] | null; location: string | null; price_per_night: number | null };
+
 const ChatThread = () => {
   const { agentId } = useParams();
   const [params] = useSearchParams();
@@ -26,12 +28,14 @@ const ChatThread = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [other, setOther] = useState<Profile | null>(null);
+  const [listing, setListing] = useState<ListingLite | null>(null);
   const [msgs, setMsgs] = useState<Msg[]>([]);
   const [draft, setDraft] = useState("");
   const [sending, setSending] = useState(false);
   const endRef = useRef<HTMLDivElement>(null);
 
   const otherId = agentId;
+
 
   useEffect(() => {
     if (!user || !isUuid(otherId)) return;

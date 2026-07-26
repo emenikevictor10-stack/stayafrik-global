@@ -12,9 +12,11 @@ type Row = {
   receiver_id: string;
   content: string;
   created_at: string;
+  listing_id?: string | null;
 };
 
 type Profile = { user_id: string; full_name: string | null; avatar_url: string | null };
+type ListingLite = { id: string; title: string; images: string[] | null; location: string | null };
 
 type Thread = {
   otherId: string;
@@ -23,6 +25,7 @@ type Thread = {
   last: string;
   time: string;
   unread: number;
+  listing: ListingLite | null;
 };
 
 const Messages = () => {
@@ -40,7 +43,6 @@ const Messages = () => {
       .limit(200);
     const rows = (data as Row[]) || [];
 
-    // Group by other participant
     const byOther = new Map<string, Row[]>();
     for (const r of rows) {
       const other = r.sender_id === user.id ? r.receiver_id : r.sender_id;
@@ -57,7 +59,23 @@ const Messages = () => {
     }
     const pmap = new Map(profiles.map((p) => [p.user_id, p]));
 
-    // Unread notifs (type=message) give a rough unread count per sender
+    // Latest listing per thread (from newest message that has a listing_id)
+    const listingIdByOther = new Map<string, string>();
+    for (const [other, arr] of byOther) {
+      const withListing = arr.find((r) => r.listing_id);
+      if (withListing?.listing_id) listingIdByOther.set(other, withListing.listing_id);
+    }
+    const listingIds = Array.from(new Set(listingIdByOther.values()));
+    let listings: ListingLite[] = [];
+    if (listingIds.length) {
+      const { data: ls } = await supabase
+        .from("listings")
+        .select("id,title,images,location")
+        .in("id", listingIds);
+      listings = (ls as ListingLite[]) || [];
+    }
+    const lmap = new Map(listings.map((l) => [l.id, l]));
+
     const { data: notifs } = await supabase
       .from("notifications")
       .select("link")
@@ -74,6 +92,7 @@ const Messages = () => {
       const arr = byOther.get(id)!;
       const latest = arr[0];
       const p = pmap.get(id);
+      const lid = listingIdByOther.get(id);
       return {
         otherId: id,
         name: p?.full_name || "User",
@@ -81,6 +100,7 @@ const Messages = () => {
         last: latest.content,
         time: formatDistanceToNow(new Date(latest.created_at), { addSuffix: false }),
         unread: unreadBy.get(id) || 0,
+        listing: lid ? lmap.get(lid) || null : null,
       };
     });
     setThreads(list);
@@ -115,34 +135,59 @@ const Messages = () => {
             <p className="text-xs mt-1">Message a host from a property page to start.</p>
           </div>
         )}
-        {threads.map((t) => (
-          <Link
-            key={t.otherId}
-            to={`/messages/${t.otherId}`}
-            className="w-full flex items-center gap-3 px-3 py-3 rounded-2xl hover:bg-card transition-colors text-left"
-          >
-            <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0 overflow-hidden">
-              {t.avatarUrl ? <img src={t.avatarUrl} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-primary" />}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-semibold text-sm truncate">{t.name}</span>
-                <span className="text-[10px] text-muted-foreground shrink-0">{t.time}</span>
+        {threads.map((t) => {
+          const cover = t.listing?.images?.[0];
+          const href = t.listing ? `/messages/${t.otherId}?listing=${t.listing.id}` : `/messages/${t.otherId}`;
+          return (
+            <Link
+              key={t.otherId}
+              to={href}
+              className="w-full flex flex-col gap-2 px-3 py-3 rounded-2xl hover:bg-card transition-colors text-left"
+            >
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center shrink-0 overflow-hidden">
+                  {t.avatarUrl ? <img src={t.avatarUrl} alt="" className="w-full h-full object-cover" /> : <User className="w-5 h-5 text-primary" />}
+                </div>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="font-semibold text-sm truncate">{t.name}</span>
+                    <span className="text-[10px] text-muted-foreground shrink-0">{t.time}</span>
+                  </div>
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <p className="text-xs text-muted-foreground truncate flex-1">{t.last}</p>
+                    {t.unread > 0 && (
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                        {t.unread}
+                      </span>
+                    )}
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center gap-2 mt-0.5">
-                <p className="text-xs text-muted-foreground truncate flex-1">{t.last}</p>
-                {t.unread > 0 && (
-                  <span className="shrink-0 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
-                    {t.unread}
-                  </span>
-                )}
-              </div>
-            </div>
-          </Link>
-        ))}
+              {t.listing && (
+                <div className="ml-15 mt-1 flex items-center gap-2 rounded-xl bg-card border border-border p-2">
+                  <div className="w-12 h-12 rounded-lg overflow-hidden bg-muted shrink-0">
+                    {cover ? (
+                      <img src={cover} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <div className="w-full h-full flex items-center justify-center text-lg">🏠</div>
+                    )}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">About</div>
+                    <div className="text-xs font-semibold truncate">{t.listing.title}</div>
+                    {t.listing.location && (
+                      <div className="text-[10px] text-muted-foreground truncate">📍 {t.listing.location}</div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </Link>
+          );
+        })}
       </main>
     </>
   );
 };
 
 export default Messages;
+

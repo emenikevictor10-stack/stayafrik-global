@@ -20,23 +20,55 @@ const distKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }
   return 2 * R * Math.asin(Math.sqrt(s));
 };
 
+type SmartFilter = "budget" | "toprated" | "family" | "power" | "workstay" | "luxury";
+
+const SMART_FILTERS: { key: SmartFilter; label: string; emoji: string; hint: string }[] = [
+  { key: "budget", label: "Budget friendly", emoji: "💸", hint: "Under ₦100k / night" },
+  { key: "toprated", label: "Top rated", emoji: "⭐", hint: "4.5+ rating" },
+  { key: "family", label: "Family size", emoji: "👨‍👩‍👧", hint: "3+ bedrooms" },
+  { key: "power", label: "Never dark", emoji: "🔌", hint: "Generator / inverter" },
+  { key: "workstay", label: "Work stay", emoji: "💻", hint: "Fast Wi-Fi" },
+  { key: "luxury", label: "Luxury", emoji: "💎", hint: "Premium homes" },
+];
+
+const hasAmenity = (p: Property, words: string[]) =>
+  p.amenities.some((a) => words.some((w) => a.label.toLowerCase().includes(w)));
+
+const matchesSmart = (p: Property, f: SmartFilter) => {
+  switch (f) {
+    case "budget": return p.priceNum > 0 && p.priceNum <= 100000;
+    case "toprated": return p.rating >= 4.5;
+    case "family": return p.beds >= 3;
+    case "power": return hasAmenity(p, ["generator", "inverter", "solar", "power"]);
+    case "workstay": return hasAmenity(p, ["wi-fi", "wifi", "internet"]);
+    case "luxury": return p.priceNum >= 200000 || hasAmenity(p, ["pool", "gym"]);
+  }
+};
+
 const Explore = () => {
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<string | null>(null);
+  const [smart, setSmart] = useState<SmartFilter[]>([]);
   const [view, setView] = useState<"list" | "map">("list");
   const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
   const [selected, setSelected] = useState<Property | null>(null);
   const { data: properties, loading } = useListings();
 
+  const toggleSmart = (k: SmartFilter) =>
+    setSmart((s) => (s.includes(k) ? s.filter((x) => x !== k) : [...s, k]));
+
   const list = useMemo(() => {
     const shortlets = properties.filter((p) => p.type === "Shortlet");
+    const needle = q.trim().toLowerCase();
     let out = shortlets.filter((p) => {
       const matchesQ =
-        !q ||
-        p.title.toLowerCase().includes(q.toLowerCase()) ||
-        p.location.toLowerCase().includes(q.toLowerCase());
-      return matchesQ;
+        !needle ||
+        p.title.toLowerCase().includes(needle) ||
+        p.location.toLowerCase().includes(needle) ||
+        p.amenities.some((a) => a.label.toLowerCase().includes(needle));
+      return matchesQ && smart.every((f) => matchesSmart(p, f));
     });
+    if (smart.includes("budget")) out = [...out].sort((a, b) => a.priceNum - b.priceNum);
+    else if (smart.includes("toprated")) out = [...out].sort((a, b) => b.rating - a.rating);
     if (nearMe) {
       out = out
         .map((p) => ({ p, d: distKm(nearMe, { lat: p.lat, lng: p.lng }) }))
@@ -44,7 +76,8 @@ const Explore = () => {
         .map((x) => x.p);
     }
     return out;
-  }, [properties, q, nearMe]);
+  }, [properties, q, smart, nearMe]);
+
 
   return (
     <>

@@ -60,8 +60,13 @@ export const toWebp = async (file: File, quality = QUALITY): Promise<File> => {
     const name = file.name.replace(/\.[^.]+$/, "") + ".webp";
     return new File([blob], name, { type: "image/webp" });
   } catch {
-    return file;
+    // Only fall back to the raw file when browsers can actually render it.
+    const renderable = /^image\/(jpeg|png|gif|webp)$/i.test(source.type) ||
+      /\.(jpe?g|png|gif|webp)$/i.test(source.name);
+    if (renderable) return source;
+    throw new Error(`${file.name}: unsupported image format. Please upload a JPEG, PNG or WebP.`);
   }
+
 };
 
 /** Guess a safe mime-type + extension for storage upload from a File. */

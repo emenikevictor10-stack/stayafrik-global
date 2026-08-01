@@ -239,17 +239,29 @@ const PropertyDetail = () => {
         <section className="mt-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-sm">Location & neighbourhood</h2>
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-[11px] font-semibold text-primary inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30"
-            >
-              🧭 Get directions
-            </a>
+            {unlocked && (
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[11px] font-semibold text-primary inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30"
+              >
+                🧭 Get directions
+              </a>
+            )}
           </div>
-          <SinglePropertyMap p={p} height={220} />
-          <p className="text-[11px] text-muted-foreground mt-2">📍 {p.location}</p>
+          <SinglePropertyMap p={p} height={220} approximate={!unlocked} />
+          <p className="text-[11px] text-muted-foreground mt-2">📍 {shownLocation}</p>
+          {!unlocked && (
+            <div className="mt-2 rounded-xl bg-card border border-border p-3 text-[11px] text-muted-foreground flex items-start gap-2">
+              <span className="text-sm">🔒</span>
+              <span>
+                For host safety we only show the approximate area. The exact address and directions
+                are unlocked as soon as your payment is confirmed.
+              </span>
+            </div>
+          )}
+
           <div className="mt-4">
             <h3 className="text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wider">What's nearby</h3>
             <NearbyServices p={p} />

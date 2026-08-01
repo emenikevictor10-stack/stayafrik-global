@@ -3,6 +3,7 @@ import type { Property } from "@/data/properties";
 import { Star, Heart, BedDouble, Bath } from "lucide-react";
 import { useWishlist } from "@/hooks/useWishlist";
 import { cn } from "@/lib/utils";
+import { approxLocation } from "@/hooks/useListingAccess";
 
 export const PropertyCard = ({ p }: { p: Property }) => {
   const { has, toggle } = useWishlist();
@@ -67,7 +68,7 @@ export const PropertyCard = ({ p }: { p: Property }) => {
             <span className="text-muted-foreground ml-0.5">({p.reviews})</span>
           </span>
         </div>
-        <p className="text-xs text-muted-foreground mt-0.5 truncate">📍 {p.location}</p>
+        <p className="text-xs text-muted-foreground mt-0.5 truncate">📍 {approxLocation(p.location)}</p>
         {p.beds > 0 && (
           <div className="flex items-center gap-3 mt-2.5 text-[11px] text-muted-foreground">
             <span className="inline-flex items-center gap-1"><BedDouble className="w-3 h-3" />{p.beds} bed</span>

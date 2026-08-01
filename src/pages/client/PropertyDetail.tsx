@@ -14,6 +14,7 @@ import { ReserveDialog } from "@/components/property/ReserveDialog";
 import { useState } from "react";
 
 import { useWishlist } from "@/hooks/useWishlist";
+import { useListingAccess, approxLocation } from "@/hooks/useListingAccess";
 import { cn } from "@/lib/utils";
 
 
@@ -26,6 +27,8 @@ const PropertyDetail = () => {
   const { data: p, loading } = useListing(id);
   const { has, toggle } = useWishlist();
   const [reserveOpen, setReserveOpen] = useState(false);
+  const { unlocked } = useListingAccess(p?.id, p?.hostId);
+  const shownLocation = p ? (unlocked ? p.location : approxLocation(p.location)) : "";
 
 
 
@@ -135,7 +138,7 @@ const PropertyDetail = () => {
           )}
         </div>
         <h1 className="mt-3 text-2xl font-extrabold tracking-tight leading-tight">{p.title}</h1>
-        <p className="text-sm text-muted-foreground mt-1">📍 {p.location}</p>
+        <p className="text-sm text-muted-foreground mt-1">📍 {shownLocation}{!unlocked && <span className="ml-1 text-[11px]">· exact address after booking</span>}</p>
         <div className="flex items-center gap-2 mt-2 text-sm">
           <Star className="w-4 h-4 fill-primary text-primary" />
           <span className="font-semibold">{p.rating}</span>
@@ -236,17 +239,29 @@ const PropertyDetail = () => {
         <section className="mt-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-sm">Location & neighbourhood</h2>
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`}
-              target="_blank"
-              rel="noreferrer"
-              className="text-[11px] font-semibold text-primary inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30"
-            >
-              🧭 Get directions
-            </a>
+            {unlocked && (
+              <a
+                href={`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`}
+                target="_blank"
+                rel="noreferrer"
+                className="text-[11px] font-semibold text-primary inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30"
+              >
+                🧭 Get directions
+              </a>
+            )}
           </div>
-          <SinglePropertyMap p={p} height={220} />
-          <p className="text-[11px] text-muted-foreground mt-2">📍 {p.location}</p>
+          <SinglePropertyMap p={p} height={220} approximate={!unlocked} />
+          <p className="text-[11px] text-muted-foreground mt-2">📍 {shownLocation}</p>
+          {!unlocked && (
+            <div className="mt-2 rounded-xl bg-card border border-border p-3 text-[11px] text-muted-foreground flex items-start gap-2">
+              <span className="text-sm">🔒</span>
+              <span>
+                For host safety we only show the approximate area. The exact address and directions
+                are unlocked as soon as your payment is confirmed.
+              </span>
+            </div>
+          )}
+
           <div className="mt-4">
             <h3 className="text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wider">What's nearby</h3>
             <NearbyServices p={p} />

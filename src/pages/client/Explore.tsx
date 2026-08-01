@@ -1,6 +1,6 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { PropertyCard } from "@/components/property/PropertyCard";
-import { CATEGORIES, type Property } from "@/data/properties";
+import { type Property } from "@/data/properties";
 import { Map as MapIcon, List as ListIcon, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";
@@ -20,23 +20,55 @@ const distKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }
   return 2 * R * Math.asin(Math.sqrt(s));
 };
 
+type SmartFilter = "budget" | "toprated" | "family" | "power" | "workstay" | "luxury";
+
+const SMART_FILTERS: { key: SmartFilter; label: string; emoji: string; hint: string }[] = [
+  { key: "budget", label: "Budget friendly", emoji: "💸", hint: "Under ₦100k / night" },
+  { key: "toprated", label: "Top rated", emoji: "⭐", hint: "4.5+ rating" },
+  { key: "family", label: "Family size", emoji: "👨‍👩‍👧", hint: "3+ bedrooms" },
+  { key: "power", label: "Never dark", emoji: "🔌", hint: "Generator / inverter" },
+  { key: "workstay", label: "Work stay", emoji: "💻", hint: "Fast Wi-Fi" },
+  { key: "luxury", label: "Luxury", emoji: "💎", hint: "Premium homes" },
+];
+
+const hasAmenity = (p: Property, words: string[]) =>
+  p.amenities.some((a) => words.some((w) => a.label.toLowerCase().includes(w)));
+
+const matchesSmart = (p: Property, f: SmartFilter) => {
+  switch (f) {
+    case "budget": return p.priceNum > 0 && p.priceNum <= 100000;
+    case "toprated": return p.rating >= 4.5;
+    case "family": return p.beds >= 3;
+    case "power": return hasAmenity(p, ["generator", "inverter", "solar", "power"]);
+    case "workstay": return hasAmenity(p, ["wi-fi", "wifi", "internet"]);
+    case "luxury": return p.priceNum >= 200000 || hasAmenity(p, ["pool", "gym"]);
+  }
+};
+
 const Explore = () => {
   const [q, setQ] = useState("");
-  const [filter, setFilter] = useState<string | null>(null);
+  const [smart, setSmart] = useState<SmartFilter[]>([]);
   const [view, setView] = useState<"list" | "map">("list");
   const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
   const [selected, setSelected] = useState<Property | null>(null);
   const { data: properties, loading } = useListings();
 
+  const toggleSmart = (k: SmartFilter) =>
+    setSmart((s) => (s.includes(k) ? s.filter((x) => x !== k) : [...s, k]));
+
   const list = useMemo(() => {
     const shortlets = properties.filter((p) => p.type === "Shortlet");
+    const needle = q.trim().toLowerCase();
     let out = shortlets.filter((p) => {
       const matchesQ =
-        !q ||
-        p.title.toLowerCase().includes(q.toLowerCase()) ||
-        p.location.toLowerCase().includes(q.toLowerCase());
-      return matchesQ;
+        !needle ||
+        p.title.toLowerCase().includes(needle) ||
+        p.location.toLowerCase().includes(needle) ||
+        p.amenities.some((a) => a.label.toLowerCase().includes(needle));
+      return matchesQ && smart.every((f) => matchesSmart(p, f));
     });
+    if (smart.includes("budget")) out = [...out].sort((a, b) => a.priceNum - b.priceNum);
+    else if (smart.includes("toprated")) out = [...out].sort((a, b) => b.rating - a.rating);
     if (nearMe) {
       out = out
         .map((p) => ({ p, d: distKm(nearMe, { lat: p.lat, lng: p.lng }) }))
@@ -44,7 +76,8 @@ const Explore = () => {
         .map((x) => x.p);
     }
     return out;
-  }, [properties, q, nearMe]);
+  }, [properties, q, smart, nearMe]);
+
 
   return (
     <>
@@ -82,62 +115,42 @@ const Explore = () => {
           </button>
         )}
 
+        {/* AI-optimised quick filters */}
         <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5 mt-4 pb-1">
           <button
-            onClick={() => setFilter(null)}
+            onClick={() => setSmart([])}
             className={cn(
               "shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold border transition-colors",
-              !filter
+              smart.length === 0
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-card text-muted-foreground border-border",
             )}
           >
             ✨ All
           </button>
-          {CATEGORIES.map((c) => (
+          {SMART_FILTERS.map((f) => (
             <button
-              key={c.label}
-              onClick={() => setFilter(c.filter)}
+              key={f.key}
+              onClick={() => toggleSmart(f.key)}
+              title={f.hint}
               className={cn(
                 "shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold border transition-colors",
-                filter === c.filter
+                smart.includes(f.key)
                   ? "bg-primary text-primary-foreground border-primary"
                   : "bg-card text-muted-foreground border-border",
               )}
             >
-              <span>{c.emoji}</span>
-              {c.label}
+              <span>{f.emoji}</span>
+              {f.label}
             </button>
           ))}
         </div>
+        {smart.length > 0 && (
+          <p className="mt-2 text-[11px] text-muted-foreground">
+            {SMART_FILTERS.filter((f) => smart.includes(f.key)).map((f) => f.hint).join(" · ")}
+          </p>
+        )}
 
-        {/* Platform stats */}
-        <section className="mt-5 grid grid-cols-3 gap-2">
-          {[
-            { n: "5,000+", l: "Verified Listings" },
-            { n: "10,000+", l: "Happy Guests" },
-            { n: "2,000+", l: "Verified Hosts" },
-          ].map((s) => (
-            <div key={s.l} className="rounded-2xl bg-card border border-border p-3 text-center">
-              <div className="text-primary font-extrabold text-base leading-none">{s.n}</div>
-              <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{s.l}</div>
-            </div>
-          ))}
-        </section>
-
-        {/* Trust badges */}
-        <section className="mt-3 grid grid-cols-3 gap-2">
-          {[
-            { e: "✓", t: "Verified Listings", c: "text-success" },
-            { e: "🔒", t: "Secure Escrow", c: "text-primary" },
-            { e: "💬", t: "24/7 Support", c: "text-primary" },
-          ].map((b) => (
-            <div key={b.t} className="rounded-2xl bg-card border border-border p-2.5 flex flex-col items-center text-center gap-1">
-              <div className={cn("text-base", b.c)}>{b.e}</div>
-              <div className="text-[10px] font-semibold leading-tight">{b.t}</div>
-            </div>
-          ))}
-        </section>
 
         {view === "map" ? (
           <div className="mt-5 relative">

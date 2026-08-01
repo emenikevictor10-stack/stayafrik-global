@@ -14,6 +14,7 @@ import { ReserveDialog } from "@/components/property/ReserveDialog";
 import { useState } from "react";
 
 import { useWishlist } from "@/hooks/useWishlist";
+import { useListingAccess, approxLocation } from "@/hooks/useListingAccess";
 import { cn } from "@/lib/utils";
 
 
@@ -26,6 +27,8 @@ const PropertyDetail = () => {
   const { data: p, loading } = useListing(id);
   const { has, toggle } = useWishlist();
   const [reserveOpen, setReserveOpen] = useState(false);
+  const { unlocked } = useListingAccess(p?.id, p?.hostId);
+  const shownLocation = p ? (unlocked ? p.location : approxLocation(p.location)) : "";
 
 
 
@@ -135,7 +138,7 @@ const PropertyDetail = () => {
           )}
         </div>
         <h1 className="mt-3 text-2xl font-extrabold tracking-tight leading-tight">{p.title}</h1>
-        <p className="text-sm text-muted-foreground mt-1">📍 {p.location}</p>
+        <p className="text-sm text-muted-foreground mt-1">📍 {shownLocation}{!unlocked && <span className="ml-1 text-[11px]">· exact address after booking</span>}</p>
         <div className="flex items-center gap-2 mt-2 text-sm">
           <Star className="w-4 h-4 fill-primary text-primary" />
           <span className="font-semibold">{p.rating}</span>

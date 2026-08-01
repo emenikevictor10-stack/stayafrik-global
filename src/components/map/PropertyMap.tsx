@@ -61,22 +61,44 @@ const Fallback = ({ height, lat, lng }: { height: number; lat?: number; lng?: nu
   );
 };
 
-export const SinglePropertyMap = ({ p, height = 200 }: { p: Property; height?: number }) => {
+export const SinglePropertyMap = ({
+  p,
+  height = 200,
+  approximate = false,
+}: { p: Property; height?: number; approximate?: boolean }) => {
   const ref = useRef<HTMLDivElement>(null);
   const [err, setErr] = useState(false);
   useEffect(() => {
     let cancelled = false;
     loadMaps().then((g) => {
       if (cancelled || !ref.current) return;
-      const map = new g.maps.Map(ref.current, { center: { lat: p.lat, lng: p.lng }, zoom: 14, disableDefaultUI: true, zoomControl: true });
-      new g.maps.Marker({ map, position: { lat: p.lat, lng: p.lng }, title: p.title });
+      const map = new g.maps.Map(ref.current, {
+        center: { lat: p.lat, lng: p.lng },
+        zoom: approximate ? 13 : 14,
+        disableDefaultUI: true,
+        zoomControl: !approximate,
+        gestureHandling: approximate ? "none" : "auto",
+      });
+      if (approximate) {
+        new g.maps.Circle({
+          map,
+          center: { lat: p.lat, lng: p.lng },
+          radius: 900,
+          strokeOpacity: 0,
+          fillColor: "#84cc16",
+          fillOpacity: 0.25,
+        });
+      } else {
+        new g.maps.Marker({ map, position: { lat: p.lat, lng: p.lng }, title: p.title });
+      }
     }).catch(() => setErr(true));
     const off = onAuthFailure(() => setErr(true));
     return () => { cancelled = true; off(); };
-  }, [p.lat, p.lng, p.title]);
+  }, [p.lat, p.lng, p.title, approximate]);
   if (err) return <Fallback height={height} lat={p.lat} lng={p.lng} />;
   return <div ref={ref} className="rounded-2xl overflow-hidden border border-border" style={{ height }} />;
 };
+
 
 const fmtPrice = (n: number) => {
   if (n >= 1_000_000) return `₦${(n / 1_000_000).toFixed(1)}M`;

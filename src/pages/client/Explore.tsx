@@ -1,6 +1,6 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { PropertyCard } from "@/components/property/PropertyCard";
-import { CATEGORIES, type Property } from "@/data/properties";
+import { type Property } from "@/data/properties";
 import { Map as MapIcon, List as ListIcon, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { Link } from "react-router-dom";

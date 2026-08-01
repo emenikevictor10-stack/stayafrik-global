@@ -7,17 +7,37 @@ const QUALITY = 0.82;
 export const isImage = (file: File) =>
   file.type.startsWith("image/") || /\.(jpe?g|png|webp|gif|bmp|heic|heif|avif|tiff?)$/i.test(file.name);
 
+const isHeic = (file: File) =>
+  /image\/hei[cf]/i.test(file.type) || /\.(heic|heif)$/i.test(file.name);
+
+/** Decode HEIC/HEIF (which browsers can't render) into a JPEG File. */
+const heicToJpeg = async (file: File): Promise<File> => {
+  const { heicTo } = await import("heic-to");
+  const blob = await heicTo({ blob: file, type: "image/jpeg", quality: 0.9 });
+  return new File([blob], file.name.replace(/\.[^.]+$/, "") + ".jpg", { type: "image/jpeg" });
+};
+
 /**
- * Convert any browser-supported image to WebP. Falls back to the original
- * file (with its real extension preserved) when the browser can't decode it —
- * that way HEIC/AVIF still get uploaded and previewed with a valid mime.
+ * Convert any browser-supported image to WebP. HEIC/HEIF are decoded first so
+ * they never end up stored in a format browsers can't display.
+ * Throws when the file cannot be decoded at all, so the uploader can warn.
  */
 export const toWebp = async (file: File, quality = QUALITY): Promise<File> => {
   if (!isImage(file)) return file;
   if (file.type === "image/webp" && file.size < 500 * 1024) return file;
 
+  let source = file;
+  if (isHeic(file)) {
+    try {
+      source = await heicToJpeg(file);
+    } catch {
+      throw new Error(`${file.name}: this iPhone HEIC photo could not be converted. Please re-save it as JPEG and try again.`);
+    }
+  }
+
   try {
-    const bitmap = await createImageBitmap(file);
+    const bitmap = await createImageBitmap(source);
+
     const scale = Math.min(1, MAX_DIM / Math.max(bitmap.width, bitmap.height));
     const w = Math.round(bitmap.width * scale);
     const h = Math.round(bitmap.height * scale);

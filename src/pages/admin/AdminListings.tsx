@@ -6,6 +6,21 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Seo } from "@/components/seo/Seo";
 
+/** Image that degrades gracefully when the browser can't decode the file (e.g. legacy HEIC uploads). */
+const SafeImg = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
+  const [failed, setFailed] = useState(false);
+  if (failed)
+    return (
+      <div className="w-full h-full bg-secondary flex flex-col items-center justify-center gap-1 text-center p-2">
+        <span className="text-lg">🖼️</span>
+        <span className="text-[10px] text-muted-foreground leading-tight">
+          Unsupported format (HEIC) — ask host to re-upload
+        </span>
+      </div>
+    );
+  return <img src={src} alt={alt} className={className} loading="lazy" onError={() => setFailed(true)} />;
+};
+
 type ListingRow = {
   id: string;
   title: string;
@@ -238,7 +253,7 @@ const AdminListings = () => {
                       onClick={() => setLightbox({ images, start: 0 })}
                       className="col-span-4 md:col-span-2 md:row-span-2 aspect-[4/3] md:aspect-auto md:h-full overflow-hidden rounded-2xl"
                     >
-                      <img src={hero} alt={r.title} className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                      <SafeImg src={hero} alt={r.title} className="w-full h-full object-cover hover:scale-105 transition-transform" />
                     </button>
                   )}
                   {rest.slice(0, 4).map((src, i) => (
@@ -248,7 +263,7 @@ const AdminListings = () => {
                       onClick={() => setLightbox({ images, start: i + 1 })}
                       className="col-span-2 md:col-span-1 aspect-square overflow-hidden rounded-2xl relative"
                     >
-                      <img src={src} alt={`${r.title} photo ${i + 2}`} className="w-full h-full object-cover hover:scale-105 transition-transform" />
+                      <SafeImg src={src} alt={`${r.title} photo ${i + 2}`} className="w-full h-full object-cover hover:scale-105 transition-transform" />
                       {i === 3 && images.length > 5 && (
                         <div className="absolute inset-0 bg-black/50 flex items-center justify-center text-white text-sm font-bold">
                           +{images.length - 5} more

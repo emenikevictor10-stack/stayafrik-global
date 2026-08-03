@@ -211,7 +211,7 @@ const NewListing = () => {
     "Where is your shortlet?",
     "Property details",
     "Add photos",
-    "Add a short video tour",
+    "Add a short video tour (optional)",
     "What's included?",
     "Set your nightly price",
     "Review & submit",

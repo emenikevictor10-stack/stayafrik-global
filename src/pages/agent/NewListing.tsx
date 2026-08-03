@@ -85,7 +85,7 @@ const NewListing = () => {
       return null;
     }
     if (s === 4) {
-      if (!videoUrl) return "Upload a short property video (max 5MB, ~1 min)";
+      // Video is optional
       return null;
     }
     if (s === 5) {
@@ -324,7 +324,7 @@ const NewListing = () => {
         {step === 4 && (
           <div>
             <p className="text-xs text-muted-foreground mb-3">
-              Upload a short walkthrough video (max <span className="font-bold text-foreground">5MB</span>, about 1 minute). MP4 / MOV / WebM.
+              <span className="font-bold text-foreground">Optional.</span> Add a short walkthrough video (max <span className="font-bold text-foreground">5MB</span>, about 1 minute). MP4 / MOV / WebM — you can skip this step.
             </p>
             <input ref={videoInput} type="file" accept="video/*" className="hidden" onChange={(e) => handleVideo(e.target.files?.[0])} />
             {videoUrl ? (

@@ -758,6 +758,16 @@ export type Database = {
           read_ct: number
         }[]
       }
+      send_alert_email: {
+        Args: {
+          _body: string
+          _heading: string
+          _link: string
+          _subject: string
+          _user_id: string
+        }
+        Returns: undefined
+      }
     }
     Enums: {
       app_role: "client" | "agent" | "admin"

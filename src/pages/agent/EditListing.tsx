@@ -48,21 +48,30 @@ const EditListing = () => {
   const handleFiles = async (files: FileList | null) => {
     if (!files || !user) return;
     setUploading(true);
+    const paths: string[] = [];
     try {
       const uploaded: string[] = [];
-      for (const file of Array.from(files)) {
-        if (!file.type.startsWith("image/")) throw new Error("Image files only");
-        const ext = (file.name.split(".").pop() || "jpg").toLowerCase().replace(/[^a-z0-9]/g, "") || "jpg";
+      for (const raw of Array.from(files)) {
+        const looksImage = raw.type.startsWith("image/") || /\.(jpe?g|png|webp|gif|heic|heif|avif|bmp|tiff?)$/i.test(raw.name);
+        if (!looksImage) throw new Error("Image files only");
+        const file = await toWebp(raw);
+        const { ext, contentType } = inferUpload(file);
         const path = `${user.id}/${crypto.randomUUID()}.${ext}`;
-        const { error } = await supabase.storage.from("listing-images").upload(path, file, { upsert: false, contentType: file.type });
+        const { error } = await supabase.storage.from("listing-images").upload(path, file, { upsert: false, contentType, cacheControl: "3600" });
         if (error) throw error;
+        paths.push(path);
         const { data } = supabase.storage.from("listing-images").getPublicUrl(path);
         uploaded.push(data.publicUrl);
       }
       setImages((p) => [...p, ...uploaded]);
       if (fileInput.current) fileInput.current.value = "";
+      toast.success(uploaded.length === 1 ? "Photo uploaded" : `${uploaded.length} photos uploaded`);
     } catch (e: any) {
-      toast.error(e.message);
+      if (paths.length) {
+        try { await supabase.storage.from("listing-images").remove(paths); } catch {}
+      }
+      if (fileInput.current) fileInput.current.value = "";
+      toast.error((e?.message || "Upload failed") + " — none of the photos in that batch were kept, please try again");
     } finally {
       setUploading(false);
     }

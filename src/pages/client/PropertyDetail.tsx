@@ -183,7 +183,7 @@ const PropertyDetail = () => {
               </div>
             </div>
           </div>
-          <div className="mt-3 flex gap-2">
+          <div className="mt-3">
             {p.hostId && (
               <Link
                 to={`/messages/${p.hostId}?listing=${p.id}`}
@@ -194,24 +194,16 @@ const PropertyDetail = () => {
                     navigate(`/auth?mode=signin`, { state: { from: `/messages/${p.hostId}?listing=${p.id}` } });
                   }
                 }}
-                className="flex-1 text-center text-xs font-bold text-primary px-3 py-2.5 rounded-xl bg-primary/10 border border-primary/30"
+                className="block w-full text-center text-xs font-bold text-primary px-3 py-2.5 rounded-xl bg-primary/10 border border-primary/30"
               >
-                💬 Message host
+                💬 Message host in app
               </Link>
             )}
-            {p.hostWhatsapp && (
-              <a
-                href={`https://wa.me/${p.hostWhatsapp.replace(/[^\d]/g, "")}?text=${encodeURIComponent(
-                  `Hi! I'm interested in your listing: ${p.title}`,
-                )}`}
-                target="_blank"
-                rel="noreferrer"
-                className="flex-1 text-center text-xs font-bold text-white px-3 py-2.5 rounded-xl bg-[#25D366]"
-              >
-                WhatsApp
-              </a>
-            )}
+            <p className="mt-2 text-[10px] text-muted-foreground text-center">
+              For your safety, all conversations stay inside Stay. Hosts are alerted instantly.
+            </p>
           </div>
+
         </section>
 
         <section className="mt-6">

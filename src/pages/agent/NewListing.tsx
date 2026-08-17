@@ -138,6 +138,7 @@ const NewListing = () => {
   const handleFiles = async (files: FileList | null) => {
     if (!files || !user) return;
     setUploading(true);
+    const paths: string[] = [];
     try {
       const uploaded: string[] = [];
       for (const raw of Array.from(files)) {
@@ -152,6 +153,7 @@ const NewListing = () => {
           upsert: false,
         });
         if (error) throw error;
+        paths.push(path);
         const { data } = supabase.storage.from("listing-images").getPublicUrl(path);
         uploaded.push(data.publicUrl);
       }
@@ -159,7 +161,12 @@ const NewListing = () => {
       if (fileInput.current) fileInput.current.value = "";
       toast.success(uploaded.length === 1 ? "Photo uploaded" : `${uploaded.length} photos uploaded`);
     } catch (err: any) {
-      toast.error(err.message || "Upload failed");
+      // All-or-nothing: roll back any partially uploaded files so no half batch is kept
+      if (paths.length) {
+        try { await supabase.storage.from("listing-images").remove(paths); } catch {}
+      }
+      if (fileInput.current) fileInput.current.value = "";
+      toast.error((err?.message || "Upload failed") + " — none of the photos in that batch were kept, please try again");
     } finally {
       setUploading(false);
     }

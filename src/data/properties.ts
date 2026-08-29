@@ -33,6 +33,8 @@ export type Property = {
   hostId?: string;
   hostAvatar?: string | null;
   hostWhatsapp?: string | null;
+  source?: "stayglobal" | "rayprop";
+  raypropListingId?: string;
 };
 
 

@@ -4,6 +4,7 @@ import { Star, Heart, BedDouble, Bath } from "lucide-react";
 import { useWishlist } from "@/hooks/useWishlist";
 import { cn } from "@/lib/utils";
 import { approxLocation } from "@/hooks/useListingAccess";
+import { rememberRayPropListing } from "@/lib/rayprop";
 
 export const PropertyCard = ({ p }: { p: Property }) => {
   const { has, toggle } = useWishlist();
@@ -18,6 +19,7 @@ export const PropertyCard = ({ p }: { p: Property }) => {
   return (
     <Link
       to={`/property/${p.id}`}
+      onClick={() => p.source === "rayprop" && rememberRayPropListing(p)}
       className="block group rounded-2xl overflow-hidden bg-card border border-border transition-all hover:border-primary/50 active:scale-[0.99]"
     >
       <div className="relative aspect-[4/3] overflow-hidden bg-secondary">
@@ -45,8 +47,8 @@ export const PropertyCard = ({ p }: { p: Property }) => {
         </div>
         {p.verified && (
           <div className="absolute bottom-3 left-3">
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-success text-white text-[10px] font-bold shadow-lg">
-              ✓ Verified Host
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-success text-success-foreground text-[10px] font-bold shadow-lg">
+              ✓ {p.source === "rayprop" ? "Verified Partner" : "Verified Host"}
             </span>
           </div>
         )}

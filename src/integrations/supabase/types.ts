@@ -53,7 +53,12 @@ export type Database = {
           id: string
           listing_id: string
           payment_reference: string | null
+          rayprop_hold_id: string | null
+          rayprop_listing_id: string | null
+          rayprop_quote_id: string | null
+          rayprop_reservation_id: string | null
           released_at: string | null
+          source: string
           status: string
           total_price: number
           updated_at: string
@@ -66,7 +71,12 @@ export type Database = {
           id?: string
           listing_id: string
           payment_reference?: string | null
+          rayprop_hold_id?: string | null
+          rayprop_listing_id?: string | null
+          rayprop_quote_id?: string | null
+          rayprop_reservation_id?: string | null
           released_at?: string | null
+          source?: string
           status?: string
           total_price?: number
           updated_at?: string
@@ -79,7 +89,12 @@ export type Database = {
           id?: string
           listing_id?: string
           payment_reference?: string | null
+          rayprop_hold_id?: string | null
+          rayprop_listing_id?: string | null
+          rayprop_quote_id?: string | null
+          rayprop_reservation_id?: string | null
           released_at?: string | null
+          source?: string
           status?: string
           total_price?: number
           updated_at?: string

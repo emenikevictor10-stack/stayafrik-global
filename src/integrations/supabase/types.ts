@@ -51,7 +51,7 @@ export type Database = {
           created_at: string
           guest_id: string
           id: string
-          listing_id: string
+          listing_id: string | null
           payment_reference: string | null
           rayprop_hold_id: string | null
           rayprop_listing_id: string | null
@@ -69,7 +69,7 @@ export type Database = {
           created_at?: string
           guest_id: string
           id?: string
-          listing_id: string
+          listing_id?: string | null
           payment_reference?: string | null
           rayprop_hold_id?: string | null
           rayprop_listing_id?: string | null
@@ -87,7 +87,7 @@ export type Database = {
           created_at?: string
           guest_id?: string
           id?: string
-          listing_id?: string
+          listing_id?: string | null
           payment_reference?: string | null
           rayprop_hold_id?: string | null
           rayprop_listing_id?: string | null

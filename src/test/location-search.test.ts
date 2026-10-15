@@ -31,4 +31,15 @@ describe("location search", () => {
     expect(idx.find((e) => e.name === "Lifecamp")!.local).toBe(true);
     expect(matchLocations(idx, "mary")[0].label).toBe("Maryland, Lagos");
   });
+  it("rescueCities suggests the hinted city first when a search finds nothing", () => {
+    expect(rescueCities(list, "Ikoyi")[0]).toBe("Lagos");
+  });
+  it("rescueCities falls back to the busiest cities for unknown places", () => {
+    const cities = rescueCities(list, "Nowhereville");
+    expect(cities).toContain("Lagos");
+    expect(cities.length).toBeLessThanOrEqual(3);
+  });
+  it("rescueCities returns nothing when there are no stays", () => {
+    expect(rescueCities([], "Lekki")).toEqual([]);
+  });
 });

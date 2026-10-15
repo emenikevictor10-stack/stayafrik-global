@@ -6,7 +6,6 @@ import {
   Pencil,
   Home,
   Star,
-  Settings,
   CreditCard,
   ShieldCheck,
   Heart,
@@ -20,12 +19,14 @@ import {
   Briefcase,
   Lock,
   Camera,
+  Trash2,
   type LucideIcon,
 } from "lucide-react";
 import { Link, useNavigate } from "react-router-dom";
 import { toast } from "sonner";
 import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { cn } from "@/lib/utils";
 
 type Item = { Icon: LucideIcon; title: string; subtitle: string; to: string };
 
@@ -37,7 +38,6 @@ const clientItems: Item[] = [
   { Icon: Lock, title: "Unlock PIN", subtitle: "App lock & security", to: "/profile/pin" },
   { Icon: Globe, title: "Language & currency", subtitle: "Regional preferences", to: "/profile/language" },
   { Icon: LifeBuoy, title: "Help & support", subtitle: "Get assistance", to: "/profile/help" },
-  { Icon: Settings, title: "Settings", subtitle: "Account & preferences", to: "/profile/edit" },
 ];
 
 const agentItems: Item[] = [
@@ -50,8 +50,52 @@ const agentItems: Item[] = [
   { Icon: Lock, title: "Unlock PIN", subtitle: "App lock & security", to: "/profile/pin" },
   { Icon: Globe, title: "Language & currency", subtitle: "Regional preferences", to: "/profile/language" },
   { Icon: LifeBuoy, title: "Help & support", subtitle: "Get assistance", to: "/profile/help" },
-  { Icon: Settings, title: "Settings", subtitle: "Account & preferences", to: "/profile/edit" },
 ];
+
+/** Shared row style used by every action on this page. */
+const Row = ({
+  Icon,
+  title,
+  subtitle,
+  tone = "default",
+  to,
+  onClick,
+}: {
+  Icon: LucideIcon;
+  title: string;
+  subtitle: string;
+  tone?: "default" | "danger";
+  to?: string;
+  onClick?: () => void;
+}) => {
+  const inner = (
+    <>
+      <div className="w-11 h-11 rounded-2xl bg-background flex items-center justify-center shrink-0">
+        <Icon className={cn("w-5 h-5", tone === "danger" ? "text-destructive" : "text-primary")} />
+      </div>
+      <div className="flex-1 min-w-0 text-left">
+        <div className={cn("font-bold text-[15px] leading-tight", tone === "danger" && "text-destructive")}>
+          {title}
+        </div>
+        <div className="text-xs text-muted-foreground mt-0.5 truncate">{subtitle}</div>
+      </div>
+      <ChevronRight className="w-4 h-4 text-muted-foreground shrink-0" />
+    </>
+  );
+
+  const className =
+    "flex items-center gap-4 rounded-2xl bg-card px-4 py-3.5 hover:bg-secondary transition-colors w-full";
+
+  return to ? (
+    <Link to={to} className={className}>
+      {inner}
+    </Link>
+  ) : (
+    <button type="button" onClick={onClick} className={className}>
+      {inner}
+    </button>
+  );
+};
 
 const Profile = () => {
   const { role, user, setRole } = useRole();
@@ -96,14 +140,17 @@ const Profile = () => {
     navigate("/", { replace: true });
   };
 
+  const handleSignOut = async () => {
+    await signOut();
+    toast.success("Signed out");
+    navigate("/auth", { replace: true });
+  };
+
   return (
     <main className="px-5 pt-6 pb-32">
       {/* Header */}
-      <header className="flex items-center justify-between mb-6">
+      <header className="mb-6">
         <h1 className="text-3xl font-extrabold tracking-tight">Profile</h1>
-        <Link to="/profile/edit" className="flex items-center gap-1.5 text-primary text-sm font-bold">
-          <Pencil className="w-4 h-4" /> Edit
-        </Link>
       </header>
 
       {/* Identity */}
@@ -145,72 +192,39 @@ const Profile = () => {
         </div>
       </section>
 
-      {/* Become a Host / Switch mode promo card */}
-      <section className="relative overflow-hidden rounded-3xl border border-primary/40 bg-gradient-to-br from-primary/20 via-primary/5 to-transparent p-5 mb-7">
-        <div className="absolute -right-8 -top-8 w-40 h-40 bg-primary/20 blur-3xl rounded-full pointer-events-none" />
-        <div className="relative">
-          <h3 className="text-lg font-extrabold mb-1">
-            {role === "client" ? "Become a Host" : "Switch to Guest"}
-          </h3>
-          <p className="text-sm text-muted-foreground mb-4 max-w-[280px]">
-            {role === "client"
-              ? "List your property and start earning on Stay"
-              : "Explore stays and book trips as a client"}
-          </p>
-          <button
-            onClick={() => (role === "client" ? navigate("/become-host") : switchRole())}
-            className="rounded-full bg-primary text-primary-foreground px-5 py-3 text-sm font-extrabold shadow-glow inline-flex items-center gap-2"
-          >
-            {role === "client" ? (
-              <>
-                <Briefcase className="w-4 h-4" /> Start hosting
-              </>
-            ) : (
-              <>
-                <User className="w-4 h-4" /> Browse as client
-              </>
-            )}
-          </button>
-        </div>
-      </section>
-
-      {/* Menu list */}
+      {/* Actions — every button uses the same row style */}
       <section className="space-y-3">
+        <Row
+          Icon={role === "client" ? Briefcase : User}
+          title={role === "client" ? "Become a Host" : "Switch to Guest"}
+          subtitle={
+            role === "client"
+              ? "List your property and start earning on Stay"
+              : "Explore stays and book trips as a client"
+          }
+          onClick={() => (role === "client" ? navigate("/become-host") : switchRole())}
+        />
+        <Row Icon={Pencil} title="Edit profile" subtitle="Name, photo & details" to="/profile/edit" />
+
         {items.map(({ Icon, title, subtitle, to }) => (
-          <Link
-            key={title}
-            to={to}
-            className="flex items-center gap-4 rounded-2xl bg-card border border-border/60 px-4 py-3.5 hover:bg-secondary transition-colors border-none"
-          >
-            <div className="w-11 h-11 rounded-2xl bg-background flex items-center justify-center border border-border/60 border-none">
-              <Icon className="w-5 h-5 text-primary" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <div className="font-bold text-[15px] leading-tight">{title}</div>
-              <div className="text-xs text-muted-foreground mt-0.5">{subtitle}</div>
-            </div>
-            <ChevronRight className="w-4 h-4 text-muted-foreground" />
-          </Link>
+          <Row key={title} Icon={Icon} title={title} subtitle={subtitle} to={to} />
         ))}
+
+        <Row
+          Icon={LogOut}
+          title="Log out"
+          subtitle="Sign out of this device"
+          tone="danger"
+          onClick={handleSignOut}
+        />
+        <Row
+          Icon={Trash2}
+          title="Delete account"
+          subtitle="Permanently remove your account"
+          tone="danger"
+          to="/profile/delete"
+        />
       </section>
-
-      <button
-        onClick={async () => {
-          await signOut();
-          toast.success("Signed out");
-          navigate("/auth", { replace: true });
-        }}
-        className="mt-6 w-full flex items-center justify-center gap-2 rounded-2xl border border-destructive/40 bg-destructive/10 text-destructive py-3.5 text-sm font-bold"
-      >
-        <LogOut className="w-4 h-4" /> Log out
-      </button>
-
-      <Link
-        to="/profile/delete"
-        className="mt-3 w-full flex items-center justify-center gap-2 rounded-2xl border border-border/60 bg-card text-destructive py-3 text-xs font-bold"
-      >
-        Delete account
-      </Link>
 
       <div className="mt-6 flex items-center justify-center gap-3 text-[10px] text-muted-foreground flex-wrap">
         <span>Stay · v0.1 · Africa 🌍</span>

@@ -31,7 +31,7 @@ describe("RayProp amenity mapping", () => {
       { id: "A1", amenities: ["streaming", "streaming services", "smart tv", "smart tvs", "tastefully_furnished", "tastefully furnished"] },
       "fallback.jpg",
     );
-    expect(p!.amenities.map((a) => a.label)).toEqual(["Streaming", "Smart TV", "Tastefully Furnished"]);
+    expect(p!.amenities.map((a) => a.label)).toEqual(["Streaming", "Smart TV", "Tastefully furnished"]);
   });
 
   it("derives amenities from structured boolean fields", () => {

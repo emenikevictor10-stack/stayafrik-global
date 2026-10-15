@@ -7,7 +7,8 @@ import maitama from "@/assets/prop-maitama.jpg";
 import ikoyi from "@/assets/prop-ikoyi.jpg";
 import land from "@/assets/prop-land.jpg";
 import wuse from "@/assets/prop-wuse.jpg";
-import { searchRayProp, getRayPropListing, rememberRayPropListing } from "@/lib/rayprop";
+import { searchRayProp, getRayPropListing, RAYPROP_CITIES } from "@/lib/rayprop";
+import { raypropToProperty } from "@/lib/rayprop-map";
 
 // Fallback image mapping for seeded listings whose images point to bundler paths
 const seedImageMap: Record<string, string> = {
@@ -82,58 +83,30 @@ export const rowToProperty = (r: ListingRow, host?: HostInfo): Property => {
     hostId: r.host_id,
     hostAvatar: host?.avatar_url ?? null,
     hostWhatsapp: host?.whatsapp ?? null,
+    source: "stayglobal",
+    city: r.city || undefined,
+    createdAt: r.created_at,
   };
-};
-
-const raypropValue = (value: unknown, fallback = "") => String(value ?? fallback);
-const raypropNumber = (value: unknown, fallback = 0) => Number(value ?? fallback) || fallback;
-
-const raypropToProperty = (raw: Record<string, unknown>): Property | null => {
-  const id = raypropValue(raw.id || raw.listing_id || raw.listingId);
-  if (!id) return null;
-  const rawImages = raw.images || raw.photos || raw.media;
-  const images = (Array.isArray(rawImages) ? rawImages : [raw.image || raw.photo]).map((image) => {
-    if (typeof image === "string") return image;
-    if (image && typeof image === "object") return raypropValue((image as Record<string, unknown>).url);
-    return "";
-  }).filter(Boolean);
-  const city = raypropValue(raw.city || raw.location || raw.area, "Nigeria");
-  const priceNum = raypropNumber(raw.price_per_night || raw.nightly_rate || raw.price || raw.amount);
-  const property: Property = {
-    id,
-    title: raypropValue(raw.title || raw.name, "Verified partner stay"),
-    location: city,
-    type: "Shortlet",
-    price: priceNum ? formatPrice(priceNum) : "Price on request",
-    priceNum,
-    beds: raypropNumber(raw.bedrooms || raw.beds),
-    baths: raypropNumber(raw.bathrooms || raw.baths),
-    area: raypropValue(raw.area || raw.size),
-    verified: true,
-    agent: "Verified Partner",
-    agentTag: "Verified Partner",
-    agentEmoji: "✓",
-    emoji: "🏠",
-    image: images[0] || placeholderImg,
-    images: images.length ? images : [placeholderImg],
-    rating: raypropNumber(raw.rating, 0),
-    reviews: raypropNumber(raw.reviews_count || raw.reviews),
-    desc: raypropValue(raw.description || raw.desc),
-    amenities: (Array.isArray(raw.amenities) ? raw.amenities : []).map((amenity) => ({ emoji: "✓", label: raypropValue(typeof amenity === "object" && amenity ? (amenity as Record<string, unknown>).name : amenity) })).filter((a) => a.label),
-    lat: raypropNumber(raw.lat || raw.latitude, 9.082),
-    lng: raypropNumber(raw.lng || raw.longitude, 8.6753),
-    source: "rayprop",
-    raypropListingId: id,
-  };
-  rememberRayPropListing(property);
-  return property;
 };
 
 const fetchRayProp = async (): Promise<Property[]> => {
-  const cities = ["Lagos", "Abuja", "Port Harcourt", "Enugu", "Ibadan"];
-  const results = await Promise.allSettled(cities.map((city) => searchRayProp(city, 10)));
-  const rows = results.flatMap((result) => result.status === "fulfilled" && Array.isArray(result.value) ? result.value : []);
-  return rows.map(raypropToProperty).filter((property): property is Property => Boolean(property));
+  const results = await Promise.allSettled(RAYPROP_CITIES.map((city) => searchRayProp(city, 10)));
+  const rows = results.flatMap((r) => (r.status === "fulfilled" && Array.isArray(r.value) ? r.value : []));
+  const seen = new Set<string>();
+  return rows
+    .map((raw) => raypropToProperty(raw, placeholderImg))
+    .filter((p): p is Property => !!p && !seen.has(p.id) && !!seen.add(p.id));
+};
+
+/** Mix partner and local listings, newest first (items without a date keep their relative spot). */
+const mixListings = (local: Property[], partner: Property[]) => {
+  const out: Property[] = [];
+  const max = Math.max(local.length, partner.length);
+  for (let i = 0; i < max; i++) {
+    if (local[i]) out.push(local[i]);
+    if (partner[i]) out.push(partner[i]);
+  }
+  return out;
 };
 
 const fetchHosts = async (ids: string[]): Promise<Map<string, HostInfo>> => {
@@ -169,7 +142,7 @@ export const useListings = () => {
         const local = rows.map((r) => rowToProperty(r, hosts.get(r.host_id)));
         try {
           const partner = await fetchRayProp();
-          if (active) setData([...partner, ...local]);
+          if (active) setData(mixListings(local, partner));
         } catch (raypropError) {
           console.error("[rayprop] listings unavailable", raypropError);
           if (active) setData(local);
@@ -204,9 +177,9 @@ export const useListing = (id: string | undefined) => {
         try {
           const cached = (() => { try { return JSON.parse(sessionStorage.getItem("stay:rayprop:last-listing") || "null") as Property | null; } catch { return null; } })();
           if (cached?.id === id) { setData(cached); setLoading(false); return; }
-          const records = await getRayPropListing(id);
-          const property = records.map(raypropToProperty).find((item) => item?.id === id) || null;
-          setData(property);
+          const records = await getRayPropListing(id.slice(3));
+          const property = records.map((r) => raypropToProperty(r, placeholderImg)).find((item) => item?.id === id) || null;
+          if (active) setData(property);
         } catch (error) { console.error("[rayprop] listing unavailable", error); }
         setLoading(false);
         return;

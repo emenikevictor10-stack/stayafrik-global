@@ -2,14 +2,14 @@ import { TopBar } from "@/components/shell/TopBar";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { type Property } from "@/data/properties";
 import { Map as MapIcon, List as ListIcon, X } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { PropertiesMap } from "@/components/map/PropertyMap";
 import { useListings } from "@/hooks/useListings";
 import { Seo } from "@/components/seo/Seo";
 import { SmartSearchBar } from "@/components/search/SmartSearchBar";
-import { searchProperties, buildLocationIndex } from "@/lib/location-search";
+import { searchProperties, buildLocationIndex, rescueCities } from "@/lib/location-search";
 
 // Haversine in km
 const distKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
@@ -52,7 +52,28 @@ const Explore = () => {
   const [view, setView] = useState<"list" | "map">("list");
   const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
   const [selected, setSelected] = useState<Property | null>(null);
-  const { data: properties, loading } = useListings();
+  const { data: properties, loading, loadingMore, hasMore, loadMore, searchPartner } = useListings();
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Debounced server-side partner search so any RayProp area is findable
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      const query = q.trim();
+      searchPartner(query.length >= 3 ? query : null);
+    }, 400);
+    return () => window.clearTimeout(t);
+  }, [q, searchPartner]);
+
+  // Auto-load more partner stays as the guest scrolls near the bottom
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasMore) return;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) loadMore();
+    }, { rootMargin: "600px" });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [hasMore, loadMore]);
 
   const toggleSmart = (k: SmartFilter) =>
     setSmart((s) => (s.includes(k) ? s.filter((x) => x !== k) : [...s, k]));
@@ -87,6 +108,7 @@ const Explore = () => {
           value={q}
           onChange={setQ}
           places={places}
+          loading={loading}
           onLocate={(c) => {
             setNearMe(c);
             setView("map");
@@ -207,12 +229,43 @@ const Explore = () => {
               <div className="text-center py-16 text-muted-foreground text-sm">
                 <div className="text-4xl mb-2">🔍</div>
                 No properties match your search.
+                {q && rescueCities(properties, q).length > 0 && (
+                  <div className="mt-4">
+                    <div className="text-[11px] mb-2">Try these places instead:</div>
+                    <div className="flex flex-wrap justify-center gap-1.5">
+                      {rescueCities(properties, q).map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          onClick={() => setQ(c)}
+                          className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-secondary hover:bg-primary/10 border border-border"
+                        >
+                          Stays in {c}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
                 {q && (
                   <div>
                     <button type="button" onClick={() => setQ("")} className="mt-3 text-xs font-semibold text-primary underline">Show all stays</button>
                   </div>
                 )}
               </div>
+            )}
+          </div>
+        )}
+
+        {view === "list" && !loading && list.length > 0 && (
+          <div ref={sentinelRef} className="py-6 text-center">
+            {loadingMore && (
+              <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                <span className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
+                Loading more stays…
+              </div>
+            )}
+            {!hasMore && !loadingMore && properties.some((p) => p.source === "rayprop") && (
+              <div className="text-[11px] text-muted-foreground">That's everything ✨</div>
             )}
           </div>
         )}

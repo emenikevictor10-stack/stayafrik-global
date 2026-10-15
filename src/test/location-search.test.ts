@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tokenize, searchProperties, buildLocationIndex, matchLocations } from "@/lib/location-search";
+import { tokenize, searchProperties, buildLocationIndex, matchLocations, rescueCities } from "@/lib/location-search";
 import type { Property } from "@/data/properties";
 
 const mk = (id: string, location: string, city: string, source: "rayprop" | "stayglobal" = "rayprop") =>
@@ -30,5 +30,16 @@ describe("location search", () => {
     expect(lagos.partner).toBe(true);
     expect(idx.find((e) => e.name === "Lifecamp")!.local).toBe(true);
     expect(matchLocations(idx, "mary")[0].label).toBe("Maryland, Lagos");
+  });
+  it("rescueCities suggests the hinted city first when a search finds nothing", () => {
+    expect(rescueCities(list, "Ikoyi")[0]).toBe("Lagos");
+  });
+  it("rescueCities falls back to the busiest cities for unknown places", () => {
+    const cities = rescueCities(list, "Nowhereville");
+    expect(cities).toContain("Lagos");
+    expect(cities.length).toBeLessThanOrEqual(3);
+  });
+  it("rescueCities returns nothing when there are no stays", () => {
+    expect(rescueCities([], "Lekki")).toEqual([]);
   });
 });

@@ -53,15 +53,20 @@ Deno.serve(async (req) => {
       if (!configured) return json(200, { data: [], disabled: true });
       const city = text(body?.city, 40);
       const limit = Number(body?.limit || 10);
+      const page = Number(body?.page || 1);
+      const q = body?.q ? text(body.q, 80) ?? undefined : undefined;
       const listingId = body?.listing_id ? text(stripRp(String(body.listing_id)), 120) ?? undefined : undefined;
       if (!city || !CITIES.has(city)) return json(400, { error: "Unsupported city" });
       if (!Number.isInteger(limit) || limit < 1 || limit > 50) return json(400, { error: "Invalid limit" });
-      const key = `${city}|${limit}|${listingId || ""}`;
-      const hit = cache.get(key);
-      if (hit && Date.now() - hit.at < TTL) return json(200, { data: hit.data });
-      const data = unwrapRayProp(await raypropSearch(city, limit, listingId));
-      cache.set(key, { at: Date.now(), data });
-      return json(200, { data });
+      if (!Number.isInteger(page) || page < 1 || page > 200) return json(400, { error: "Invalid page" });
+      const key = `${city}|${limit}|${page}|${listingId || ""}|${q || ""}`;
+      const hit = cache.get(key) as { at: number; data: unknown; meta: unknown } | undefined;
+      if (hit && Date.now() - hit.at < TTL) return json(200, { data: hit.data, meta: hit.meta });
+      const payload = await raypropSearch(city, limit, listingId, q, page);
+      const data = unwrapRayProp(payload);
+      const meta = payload?.meta ?? null;
+      cache.set(key, { at: Date.now(), data, meta });
+      return json(200, { data, meta });
     }
 
     if (action === "availability") {

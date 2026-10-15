@@ -43,3 +43,26 @@ export const mapRayPropStatus = (eventOrStatus: string): string | null => {
   if (s.includes("fail")) return "failed";
   return null;
 };
+
+const norm = (v: unknown) => String(v ?? "").toLowerCase().replace(/\./g, "").replace(/\s+/g, " ").trim();
+const FILLER = new Set(["nigeria", "state", "lga", "the", "in", "near", "city", "area", "of", "and"]);
+const ALIAS: Record<string, string> = { fct: "abuja", "federal capital territory": "abuja", vi: "victoria island", ph: "port harcourt", phc: "port harcourt" };
+
+/** Searchable text for a RayProp listing; FCT state counts as Abuja. */
+export const raypropHaystack = (r: Record<string, unknown>) => {
+  const state = norm(r.state);
+  const parts = [r.city, r.state, r.neighborhood, r.title, r.address, r.area].map(norm);
+  if (state === "fct" || state.includes("federal capital")) parts.push("abuja");
+  if (state === "rivers") parts.push("port harcourt");
+  return ` ${parts.join(" ")} `;
+};
+
+/** True when every meaningful word of q appears in the listing's location/title text. */
+export const raypropMatches = (r: Record<string, unknown>, q: string) => {
+  let text = norm(q).replace(/,/g, " ");
+  for (const [k, v] of Object.entries(ALIAS)) text = text.replace(new RegExp(`\\b${k}\\b`, "g"), v);
+  const words = text.split(" ").filter((w) => w && !FILLER.has(w));
+  if (!words.length) return true;
+  const hay = raypropHaystack(r);
+  return words.every((w) => hay.includes(w));
+};

@@ -2,18 +2,41 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import {
   RayPropError, markupPerNightKobo, raypropAvailability, raypropCancel, raypropHold, raypropQuote,
-  raypropRegisterWebhook, raypropReservationStatus, raypropList, raypropSearch, raypropWalletBalance, unwrapRayProp,
+  raypropRegisterWebhook, raypropReservationStatus, raypropList, raypropWalletBalance, unwrapRayProp,
 } from "../_shared/rayprop.ts";
-import { mapRayPropStatus } from "../_shared/rayprop-core.ts";
+import { mapRayPropStatus, raypropMatches } from "../_shared/rayprop-core.ts";
 import { fulfilRayProp } from "../_shared/rayprop-fulfil.ts";
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
-const CITIES = new Set(["Lagos", "Abuja", "Port Harcourt"]);
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const cache = new Map<string, { at: number; data: unknown }>();
 const TTL = 10 * 60_000;
+
+/** Whole RayProp catalogue (all pages, all cities), cached 10 minutes. */
+let catalogue: { at: number; rows: any[] } | null = null;
+let inflight: Promise<any[]> | null = null;
+const loadCatalogue = async (): Promise<any[]> => {
+  if (catalogue && Date.now() - catalogue.at < TTL) return catalogue.rows;
+  if (inflight) return inflight;
+  inflight = (async () => {
+    const first = await raypropList({ limit: "50" });
+    const pages = Math.min(Number(first?.meta?.total_pages || 1), 100);
+    const rows: any[] = [...((unwrapRayProp(first) as any[]) || [])];
+    for (let p = 2; p <= pages; p += 6) {
+      const batch = await Promise.allSettled(
+        Array.from({ length: Math.min(6, pages - p + 1) }, (_, i) => raypropList({ limit: "50", page: String(p + i) })),
+      );
+      for (const r of batch) if (r.status === "fulfilled") rows.push(...((unwrapRayProp(r.value) as any[]) || []));
+    }
+    const seen = new Set<string>();
+    const unique = rows.filter((r) => r?.id && !seen.has(String(r.id)) && !!seen.add(String(r.id)));
+    catalogue = { at: Date.now(), rows: unique };
+    return unique;
+  })().finally(() => { inflight = null; });
+  return inflight;
+};
 
 const admin = () => createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
@@ -49,42 +72,32 @@ Deno.serve(async (req) => {
     if (!action) return json(400, { error: "Missing action" });
     const configured = !!Deno.env.get("RAYPROP_API_KEY");
 
-    if (action === "probe") {
-      if (!configured) return json(200, { disabled: true });
-      const out: Record<string, unknown> = {};
-      for (const [label, params] of [
-        ["none", { limit: "50" }], ["none_p2", { limit: "50", page: "2" }], ["none_off", { limit: "50", offset: "50" }],
-        ["lim200", { limit: "200" }], ["fct", { city: "FCT", limit: "50" }], ["state_fct", { state: "FCT", limit: "50" }],
-        ["abuja_p2", { city: "Abuja", limit: "50", page: "2" }],
-      ] as [string, Record<string, string>][]) {
-        try {
-          const p = await raypropList(params); const d = unwrapRayProp(p) as any[];
-          const tally: Record<string, number> = {};
-          for (const r of d || []) { const k = `${r.city}|${r.state ?? ""}`; tally[k] = (tally[k] || 0) + 1; }
-          out[label] = { n: d?.length, meta: p?.meta ?? null, first: d?.[0]?.id, tally, keys: Object.keys(p || {}) };
-        } catch (e) { out[label] = { error: String((e as Error).message) }; }
-      }
-      return json(200, out);
-    }
-
-    if (action === "search") {
+    if (action === "search" || action === "places") {
       if (!configured) return json(200, { data: [], disabled: true });
-      const city = text(body?.city, 40);
-      const limit = Number(body?.limit || 10);
+      const all = await loadCatalogue();
+      if (action === "places") {
+        const tally = new Map<string, { city: string; state: string; area: string; count: number }>();
+        for (const r of all) {
+          const k = `${r.city}|${r.state}|${r.neighborhood}`;
+          const t = tally.get(k) || { city: String(r.city || ""), state: String(r.state || ""), area: String(r.neighborhood || ""), count: 0 };
+          t.count++; tally.set(k, t);
+        }
+        return json(200, { data: [...tally.values()], meta: { total: all.length } });
+      }
+      const limit = Number(body?.limit || 30);
       const page = Number(body?.page || 1);
-      const q = body?.q ? text(body.q, 80) ?? undefined : undefined;
-      const listingId = body?.listing_id ? text(stripRp(String(body.listing_id)), 120) ?? undefined : undefined;
-      if (!city || !CITIES.has(city)) return json(400, { error: "Unsupported city" });
-      if (!Number.isInteger(limit) || limit < 1 || limit > 50) return json(400, { error: "Invalid limit" });
-      if (!Number.isInteger(page) || page < 1 || page > 200) return json(400, { error: "Invalid page" });
-      const key = `${city}|${limit}|${page}|${listingId || ""}|${q || ""}`;
-      const hit = cache.get(key) as { at: number; data: unknown; meta: unknown } | undefined;
-      if (hit && Date.now() - hit.at < TTL) return json(200, { data: hit.data, meta: hit.meta });
-      const payload = await raypropSearch(city, limit, listingId, q, page);
-      const data = unwrapRayProp(payload);
-      const meta = payload?.meta ?? null;
-      cache.set(key, { at: Date.now(), data, meta });
-      return json(200, { data, meta });
+      if (!Number.isInteger(limit) || limit < 1 || limit > 60) return json(400, { error: "Invalid limit" });
+      if (!Number.isInteger(page) || page < 1 || page > 500) return json(400, { error: "Invalid page" });
+      const q = body?.q ? text(body.q, 80) : null;
+      const listingId = body?.listing_id ? text(stripRp(String(body.listing_id)), 120) : null;
+      if (listingId) {
+        let hit = all.filter((r) => String(r.id) === listingId);
+        if (!hit.length) hit = (unwrapRayProp(await raypropList({ listing_id: listingId, limit: "1" })) as any[]) || [];
+        return json(200, { data: hit, meta: { total: hit.length, hasMore: false } });
+      }
+      const rows = q ? all.filter((r) => raypropMatches(r, q)) : all;
+      const slice = rows.slice((page - 1) * limit, page * limit);
+      return json(200, { data: slice, meta: { total: rows.length, page, hasMore: page * limit < rows.length } });
     }
 
     if (action === "availability") {

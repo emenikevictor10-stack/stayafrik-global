@@ -96,23 +96,23 @@ const dedupe = (rows: ReturnType<typeof raypropToProperty>[]) => {
   return rows.filter((p): p is Property => !!p && !seen.has(p.id) && !!seen.add(p.id));
 };
 
-/** One page of partner stays across all cities. hasMore = any city returned a full page. */
-const fetchRayPropPage = async (offset: number, q?: string): Promise<{ items: Property[]; hasMore: boolean }> => {
+/** One page of partner stays across all cities (1-based page). hasMore = any city has another page. */
+const fetchRayPropPage = async (page: number, q?: string): Promise<{ items: Property[]; hasMore: boolean }> => {
   const results = await Promise.allSettled(
-    RAYPROP_CITIES.map((city) => searchRayProp(city, RAYPROP_PAGE, { offset, ...(q ? { q } : {}) })),
+    RAYPROP_CITIES.map((city) => searchRayProp(city, RAYPROP_PAGE, { page, ...(q ? { q } : {}) })),
   );
   const rows: Record<string, unknown>[] = [];
   let hasMore = false;
   for (const r of results) {
-    if (r.status === "fulfilled" && Array.isArray(r.value)) {
-      if (r.value.length >= RAYPROP_PAGE) hasMore = true;
-      rows.push(...r.value);
+    if (r.status === "fulfilled") {
+      if (r.value.hasMore) hasMore = true;
+      rows.push(...r.value.items);
     }
   }
   return { items: dedupe(rows.map((raw) => raypropToProperty(raw, placeholderImg))), hasMore };
 };
 
-const fetchRayProp = async (): Promise<Property[]> => (await fetchRayPropPage(0)).items;
+const fetchRayProp = async (): Promise<Property[]> => (await fetchRayPropPage(1)).items;
 
 /** Mix partner and local listings, newest first (items without a date keep their relative spot). */
 const mixListings = (local: Property[], partner: Property[]) => {

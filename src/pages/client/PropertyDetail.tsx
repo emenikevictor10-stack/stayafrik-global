@@ -126,7 +126,8 @@ const PropertyDetail = () => {
       </div>
 
 
-      <div className="px-5 pt-5">
+      <div className="px-5 pt-5 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10 lg:items-start">
+        <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 border border-primary/30 text-[10px] font-bold text-primary">
             {p.emoji} {p.type}

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Property, PropertyType } from "@/data/properties";
 import lekki from "@/assets/prop-lekki.jpg";

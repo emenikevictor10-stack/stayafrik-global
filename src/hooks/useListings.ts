@@ -89,14 +89,30 @@ export const rowToProperty = (r: ListingRow, host?: HostInfo): Property => {
   };
 };
 
-const fetchRayProp = async (): Promise<Property[]> => {
-  const results = await Promise.allSettled(RAYPROP_CITIES.map((city) => searchRayProp(city, 30)));
-  const rows = results.flatMap((r) => (r.status === "fulfilled" && Array.isArray(r.value) ? r.value : []));
+const RAYPROP_PAGE = 30;
+
+const dedupe = (rows: ReturnType<typeof raypropToProperty>[]) => {
   const seen = new Set<string>();
-  return rows
-    .map((raw) => raypropToProperty(raw, placeholderImg))
-    .filter((p): p is Property => !!p && !seen.has(p.id) && !!seen.add(p.id));
+  return rows.filter((p): p is Property => !!p && !seen.has(p.id) && !!seen.add(p.id));
 };
+
+/** One page of partner stays across all cities. hasMore = any city returned a full page. */
+const fetchRayPropPage = async (offset: number, q?: string): Promise<{ items: Property[]; hasMore: boolean }> => {
+  const results = await Promise.allSettled(
+    RAYPROP_CITIES.map((city) => searchRayProp(city, RAYPROP_PAGE, { offset, ...(q ? { q } : {}) })),
+  );
+  const rows: Record<string, unknown>[] = [];
+  let hasMore = false;
+  for (const r of results) {
+    if (r.status === "fulfilled" && Array.isArray(r.value)) {
+      if (r.value.length >= RAYPROP_PAGE) hasMore = true;
+      rows.push(...r.value);
+    }
+  }
+  return { items: dedupe(rows.map((raw) => raypropToProperty(raw, placeholderImg))), hasMore };
+};
+
+const fetchRayProp = async (): Promise<Property[]> => (await fetchRayPropPage(0)).items;
 
 /** Mix partner and local listings, newest first (items without a date keep their relative spot). */
 const mixListings = (local: Property[], partner: Property[]) => {

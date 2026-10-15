@@ -213,7 +213,7 @@ export const useListings = () => {
       return;
     }
     try {
-      const page = await fetchRayPropPage(0, q);
+      const page = await fetchRayPropPage(1, q);
       setPartner(page.items);
       setHasMore(false);
     } catch (error) {

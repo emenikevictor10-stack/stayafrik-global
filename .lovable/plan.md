@@ -18,6 +18,13 @@ Every listing has a short, readable ID that staff can use to trace activity (boo
    - Admin listing approvals, bookings, partner bookings, payouts and user detail pages show the code: `SG2345LT` for local stays, `RP·1C1F9KRZ` for partner stays.
    - Admin search accepts either kind of code.
    - Guests see the code small on the listing page and on their booking receipt ("Listing ID"), so support can quote it.
+   - **RayProp listings show their RayProp listing ID on the listing details page.** It sits in the "Good to know" section as "Listing ID: RP·1C1F9KRZ", and staff can tap to copy it.
+5. **Cleaner admin area**
+   - Consistent page headers: a title, one line of description, and actions on the right.
+   - Tables become tidy cards on smaller screens, with even spacing and clear status pills (Pending / Approved / Rejected / Needs attention).
+   - The listing approvals page gets a compact list on the left and the selected listing's details on the right on computers, with Approve / Reject pinned at the bottom.
+   - A search box and status filters at the top of each list page.
+   - Clear empty states and loading skeletons instead of blank areas.
 4. **Activity tracking**
    - Admin audit log entries for listing actions (approve, reject, revoke, edit) record the listing code.
    - Bookings keep a copy of the listing code, so the history still reads correctly if a listing is later deleted.

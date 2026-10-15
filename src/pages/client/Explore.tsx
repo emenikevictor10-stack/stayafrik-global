@@ -102,7 +102,7 @@ const Explore = () => {
         title="Explore verified shortlets in Nigeria | Stay"
         description="Search verified shortlets in Lagos, Abuja, Port Harcourt and more. Book partner and local stays securely."
       />
-      <TopBar title="Explore" subtitle={`${list.length} verified properties`} />
+      <TopBar title="Explore" />
       <main className="px-5 pt-5 pb-8">
         <SmartSearchBar
           value={q}
@@ -166,11 +166,9 @@ const Explore = () => {
         </div>
         {q.trim() && !loading && (
           <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
-            <span>
-              {fallbackCity
-                ? `No exact match for "${q}" — showing other ${fallbackCity} stays`
-                : `${list.length} ${list.length === 1 ? "stay" : "stays"} for "${q}"`}
-            </span>
+            {fallbackCity && (
+              <span>No exact match for "{q}" — showing other {fallbackCity} stays</span>
+            )}
             <button type="button" onClick={() => setQ("")} className="font-semibold text-primary underline">Clear search</button>
           </div>
         )}

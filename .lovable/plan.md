@@ -4,23 +4,25 @@ Reviewed on phone (390px), tablet (820px) and desktop (1440px).
 
 ## What looks off
 
-1. **Logo shows twice on tablet/desktop** — once in the sidebar, again next to "Explore" in the top bar.
-2. **Sidebar feels empty** — four links at the top, then a tall blank column. No account or role info, nothing at the bottom.
-3. **Sidebar too wide on tablet** — at 820px it takes 240px, so filter chips get cut off ("Never da…").
-4. **Broken chip icons** — "All", "Budget friendly", "Never dark", "Luxury" show empty boxes instead of icons on all screens.
-5. **Loading spinner sits off-centre** on tablet/desktop (pushed left instead of centred in the page).
-6. **Desktop content stretches edge to edge** — search bar is extremely wide on big screens.
+1. **Logo shows twice on tablet/desktop**: once in the sidebar and again next to "Explore".
+2. **Sidebar feels empty**: four links, then a tall blank column. With only 4 links it isn't needed.
+3. **Sidebar eats space on tablet**: filter chips get cut off ("Never da…").
+4. **Broken chip icons**: "All", "Budget friendly", "Never dark" and "Luxury" show empty boxes.
+5. **Loading spinner sits off-centre** on tablet/desktop.
+6. **Desktop content stretches edge to edge**: the search bar is very wide.
 
 ## Suggested fixes
 
-1. Hide the top-bar logo when the sidebar is visible; keep just the page title.
-2. Sidebar polish: add a slim divider under the logo, move the role switch (Client/Agent) and the profile avatar + name to the bottom of the sidebar, and remove the "CLIENT" pill from the top bar on desktop.
-3. Tablet: use a narrow icon-only sidebar (about 72px, labels on hover) from tablet up to small laptops; full sidebar with labels only on large screens.
-4. Replace the emoji chip icons with the same line icons used elsewhere so they render everywhere.
-5. Centre the loading spinner and empty states within the content area.
-6. Cap content width on large screens (about 1280px, centred) so the search bar and cards don't stretch.
+1. **Remove the sidebar completely.**
+   - **Computer:** one slim top bar with the Stay logo on the left, then Explore · Bookings · Inbox · Profile links, then the notifications bell and avatar on the right.
+   - **Tablet and phone:** the top bar shows the logo, bell and a hamburger button (three lines). Tapping it slides open a menu with the 4 links, Client/Agent switch, and Log out.
+   - Recommendation: keep the bottom tab bar on phones as well. It's quicker to reach with a thumb, and booking apps like Airbnb use it. If you'd rather use the hamburger only, we'll drop the bottom bar.
+2. Show the logo only once (in the top bar).
+3. Replace the broken chip icons with the same line icons used elsewhere.
+4. Centre the loading spinner and empty states.
+5. Limit page width on big screens (about 1280px, centred) so the search bar and cards don't stretch too far.
 
 ## Technical notes
-- SideNav.tsx: `md:w-[72px] lg:w-60`, labels `hidden lg:inline`, bottom section with avatar + role toggle via `mt-auto`.
-- MobileShell/TopBar: hide logo and role pill at `md:`; matching left padding `md:pl-[72px] lg:pl-60`.
-- Explore.tsx: SMART_FILTERS icons to lucide components; loader wrapper `w-full flex justify-center`; content `max-w-7xl mx-auto`.
+- Delete SideNav usage and the `md:pl-60` offset in MobileShell. New `TopNav` holds desktop links at `lg:` and a hamburger at `<lg` that opens a shadcn `Sheet` with the navTabs, role toggle and log out.
+- The BottomNav stays at `<md` (or is removed if the user chooses hamburger only).
+- Explore.tsx: change SMART_FILTERS icons to lucide components, use a `w-full flex justify-center` loader, and wrap content in `max-w-7xl mx-auto`.

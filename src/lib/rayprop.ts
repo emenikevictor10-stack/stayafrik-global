@@ -26,8 +26,20 @@ const call = async <T>(body: Record<string, unknown>) => {
 
 export const RAYPROP_CITIES = ["Lagos", "Abuja", "Port Harcourt"];
 
-export const searchRayProp = (city: string, limit = 10, opts: { offset?: number; q?: string } = {}) =>
-  call<RayPropRecord[]>({ action: "search", city, limit, ...(opts.offset ? { offset: opts.offset } : {}), ...(opts.q ? { q: opts.q } : {}) });
+export type RayPropPage = { items: RayPropRecord[]; hasMore: boolean; total: number };
+
+export const searchRayProp = async (city: string, limit = 10, opts: { page?: number; q?: string } = {}): Promise<RayPropPage> => {
+  const { data, error } = await supabase.functions.invoke("rayprop-api", {
+    body: { action: "search", city, limit, ...(opts.page && opts.page > 1 ? { page: opts.page } : {}), ...(opts.q ? { q: opts.q } : {}) },
+  });
+  if (data?.error) throw new Error(data.error);
+  if (error) {
+    let msg = error.message;
+    try { const j = await (error as any).context?.json?.(); if (j?.error) msg = j.error; } catch { /* ignore */ }
+    throw new Error(msg || "Partner stays are unavailable right now");
+  }
+  return { items: (data?.data as RayPropRecord[]) || [], hasMore: !!data?.meta?.hasMore, total: Number(data?.meta?.total || 0) };
+};
 
 export const getRayPropListing = async (listingId: string) => {
   const results = await Promise.allSettled(RAYPROP_CITIES.map((city) => call<RayPropRecord[]>({ action: "search", city, listing_id: listingId, limit: 1 })));

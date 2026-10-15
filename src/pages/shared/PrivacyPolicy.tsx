@@ -190,7 +190,7 @@ const PrivacyPolicy = () => {
         noindex
       />
       <main className="min-h-screen bg-background text-foreground">
-        <div className="max-w-md mx-auto px-5 pt-6 pb-28">
+        <div className="max-w-md md:max-w-2xl mx-auto px-5 pt-6 pb-28">
           {/* Header */}
           <div className="mb-6">
             <Link

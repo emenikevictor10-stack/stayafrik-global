@@ -55,7 +55,7 @@ const DeleteAccount = () => {
   };
 
   return (
-    <main className="px-5 pt-6 pb-32 max-w-md mx-auto">
+    <main className="px-5 pt-6 pb-32 max-w-md md:max-w-2xl mx-auto">
       <Link to="/profile" className="inline-flex items-center gap-1 text-sm text-muted-foreground mb-4">
         <ChevronLeft className="w-4 h-4" /> Back
       </Link>

@@ -200,7 +200,7 @@ const BookProperty = () => {
         </div>
       </header>
 
-      <div className="px-5 pt-5 max-w-md mx-auto">
+      <div className="px-5 pt-5 max-w-md md:max-w-xl mx-auto">
         {/* Property summary */}
         <section className="flex gap-3 rounded-2xl bg-card border border-border p-3 mb-5">
           <img src={p.image} alt={p.title} className="w-20 h-20 rounded-xl object-cover" />

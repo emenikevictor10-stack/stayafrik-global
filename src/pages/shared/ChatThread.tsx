@@ -192,7 +192,7 @@ const ChatThread = () => {
       </div>
 
       <div className="fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
-        <div className="max-w-md mx-auto px-3 pb-3">
+        <div className="max-w-md md:max-w-2xl mx-auto px-3 pb-3">
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide py-2">
             {quick.map((q) => (
               <button key={q} onClick={() => setDraft(q)}

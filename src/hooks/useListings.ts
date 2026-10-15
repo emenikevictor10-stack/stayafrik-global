@@ -138,8 +138,13 @@ const fetchHosts = async (ids: string[]): Promise<Map<string, HostInfo>> => {
 
 
 export const useListings = () => {
-  const [data, setData] = useState<Property[]>([]);
+  const [local, setLocal] = useState<Property[]>([]);
+  const [partner, setPartner] = useState<Property[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
+  const offsetRef = useRef(0);
+  const loadingMoreRef = useRef(false);
 
   useEffect(() => {
     let active = true;
@@ -155,27 +160,70 @@ export const useListings = () => {
         const rows = data as ListingRow[];
         const hosts = await fetchHosts(rows.map((r) => r.host_id));
         if (!active) return;
-        const local = rows.map((r) => rowToProperty(r, hosts.get(r.host_id)));
-        try {
-          const partner = await fetchRayProp();
-          if (active) setData(mixListings(local, partner));
-        } catch (raypropError) {
-          console.error("[rayprop] listings unavailable", raypropError);
-          if (active) setData(local);
-        }
-      }
-      if (error) {
+        setLocal(rows.map((r) => rowToProperty(r, hosts.get(r.host_id))));
+      } else if (error) {
         console.error("[stayglobal] listings unavailable", error);
-        try { setData(await fetchRayProp()); } catch (raypropError) { console.error("[rayprop] listings unavailable", raypropError); }
       }
-      setLoading(false);
+      try {
+        const page = await fetchRayPropPage(0);
+        if (!active) return;
+        offsetRef.current = RAYPROP_PAGE;
+        setPartner(page.items);
+        setHasMore(page.hasMore);
+      } catch (raypropError) {
+        console.error("[rayprop] listings unavailable", raypropError);
+      }
+      if (active) setLoading(false);
     })();
     return () => {
       active = false;
     };
   }, []);
 
-  return { data, loading };
+  /** Fetch the next page of partner stays and append it (infinite scroll). */
+  const loadMore = useCallback(async () => {
+    if (loadingMoreRef.current || !hasMore) return;
+    loadingMoreRef.current = true;
+    setLoadingMore(true);
+    try {
+      const page = await fetchRayPropPage(offsetRef.current);
+      offsetRef.current += RAYPROP_PAGE;
+      setPartner((prev) => dedupe([...prev, ...page.items]));
+      setHasMore(page.hasMore);
+    } catch (error) {
+      console.error("[rayprop] load more failed", error);
+      setHasMore(false);
+    } finally {
+      loadingMoreRef.current = false;
+      setLoadingMore(false);
+    }
+  }, [hasMore]);
+
+  /** Server-side partner text search; null restores the paged feed. */
+  const searchPartner = useCallback(async (q: string | null) => {
+    if (!q) {
+      try {
+        const page = await fetchRayPropPage(0);
+        offsetRef.current = RAYPROP_PAGE;
+        setPartner(page.items);
+        setHasMore(page.hasMore);
+      } catch (error) {
+        console.error("[rayprop] listings unavailable", error);
+      }
+      return;
+    }
+    try {
+      const page = await fetchRayPropPage(0, q);
+      setPartner(page.items);
+      setHasMore(false);
+    } catch (error) {
+      console.error("[rayprop] search unavailable", error);
+    }
+  }, []);
+
+  const data = useMemo(() => mixListings(local, partner), [local, partner]);
+
+  return { data, loading, loadingMore, hasMore, loadMore, searchPartner };
 };
 
 export const useListing = (id: string | undefined) => {

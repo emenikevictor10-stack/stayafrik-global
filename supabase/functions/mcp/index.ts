@@ -150,8 +150,8 @@ var whoami_default = defineTool6({
 // src/lib/mcp/index.ts
 var projectRef = "esdamopsmblyknfnwrou";
 var mcp_default = defineMcp({
-  name: "stayglobal-mcp",
-  title: "StayGlobal",
+  name: "stayafrik-living",
+  title: "Stayafrik Living",
   version: "0.1.0",
   instructions: "Tools for StayGlobal \u2014 Africa's verified shortlet platform. Use search_listings to find verified places to stay, get_listing for full details, my_bookings / my_listings / my_notifications for the signed-in user's own data, and whoami to fetch their profile.",
   auth: auth.oauth.issuer({

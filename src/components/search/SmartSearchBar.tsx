@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Search, X, MapPin, Locate, Clock } from "lucide-react";
 import { loadMaps } from "@/components/map/PropertyMap";
 import { toast } from "sonner";
+import { matchLocations, type LocationEntry } from "@/lib/location-search";
 
 const RECENTS_KEY = "stay:recent-searches:v1";
 
@@ -38,12 +39,14 @@ export const SmartSearchBar = ({
   onLocate,
   placeholder = "Search city, neighbourhood…",
   rightSlot,
+  places = [],
 }: {
   value: string;
   onChange: (v: string) => void;
   onLocate?: (coords: { lat: number; lng: number }) => void;
   placeholder?: string;
   rightSlot?: React.ReactNode;
+  places?: LocationEntry[];
 }) => {
   const [focused, setFocused] = useState(false);
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
@@ -114,7 +117,10 @@ export const SmartSearchBar = ({
     );
   };
 
-  const showDropdown = focused && (suggestions.length > 0 || recents.length > 0 || !value);
+  const placeMatches = matchLocations(places, value);
+  const popular = places.length ? places.filter((p) => p.kind !== "state").slice(0, 9).map((p) => p.label) : POPULAR;
+  const showDropdown = focused && (placeMatches.length > 0 || suggestions.length > 0 || recents.length > 0 || !value);
+  const kindLabel = { area: "Neighbourhood", city: "City", state: "State" } as const;
 
   return (
     <div className="relative">
@@ -158,17 +164,45 @@ export const SmartSearchBar = ({
 
       {showDropdown && (
         <div className="absolute left-0 right-0 top-full mt-2 z-40 rounded-2xl bg-card border border-border shadow-xl overflow-hidden">
-          {suggestions.length > 0 && (
+          {placeMatches.length > 0 && (
             <div className="py-1">
               <div className="px-4 pt-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Suggestions
+                Places with stays
+              </div>
+              {placeMatches.map((e) => (
+                <button
+                  key={`${e.kind}-${e.label}`}
+                  type="button"
+                  onMouseDown={(ev) => ev.preventDefault()}
+                  onClick={() => commit(e.label)}
+                  className="w-full text-left px-4 py-2.5 flex items-center gap-3 hover:bg-secondary"
+                >
+                  <MapPin className="w-4 h-4 text-primary shrink-0" />
+                  <div className="min-w-0 flex-1">
+                    <div className="text-sm font-medium truncate">{e.label}</div>
+                    <div className="text-[11px] text-muted-foreground truncate">
+                      {kindLabel[e.kind]} · {e.count} {e.count === 1 ? "stay" : "stays"}
+                    </div>
+                  </div>
+                  {e.partner && (
+                    <span className="shrink-0 text-[10px] font-semibold px-2 py-0.5 rounded-full bg-primary/10 text-primary">Partner</span>
+                  )}
+                </button>
+              ))}
+            </div>
+          )}
+
+          {suggestions.length > 0 && (
+            <div className="py-1 border-t border-border">
+              <div className="px-4 pt-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
+                More places
               </div>
               {suggestions.map((s, i) => (
                 <button
                   key={`${s.text}-${i}`}
                   type="button"
                   onMouseDown={(e) => e.preventDefault()}
-                  onClick={() => commit(s.secondary ? `${s.text}, ${s.secondary}` : s.text)}
+                  onClick={() => commit(s.secondary ? `${s.text}, ${s.secondary.split(",")[0]}` : s.text)}
                   className="w-full text-left px-4 py-2.5 flex items-start gap-3 hover:bg-secondary"
                 >
                   <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
@@ -183,7 +217,7 @@ export const SmartSearchBar = ({
             </div>
           )}
 
-          {suggestions.length === 0 && recents.length > 0 && (
+          {suggestions.length === 0 && placeMatches.length === 0 && recents.length > 0 && (
             <div className="py-1">
               <div className="px-4 pt-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
                 Recent searches
@@ -203,13 +237,13 @@ export const SmartSearchBar = ({
             </div>
           )}
 
-          {suggestions.length === 0 && (
+          {!value && (
             <div className="py-1 border-t border-border">
               <div className="px-4 pt-2 pb-1 text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">
-                Popular neighbourhoods
+                Popular places
               </div>
               <div className="flex flex-wrap gap-1.5 px-4 pb-3 pt-1">
-                {POPULAR.map((p) => (
+                {popular.map((p) => (
                   <button
                     key={p}
                     type="button"

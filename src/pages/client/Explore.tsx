@@ -9,6 +9,7 @@ import { PropertiesMap } from "@/components/map/PropertyMap";
 import { useListings } from "@/hooks/useListings";
 import { Seo } from "@/components/seo/Seo";
 import { SmartSearchBar } from "@/components/search/SmartSearchBar";
+import { searchProperties, buildLocationIndex } from "@/lib/location-search";
 
 // Haversine in km
 const distKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
@@ -56,17 +57,12 @@ const Explore = () => {
   const toggleSmart = (k: SmartFilter) =>
     setSmart((s) => (s.includes(k) ? s.filter((x) => x !== k) : [...s, k]));
 
-  const list = useMemo(() => {
+  const places = useMemo(() => buildLocationIndex(properties), [properties]);
+
+  const { list, fallbackCity } = useMemo(() => {
     const shortlets = properties.filter((p) => p.type === "Shortlet");
-    const needle = q.trim().toLowerCase();
-    let out = shortlets.filter((p) => {
-      const matchesQ =
-        !needle ||
-        p.title.toLowerCase().includes(needle) ||
-        p.location.toLowerCase().includes(needle) ||
-        p.amenities.some((a) => a.label.toLowerCase().includes(needle));
-      return matchesQ && smart.every((f) => matchesSmart(p, f));
-    });
+    const { results, fallbackCity } = searchProperties(shortlets, q);
+    let out = results.filter((p) => smart.every((f) => matchesSmart(p, f)));
     if (smart.includes("budget")) out = [...out].sort((a, b) => a.priceNum - b.priceNum);
     else if (smart.includes("toprated")) out = [...out].sort((a, b) => b.rating - a.rating);
     if (nearMe) {
@@ -75,21 +71,22 @@ const Explore = () => {
         .sort((a, b) => a.d - b.d)
         .map((x) => x.p);
     }
-    return out;
+    return { list: out, fallbackCity };
   }, [properties, q, smart, nearMe]);
 
 
   return (
     <>
       <Seo
-        title="Explore verified shortlets across Africa | Stay"
-        description="Search verified shortlets in Lagos, Abuja, Accra, Nairobi, Cape Town and more. Every property independently inspected."
+        title="Explore verified shortlets in Nigeria | Stay"
+        description="Search verified shortlets in Lagos, Abuja, Port Harcourt and more. Book partner and local stays securely."
       />
       <TopBar title="Explore" subtitle={`${list.length} verified properties`} />
       <main className="px-5 pt-5 pb-8">
         <SmartSearchBar
           value={q}
           onChange={setQ}
+          places={places}
           onLocate={(c) => {
             setNearMe(c);
             setView("map");
@@ -145,6 +142,16 @@ const Explore = () => {
             </button>
           ))}
         </div>
+        {q.trim() && !loading && (
+          <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+            <span>
+              {fallbackCity
+                ? `No exact match for "${q}" — showing other ${fallbackCity} stays`
+                : `${list.length} ${list.length === 1 ? "stay" : "stays"} for "${q}"`}
+            </span>
+            <button type="button" onClick={() => setQ("")} className="font-semibold text-primary underline">Clear search</button>
+          </div>
+        )}
         {smart.length > 0 && (
           <p className="mt-2 text-[11px] text-muted-foreground">
             {SMART_FILTERS.filter((f) => smart.includes(f.key)).map((f) => f.hint).join(" · ")}
@@ -200,6 +207,11 @@ const Explore = () => {
               <div className="text-center py-16 text-muted-foreground text-sm">
                 <div className="text-4xl mb-2">🔍</div>
                 No properties match your search.
+                {q && (
+                  <div>
+                    <button type="button" onClick={() => setQ("")} className="mt-3 text-xs font-semibold text-primary underline">Show all stays</button>
+                  </div>
+                )}
               </div>
             )}
           </div>

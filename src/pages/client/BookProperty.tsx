@@ -432,34 +432,6 @@ const BookProperty = () => {
   );
 };
 
-const DateField = ({
-  label, date, onChange, minDate,
-}: { label: string; date?: Date; onChange: (d?: Date) => void; minDate?: Date }) => (
-  <Popover>
-    <PopoverTrigger asChild>
-      <button
-        className={cn(
-          "w-full rounded-xl bg-secondary border border-border px-3 py-3 text-left",
-          !date && "text-muted-foreground"
-        )}
-      >
-        <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</div>
-        <div className="text-sm font-bold mt-0.5">{date ? format(date, "EEE, d MMM") : "Pick a date"}</div>
-      </button>
-    </PopoverTrigger>
-    <PopoverContent align="start" className="w-auto p-0">
-      <Calendar
-        mode="single"
-        selected={date}
-        onSelect={onChange}
-        disabled={(d) => (minDate ? d < minDate : false)}
-        initialFocus
-        className={cn("p-3 pointer-events-auto")}
-      />
-    </PopoverContent>
-  </Popover>
-);
-
 const Counter = ({
   children, onClick, disabled,
 }: { children: React.ReactNode; onClick: () => void; disabled?: boolean }) => (

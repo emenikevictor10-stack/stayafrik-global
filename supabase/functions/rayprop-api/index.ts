@@ -43,6 +43,8 @@ Deno.serve(async (req) => {
     if (!action) return json(400, { error: "Missing action" });
 
     if (action === "search") {
+      // Partner feed not set up yet: return nothing so the app shows local listings only.
+      if (!Deno.env.get("RAYPROP_API_KEY")) return json(200, { data: [], disabled: true });
       const city = text(body?.city, 40);
       const limit = Number(body?.limit || 10);
       const listingId = body?.listing_id ? text(body.listing_id, 120) : undefined;

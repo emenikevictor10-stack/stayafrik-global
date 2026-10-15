@@ -29,6 +29,13 @@
       "when": 1792106582811,
       "tag": "0003_revoke_anon_public_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792107098297,
+      "tag": "0004_listing_codes",
+      "breakpoints": true
     }
   ]
 }

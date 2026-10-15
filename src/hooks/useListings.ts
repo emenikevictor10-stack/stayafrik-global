@@ -7,7 +7,7 @@ import maitama from "@/assets/prop-maitama.jpg";
 import ikoyi from "@/assets/prop-ikoyi.jpg";
 import land from "@/assets/prop-land.jpg";
 import wuse from "@/assets/prop-wuse.jpg";
-import { searchRayProp, getRayPropListing, RAYPROP_CITIES } from "@/lib/rayprop";
+import { searchRayProp, getRayPropListing } from "@/lib/rayprop";
 import { raypropToProperty } from "@/lib/rayprop-map";
 
 // Fallback image mapping for seeded listings whose images point to bundler paths
@@ -96,20 +96,10 @@ const dedupe = (rows: ReturnType<typeof raypropToProperty>[]) => {
   return rows.filter((p): p is Property => !!p && !seen.has(p.id) && !!seen.add(p.id));
 };
 
-/** One page of partner stays across all cities (1-based page). hasMore = any city has another page. */
+/** One page of the full partner catalogue (1-based page), optionally filtered by text. */
 const fetchRayPropPage = async (page: number, q?: string): Promise<{ items: Property[]; hasMore: boolean }> => {
-  const results = await Promise.allSettled(
-    RAYPROP_CITIES.map((city) => searchRayProp(city, RAYPROP_PAGE, { page, ...(q ? { q } : {}) })),
-  );
-  const rows: Record<string, unknown>[] = [];
-  let hasMore = false;
-  for (const r of results) {
-    if (r.status === "fulfilled") {
-      if (r.value.hasMore) hasMore = true;
-      rows.push(...r.value.items);
-    }
-  }
-  return { items: dedupe(rows.map((raw) => raypropToProperty(raw, placeholderImg))), hasMore };
+  const r = await searchRayProp(RAYPROP_PAGE, { page, ...(q ? { q } : {}) });
+  return { items: dedupe(r.items.map((raw) => raypropToProperty(raw, placeholderImg))), hasMore: r.hasMore };
 };
 
 const fetchRayProp = async (): Promise<Property[]> => (await fetchRayPropPage(1)).items;
@@ -145,6 +135,7 @@ export const useListings = () => {
   const [hasMore, setHasMore] = useState(false);
   const pageRef = useRef(1);
   const loadingMoreRef = useRef(false);
+  const qRef = useRef<string | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -186,7 +177,7 @@ export const useListings = () => {
     loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
-      const page = await fetchRayPropPage(pageRef.current);
+      const page = await fetchRayPropPage(pageRef.current, qRef.current || undefined);
       pageRef.current += 1;
       setPartner((prev) => dedupe([...prev, ...page.items]));
       setHasMore(page.hasMore);
@@ -202,6 +193,7 @@ export const useListings = () => {
   /** Server-side partner text search; null restores the paged feed. */
   const searchPartner = useCallback(async (q: string | null) => {
     if (!q) {
+      qRef.current = null;
       try {
         const page = await fetchRayPropPage(1);
         pageRef.current = 2;
@@ -213,9 +205,12 @@ export const useListings = () => {
       return;
     }
     try {
+      // Search results page through the whole catalogue too (searchQ drives loadMore).
       const page = await fetchRayPropPage(1, q);
+      pageRef.current = 2;
+      qRef.current = q;
       setPartner(page.items);
-      setHasMore(false);
+      setHasMore(page.hasMore);
     } catch (error) {
       console.error("[rayprop] search unavailable", error);
     }

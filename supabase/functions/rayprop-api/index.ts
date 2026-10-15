@@ -11,7 +11,6 @@ const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
-const cache = new Map<string, { at: number; data: unknown }>();
 const TTL = 10 * 60_000;
 
 /** Whole RayProp catalogue (all pages, all cities), cached 10 minutes. */

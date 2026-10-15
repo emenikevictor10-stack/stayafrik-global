@@ -1,5 +1,7 @@
 import { useParams, useNavigate, Link } from "react-router-dom";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
+import { quoteRayProp, holdRayProp, type RayPropQuote } from "@/lib/rayprop";
+import { koboToNaira } from "@/lib/rayprop-map";
 import { format, differenceInCalendarDays, addDays } from "date-fns";
 import { useListing } from "@/hooks/useListings";
 import { useAuth } from "@/contexts/AuthContext";
@@ -28,6 +30,27 @@ const BookProperty = () => {
   const [checkOut, setCheckOut] = useState<Date | undefined>(addDays(new Date(), 5));
   const [guests, setGuests] = useState(2);
   const [paying, setPaying] = useState(false);
+  const [guestName, setGuestName] = useState<string>(user?.user_metadata?.full_name || "");
+  const [guestEmail, setGuestEmail] = useState<string>(user?.email || "");
+  const [guestPhone, setGuestPhone] = useState<string>("+234");
+  const [quote, setQuote] = useState<RayPropQuote | null>(null);
+  const [hold, setHold] = useState<{ id: string; expiresAt: string } | null>(null);
+  const [preparing, setPreparing] = useState(false);
+  const [nowMs, setNowMs] = useState(Date.now());
+
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("profiles").select("full_name,phone,email").eq("user_id", user.id).maybeSingle().then(({ data }) => {
+      if (data?.full_name) setGuestName((v) => v || data.full_name!);
+      if (data?.email) setGuestEmail((v) => v || data.email!);
+      if (data?.phone) setGuestPhone((v) => (v === "+234" ? data.phone! : v));
+    });
+  }, [user?.id]);
+  useEffect(() => {
+    if (!hold) return;
+    const t = setInterval(() => setNowMs(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [hold]);
 
   const nights = useMemo(() => {
     if (!checkIn || !checkOut) return 0;
@@ -43,19 +66,41 @@ const BookProperty = () => {
   }
   if (!p) return <main className="p-8 text-center text-sm text-muted-foreground">Property not found</main>;
 
+  const isPartner = p.source === "rayprop";
   const subtotal = p.priceNum * nights;
-  const fees = Math.round(subtotal * 0.08);
-  const total = subtotal + fees;
+  const fees = isPartner ? 0 : Math.round(subtotal * 0.08);
+  const total = isPartner && quote ? koboToNaira(quote.totalKobo) : subtotal + fees;
+  const holdSecsLeft = hold ? Math.max(0, Math.floor((new Date(hold.expiresAt).getTime() - nowMs) / 1000)) : 0;
+  const holdExpired = isPartner && !!hold && holdSecsLeft === 0;
+
+  const preparePartner = async () => {
+    if (!user) return toast.error("Please sign in");
+    const phone = guestPhone.replace(/[\s-]/g, "");
+    if (guestName.trim().length < 2) return toast.error("Enter your full name");
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guestEmail)) return toast.error("Enter a valid email");
+    if (!/^\+\d{8,15}$/.test(phone)) return toast.error("Enter your phone as +234…");
+    setPreparing(true);
+    try {
+      const q = await quoteRayProp({ listing_id: p.raypropListingId || p.id, check_in: format(checkIn!, "yyyy-MM-dd"), check_out: format(checkOut!, "yyyy-MM-dd"), guests });
+      const h = await holdRayProp({ quote_id: q.id, guest_name: guestName.trim(), guest_phone: phone, guest_email: guestEmail.trim() });
+      setQuote(q); setHold(h); setNowMs(Date.now()); setStep(3);
+    } catch (e: any) {
+      console.error("[rayprop] quote/hold failed", e);
+      toast.error(e.message || "Couldn't get a price. Please try again.");
+    } finally { setPreparing(false); }
+  };
 
   const datesValid = !!checkIn && !!checkOut && nights >= 1;
 
-  const back = () => (step === 1 ? navigate(-1) : setStep((s) => ((s - 1) as Step)));
+  const back = () => (step === 3 && isPartner ? (setQuote(null), setHold(null), setStep(2)) : step === 1 ? navigate(-1) : setStep((s) => ((s - 1) as Step)));
 
   const goNext = () => {
     if (step === 1) {
       if (!datesValid) return toast.error("Pick check-in and check-out dates");
       setStep(2);
     } else if (step === 2) {
+      if (isPartner) return void preparePartner();
+      if (p.maxGuests && guests > p.maxGuests) return toast.error(`This place fits up to ${p.maxGuests} guests`);
       setStep(3);
     }
   };
@@ -81,6 +126,8 @@ const BookProperty = () => {
   const pay = async () => {
     if (!user) return toast.error("Please sign in");
     if (!datesValid) return toast.error("Pick valid dates");
+    if (isPartner && (!quote || !hold)) return toast.error("Get a price first");
+    if (holdExpired) return toast.error("Your hold expired — get a new price");
     setPaying(true);
     try {
       const callback_url = `${window.location.origin}/booking/confirm`;
@@ -91,6 +138,11 @@ const BookProperty = () => {
           check_out: format(checkOut!, "yyyy-MM-dd"),
           guests,
           callback_url,
+          ...(isPartner ? {
+            source: "rayprop", quote_id: quote!.id, hold_id: hold!.id,
+            title: p.title, image: p.image, city: p.city || p.location,
+            guest: { name: guestName.trim(), email: guestEmail.trim(), phone: guestPhone.replace(/[\s-]/g, "") },
+          } : {}),
         },
       });
       if (error) throw new Error(error.message);
@@ -214,12 +266,21 @@ const BookProperty = () => {
                     <Minus className="w-4 h-4" />
                   </Counter>
                   <span className="w-6 text-center font-bold tabular-nums">{guests}</span>
-                  <Counter onClick={() => setGuests((g) => Math.min(10, g + 1))} disabled={guests >= 10}>
+                  <Counter onClick={() => setGuests((g) => Math.min(p.maxGuests || 10, g + 1))} disabled={guests >= (p.maxGuests || 10)}>
                     <Plus className="w-4 h-4" />
                   </Counter>
                 </div>
               </div>
             </div>
+            {isPartner && (
+              <div className="rounded-2xl bg-card border border-border p-5 space-y-3">
+                <h3 className="font-bold text-sm">Your contact details</h3>
+                <p className="text-[11px] text-muted-foreground">Our partner needs these to prepare your stay.</p>
+                <Field label="Full name" value={guestName} onChange={setGuestName} />
+                <Field label="Email" type="email" value={guestEmail} onChange={setGuestEmail} />
+                <Field label="Phone" type="tel" value={guestPhone} onChange={setGuestPhone} />
+              </div>
+            )}
           </section>
         )}
 
@@ -238,6 +299,22 @@ const BookProperty = () => {
 
             <div className="rounded-2xl bg-card border border-border p-4">
               <h3 className="font-bold text-sm mb-3">Price details</h3>
+              {isPartner && quote ? (
+              <div className="space-y-2 text-sm">
+                <div className="flex justify-between"><span className="text-muted-foreground">{fmt(koboToNaira(quote.ratePerNightKobo + quote.markupPerNightKobo))} × {quote.nights || nights} night{(quote.nights || nights) > 1 ? "s" : ""}</span><span>{fmt(koboToNaira(quote.subtotalKobo))}</span></div>
+                <div className="flex justify-between"><span className="text-muted-foreground">VAT (7.5%)</span><span>{fmt(koboToNaira(quote.vatKobo))}</span></div>
+                <div className="border-t border-border pt-2 mt-2 flex justify-between font-extrabold">
+                  <span>Total (NGN)</span><span className="text-primary">{fmt(total)}</span>
+                </div>
+                <div className={cn("mt-2 rounded-xl px-3 py-2 text-[11px] font-semibold", holdExpired ? "bg-destructive/10 text-destructive" : "bg-primary/10 text-primary")}>
+                  {holdExpired ? (
+                    <button onClick={preparePartner} className="underline">Your hold expired — get a new price</button>
+                  ) : (
+                    <>Dates held for you · {Math.floor(holdSecsLeft / 60)}:{String(holdSecsLeft % 60).padStart(2, "0")}</>
+                  )}
+                </div>
+              </div>
+              ) : (
               <div className="space-y-2 text-sm">
                 <div className="flex justify-between"><span className="text-muted-foreground">{p.price} × {nights} night{nights > 1 ? "s" : ""}</span><span>{fmt(subtotal)}</span></div>
                 <div className="flex justify-between"><span className="text-muted-foreground">Service & escrow fee</span><span>{fmt(fees)}</span></div>
@@ -245,6 +322,7 @@ const BookProperty = () => {
                   <span>Total (NGN)</span><span className="text-primary">{fmt(total)}</span>
                 </div>
               </div>
+              )}
             </div>
 
             <div className="rounded-2xl bg-card border border-border p-4">
@@ -271,13 +349,13 @@ const BookProperty = () => {
             </div>
           </div>
           <button
-            disabled={paying || (step === 1 && !datesValid)}
+            disabled={paying || preparing || (step === 1 && !datesValid) || (step === 3 && holdExpired)}
             onClick={step === 3 ? pay : goNext}
             className="bg-primary text-primary-foreground rounded-full px-6 h-12 font-bold text-sm disabled:opacity-60 inline-flex items-center gap-2"
           >
             {step === 3
               ? (paying ? <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting…</> : "Pay securely")
-              : "Continue"}
+              : preparing ? <><Loader2 className="w-4 h-4 animate-spin" /> Getting price…</> : "Continue"}
           </button>
         </div>
       </div>
@@ -323,6 +401,14 @@ const Counter = ({
   >
     {children}
   </button>
+);
+
+const Field = ({ label, value, onChange, type = "text" }: { label: string; value: string; onChange: (v: string) => void; type?: string }) => (
+  <label className="block">
+    <span className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</span>
+    <input type={type} value={value} onChange={(e) => onChange(e.target.value)} maxLength={254}
+      className="mt-1 w-full rounded-xl bg-secondary border border-border px-3 py-2.5 text-sm font-semibold outline-none focus:border-primary" />
+  </label>
 );
 
 const Pill = ({ label, value }: { label: string; value: string }) => (

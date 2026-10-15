@@ -143,7 +143,7 @@ export const useListings = () => {
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
-  const offsetRef = useRef(0);
+  const pageRef = useRef(1);
   const loadingMoreRef = useRef(false);
 
   useEffect(() => {
@@ -165,9 +165,9 @@ export const useListings = () => {
         console.error("[stayglobal] listings unavailable", error);
       }
       try {
-        const page = await fetchRayPropPage(0);
+        const page = await fetchRayPropPage(1);
         if (!active) return;
-        offsetRef.current = RAYPROP_PAGE;
+        pageRef.current = 2;
         setPartner(page.items);
         setHasMore(page.hasMore);
       } catch (raypropError) {
@@ -186,8 +186,8 @@ export const useListings = () => {
     loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
-      const page = await fetchRayPropPage(offsetRef.current);
-      offsetRef.current += RAYPROP_PAGE;
+      const page = await fetchRayPropPage(pageRef.current);
+      pageRef.current += 1;
       setPartner((prev) => dedupe([...prev, ...page.items]));
       setHasMore(page.hasMore);
     } catch (error) {
@@ -203,8 +203,8 @@ export const useListings = () => {
   const searchPartner = useCallback(async (q: string | null) => {
     if (!q) {
       try {
-        const page = await fetchRayPropPage(0);
-        offsetRef.current = RAYPROP_PAGE;
+        const page = await fetchRayPropPage(1);
+        pageRef.current = 2;
         setPartner(page.items);
         setHasMore(page.hasMore);
       } catch (error) {

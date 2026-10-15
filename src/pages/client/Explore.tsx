@@ -39,10 +39,10 @@ const matchesSmart = (p: Property, f: SmartFilter) => {
   switch (f) {
     case "budget": return p.priceNum > 0 && p.priceNum <= 100000;
     case "toprated": return p.rating >= 4.5;
-    case "family": return p.beds >= 3;
-    case "power": return hasAmenity(p, ["generator", "inverter", "solar", "power"]);
+    case "family": return p.beds >= 3 || hasAmenity(p, ["family friendly"]);
+    case "power": return hasAmenity(p, ["generator", "inverter", "solar", "power", "electricity"]);
     case "workstay": return hasAmenity(p, ["wi-fi", "wifi", "internet"]);
-    case "luxury": return p.priceNum >= 200000 || hasAmenity(p, ["pool", "gym"]);
+    case "luxury": return p.priceNum >= 200000 || hasAmenity(p, ["pool", "gym", "swimming pool", "hot tub", "cinema"]);
   }
 };
 

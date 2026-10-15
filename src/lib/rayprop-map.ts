@@ -20,6 +20,51 @@ const list = (v: unknown): string[] =>
 
 const fmt = (n: number) => "₦" + Math.round(n).toLocaleString();
 
+const bool = (v: unknown) => v === true || v === "true" || v === 1 || v === "1";
+
+const AMENITY_ALIASES: Record<string, string> = {
+  wifi: "Wi-Fi",
+  ac: "A/C",
+  a_c: "A/C",
+  tv: "TV",
+  "smart tv": "Smart TV",
+  "smart tvs": "Smart TVs",
+  ps5: "PS5",
+  dstv: "DStv",
+  bbq_grill: "BBQ grill",
+  en_suite_bedrooms: "En-suite bedrooms",
+};
+
+/** "backup_generator" -> "Backup generator", with friendly aliases for special cases. */
+export const prettyAmenity = (raw: unknown) => {
+  const key = str(raw).toLowerCase();
+  if (AMENITY_ALIASES[key]) return AMENITY_ALIASES[key];
+  return key.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
+};
+
+/** Collapses variants like "streaming" vs "streaming services" and "smart tv" vs "smart tvs". */
+const amenityKey = (label: string) =>
+  label.toLowerCase().replace(/[^a-z0-9]/g, "").replace(/services?$/, "").replace(/s$/, "");
+
+/** Partner amenities, prettified and deduped, plus ones derived from structured boolean fields. */
+const partnerAmenities = (raw: Record<string, any>) => {
+  const seen = new Set<string>();
+  const out: { emoji: string; label: string }[] = [];
+  const push = (label: string) => {
+    const norm = amenityKey(label);
+    if (!norm || seen.has(norm)) return;
+    seen.add(norm);
+    out.push({ emoji: "✓", label });
+  };
+  for (const a of [...list(raw.amenities), ...list(raw.building_amenities)]) push(prettyAmenity(a));
+  if (bool(raw.has_parking)) push(num(raw.parking_spaces) > 1 ? `${num(raw.parking_spaces)} parking spaces` : "Parking");
+  if (bool(raw.has_elevator)) push("Elevator");
+  if (bool(raw.allows_children)) push("Family friendly");
+  if (bool(raw.allows_pets)) push("Pets allowed");
+  if (bool(raw.suitable_for_events)) push("Events allowed");
+  return out;
+};
+
 export const raypropToProperty = (raw: Record<string, any>, fallbackImage: string): Property | null => {
   const rawId = str(raw.id || raw.unique_listing_id || raw.listing_id);
   if (!rawId) return null;
@@ -50,7 +95,7 @@ export const raypropToProperty = (raw: Record<string, any>, fallbackImage: strin
     rating: num(raw.rating),
     reviews: num(raw.reviews_count),
     desc: str(raw.description),
-    amenities: [...list(raw.amenities), ...list(raw.building_amenities)].map((label) => ({ emoji: "✓", label })),
+    amenities: partnerAmenities(raw),
     lat: num(raw.lat ?? raw.latitude, 6.5244),
     lng: num(raw.lng ?? raw.longitude, 3.3792),
     source: "rayprop",

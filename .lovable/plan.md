@@ -1,74 +1,48 @@
-# Stay — v1.1 Plan (Shortlet focus)
+# RayProp integration: aligning with the official docs
 
-Big batch of changes grouped by area. Items in the order I'd ship them.
+I read the RayProp API docs and compared them with what's already built. The basic structure (a secure server-side connection, partner listings on Explore, a webhook) is fine. But several details were built from guessed instructions and **will fail against the real API**. The items marked **CHANGES EXISTING** below rework code that's already there.
 
-## A. Auth & onboarding
+## What the docs say (key facts)
 
-1. **Skip splash for returning users.** `Welcome` only renders on first sign-in. Persist `stay:onboarded:{user.id}=1` (already exists) but also flip the flag for users who already have any data (e.g. profile `created_at` older than session). New users → `/welcome`, existing → `/explore`.
-2. **Sign-in pin (PIN code) alongside Google.** Add a 4-digit PIN as a *local-device* secondary unlock after successful Supabase login. Stored as SHA-256 hash in `localStorage` per user. Settings entry to set/reset PIN. Asked once per app open. (Not a replacement for password — it's a quick re-auth on a trusted device, common in fintech/shortlet apps.)
-3. **Email/password sign-in already exists** — verify it works end-to-end and surface "Forgot password" clearly.
+- Base URL: `https://api.rayprop.io/functions/v1/complete-api` (already correct).
+- Authentication uses an `x-api-key` header, not `Authorization: Bearer`. (I confirmed this: the live API rejects requests without `x-api-key`.)
+- All money values are in **kobo** (divide by 100 to get Naira). A 7.5% VAT is added on top of RayProp's price plus your markup.
+- Responses look like `{ success, data, meta: { page, limit, returned, hasMore } }`. Errors look like `{ success:false, error:{ code, message } }`.
+- A **quote** locks the price for 30 minutes. A **hold** blocks the dates for 15 minutes; the API returns 409 if the dates are already held.
+- A **reservation** starts as `awaiting_host`. How it becomes `booked` depends on your RayProp account's payment model:
+  - `prefunded_wallet`: you call `POST /reservations/:id/confirm-payment`, which takes the money from your RayProp wallet.
+  - `rayprop_collects`: RayProp sends payment instructions and collects the money itself.
+  - `partner_collects`: you collect the money, and the reservation stays `pending_funding` until your wallet is topped up.
+- Webhooks: you register them with `POST /webhooks` (url, events, secret). The signature arrives in the `X-RayProp-Signature: sha256=<hex>` header and is computed over `{_meta.timestamp}.{rawBody}`. Events: `reservation.created`, `.payment_confirmed`, `.booked`, `.cancelled`, `.checked_in`, `.completed`.
+- Other endpoints: `/availability`, `GET /quotes/:id`, `GET /holds/:id`, `POST /reservations/:id/cancel`, `GET /reservations/:id/payment-status`, plus wallet and usage endpoints.
+- There are separate sandbox and live keys (`rp_live_...`). Quotes cost 1.5x and reservations 2x against your rate limit.
 
-## B. Notifications
+## Changes to what already exists
 
-4. **`/notifications` page** + bell entry in TopBar with unread dot.
-   - New table `notifications` (id, user_id, type, title, body, link, read_at, created_at) with RLS (user reads/updates own).
-   - Triggers: booking created/updated → notify host; message received → notify receiver; listing verified → notify host.
-   - Realtime via Supabase channels for live unread count.
+1. **CHANGES EXISTING: how the server signs in to RayProp.** Switch from `Authorization: Bearer` to `x-api-key`. Read errors in the `error.message` shape and show 409 as a friendly "those dates were just taken" message.
+2. **CHANGES EXISTING: prices on partner cards.** Convert kobo to Naira everywhere a RayProp price is shown (cards, quote, checkout). Without this, prices would show 100x too high.
+3. **CHANGES EXISTING: reading listings.** Use the documented fields (`price_per_night`, `neighborhood`, `listing_images[].image_url` with `is_primary`, `max_guests`, `check_in_time`, house rules, amenities). Partner listings will show the neighbourhood only, which matches the existing rule of hiding the exact location until payment.
+4. **CHANGES EXISTING: the webhook.** Fix the signature check to read the `X-RayProp-Signature` header, use the `{timestamp}.{rawBody}` format and compare in constant time. Map events to booking statuses: booked/payment_confirmed become confirmed, cancelled becomes cancelled, completed becomes completed. Ignore duplicate events.
+5. **CHANGES EXISTING: the booking flow (BookProperty + paystack-verify).** The real sequence will be: quote, then show the price with VAT, then hold (with a 15-minute countdown shown), then Paystack payment, then reservation, then a step that depends on your payment model (see the question below), then save the booking with `source: "rayprop"`. If the hold expires before payment, the guest gets a new quote. The server will also reject a payment whose amount doesn't match the quote.
+6. **CHANGES EXISTING: the Paystack payment check.** The reservation step currently runs in the browser after payment. It will move into the server-side payment check, so a guest who closes the tab mid-way doesn't end up paid but unbooked.
 
-## C. Chat
+## New additions
 
-5. **Wire `Messages` + `ChatThread` to the real `messages` table** (currently mocked). 
-   - Threads list from distinct `(sender_id, receiver_id)` pairs.
-   - Insert on send, realtime subscribe on receive, mark-as-read on open.
-   - Profile join for names/avatars; deep link from PropertyDetail "Message host".
+- Check availability (`/availability`) before quoting, so taken dates are greyed out on the calendar.
+- Guests can cancel a partner booking from My Bookings (`POST /reservations/:id/cancel`), following the refund rules.
+- A one-time admin action that registers the webhook URL with RayProp (`POST /webhooks`).
+- An admin "Partner bookings" view showing RayProp reservation status, plus the wallet balance if you use the wallet model.
+- A small test that checks the kobo-to-Naira conversion and the webhook signature check.
 
-## D. PWA manifest
+## What I need from you
 
-6. **Regenerate icons** so the file dimensions match the manifest:
-   - `icon-192.png` → exactly 192×192
-   - `icon-512.png` → exactly 512×512
-   - `icon-maskable.png` → 512×512 maskable
-   - New `shortcut-96.png` → exactly 96×96, used for all 3 shortcuts.
-   - Update `manifest.webmanifest` accordingly.
+- **RAYPROP_API_KEY**: use a sandbox key first, then live.
+- **RAYPROP_WEBHOOK_SECRET**: you'll choose this value; I'll open a secure form with a Generate button.
+- **Your RayProp payment model**: since guests already pay you through Paystack, `prefunded_wallet` fits best. You keep a balance in your RayProp wallet, and the app confirms each booking from it right after Paystack succeeds. I'll build for that unless you tell me otherwise.
+- **Your markup**: whether you add a fee on top of RayProp's price, and how much.
 
-## E. Shortlet-only positioning (v1)
+## Technical details
 
-7. **Hide rental & buy/sale UI** across Explore filters, listing types, copy ("homes and land" → "shortlets"). Keep DB columns untouched; just default `listings.type = 'Shortlet'` and remove the type picker from New Listing for now. Update manifest description + welcome slides copy. Plan: re-enable in v2 behind a feature flag.
-
-## F. Payments
-
-8. **`/profile/payment-methods` page** for clients:
-   - List saved methods (`payment_methods` table: id, user_id, brand, last4, exp, is_default).
-   - Add (card form — store metadata only, no real PCI flow yet; placeholder for Paystack/Stripe later), set default, remove.
-   - Wire entry from Profile menu and from `BookProperty` checkout step.
-
-## G. Google Maps
-
-9. **Connect Google Maps Platform connector**, replace the current `PropertyMap` (Mapbox/placeholder) with the Maps JS API using `VITE_LOVABLE_CONNECTOR_GOOGLE_MAPS_BROWSER_KEY`.
-10. **Geocode on listing create/edit** (server-side via gateway from an edge function) so `listings.lat/lng` is populated automatically from `address + city`.
-11. **Browser autocomplete** (Places API New `AutocompleteSuggestion`) on the address field in New/Edit Listing.
-
-## H. Agent section
-
-12. **Auto-verify bank account name on entry.** In `PayoutAccount`, when bank + account number are filled, call an edge function `verify-bank-account` that hits a Nigerian bank-account resolution provider (Paystack `/bank/resolve`). Display the resolved name; require the user to confirm before save. *(Needs a `PAYSTACK_SECRET_KEY` — I'll ask before wiring.)*
-13. **Basic KYC**: government-issued ID only. New table `kyc_submissions` (user_id, id_type, id_number, id_image_url, status, reviewed_at). Storage bucket `kyc-documents` (private, owner-only RLS). 
-14. **`/profile/verification` page**: upload front of ID, enter ID number, submit. Show current status (pending / approved / rejected) with timeline.
-15. **Listings save reliability.** Audit `NewListing` + `EditListing`: required-field validation, optimistic state, toast on error with the real PostgREST message, retry. Make sure `host_id = auth.uid()` is always set and `images[]` is the uploaded public URLs (not blob URLs).
-16. **Role-swap bug.** `RoleProvider` currently starts in `client` and only updates from `ProtectedRoute`'s async query. Fix: persist `role` in `localStorage`, hydrate synchronously, and make `setRole` write through. Also gate `SecondTab`/`ThirdTab` on `roleReady` to avoid the flash to Explore/Bookings before user_roles loads.
-
----
-
-## Implementation order
-
-I'd ship in 3 commits so the preview stays usable:
-
-- **Commit 1 — Foundations**: H16 role-fix, A1 splash gate, A3 password polish, D6 icons, E7 shortlet copy.
-- **Commit 2 — Data features**: B4 notifications, C5 chat wiring, F8 payment methods, H13/H14 KYC, H15 listing save audit.
-- **Commit 3 — External services** *(need confirmations)*: G9–G11 Google Maps (will trigger the connector flow), H12 Paystack bank-resolve (needs `PAYSTACK_SECRET_KEY`), A2 PIN unlock.
-
-## Questions before I start
-
-1. **Paystack** for bank-name verification — OK to use? You'll need to paste `PAYSTACK_SECRET_KEY` when I ask.
-2. **PIN scope** — local device-only unlock (my recommendation), or do you want it server-side as a real auth factor?
-3. **Notifications scope** — in-app only for v1, or also browser push? (Push needs more PWA work.)
-4. **Payment Methods** — UI shell + storage only for now (no real charges), and we wire a real provider in v2? Or do you want Paystack/Stripe live now?
+- Files: `supabase/functions/_shared/rayprop.ts`, `rayprop-api/index.ts`, `rayprop-webhook/index.ts`, `paystack-init`, `paystack-verify`, `src/lib/rayprop.ts`, `src/hooks/useListings.ts`, `BookProperty.tsx`, `BookingConfirm.tsx`, `Bookings.tsx`, plus a new admin page.
+- Database: add `rayprop_hold_expires_at`, `rayprop_quote_total_kobo` and a `rayprop_events` table (event id, to ignore duplicates; admin-only access) to bookings.
+- `paystack-init` will charge the quote total (converted from kobo) for RayProp bookings, instead of looking up a local listing.

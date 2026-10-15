@@ -5,6 +5,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, ShieldCheck, Clock, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
+import { cancelRayPropBooking } from "@/lib/rayprop";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 type BookingRow = {
   id: string;
@@ -16,6 +18,11 @@ type BookingRow = {
   created_at: string;
   released_at: string | null;
   payment_reference: string | null;
+  source: string;
+  partner_title: string | null;
+  partner_image: string | null;
+  partner_city: string | null;
+  rayprop_listing_id: string | null;
   listings: {
     id: string;
     title: string;
@@ -71,6 +78,16 @@ const Bookings = () => {
     load();
   };
 
+  const cancelPartner = async (b: BookingRow) => {
+    setReleasing(b.id);
+    try {
+      await cancelRayPropBooking(b.id);
+      toast.success("Booking cancelled. Any refund follows the partner's policy.");
+      load();
+    } catch (e: any) { toast.error(e.message || "Could not cancel"); }
+    setReleasing(null);
+  };
+
   if (loading) {
     return (
       <>
@@ -93,7 +110,11 @@ const Bookings = () => {
         )}
 
         {items.map((b) => {
-          const img = b.listings?.images?.[0] || "/placeholder.svg";
+          const partner = b.source === "rayprop";
+          const img = (partner ? b.partner_image : b.listings?.images?.[0]) || "/placeholder.svg";
+          const title = (partner ? b.partner_title : b.listings?.title) || "Listing";
+          const place = partner ? b.partner_city : b.listings?.location || b.listings?.city;
+          const href = partner ? `/property/rp_${b.rayprop_listing_id}` : `/property/${b.listing_id}`;
           const createdMs = new Date(b.created_at).getTime();
           const holdEnds = createdMs + HOLD_MIN * 60_000;
           const canRelease = b.status === "confirmed" && now >= holdEnds;
@@ -103,20 +124,40 @@ const Bookings = () => {
 
           return (
             <article key={b.id} className="rounded-2xl bg-card border border-border p-3">
-              <Link to={`/property/${b.listing_id}`} className="flex gap-3">
-                <img src={img} alt={b.listings?.title || "Listing"} className="w-24 h-24 rounded-xl object-cover" loading="lazy" />
+              <Link to={href} className="flex gap-3">
+                <img src={img} alt={title} className="w-24 h-24 rounded-xl object-cover" loading="lazy" />
                 <div className="flex-1 min-w-0">
-                  <h3 className="font-semibold text-sm truncate">{b.listings?.title || "Listing"}</h3>
-                  <p className="text-[11px] text-muted-foreground truncate">📍 {b.listings?.location || b.listings?.city || "—"}</p>
+                  <h3 className="font-semibold text-sm truncate">{title}</h3>
+                  <p className="text-[11px] text-muted-foreground truncate">📍 {place || "—"}</p>
                   <p className="text-xs mt-2">🗓️ {b.check_in_date} → {b.check_out_date}</p>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full border capitalize ${statusBadge(b.status)}`}>{b.status}</span>
+                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full border capitalize ${statusBadge(b.status)}`}>{b.status === "needs_attention" ? "processing" : b.status}</span>
                     <span className="text-xs font-extrabold text-primary">{fmt(b.total_price)}</span>
                   </div>
                 </div>
               </Link>
 
-              {b.status === "confirmed" && (
+              {partner && b.status === "needs_attention" && (
+                <p className="mt-3 text-[11px] text-muted-foreground">Payment received. We're finalising this stay with our partner — you'll be notified shortly.</p>
+              )}
+              {partner && b.status === "confirmed" && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button disabled={releasing === b.id} className="mt-3 w-full rounded-xl border border-border py-2.5 text-xs font-bold text-destructive disabled:opacity-50">Cancel booking</button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Cancel this stay?</AlertDialogTitle>
+                      <AlertDialogDescription>Refunds follow the partner's policy: a full refund if you cancel 48 hours or more before check-in, and a partial or no refund closer to the date.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Keep booking</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => cancelPartner(b)}>Cancel stay</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              {!partner && b.status === "confirmed" && (
                 <div className="mt-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 p-3">
                   <div className="flex items-center gap-2 text-[11px] text-primary font-bold">
                     <ShieldCheck className="w-3.5 h-3.5" /> Funds held in escrow

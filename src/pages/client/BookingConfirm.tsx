@@ -70,7 +70,7 @@ const BookingConfirm = () => {
             <div className="mt-6 rounded-2xl bg-card border border-border p-4 text-left text-sm space-y-2">
               <Row label="Check-in" value={booking.check_in_date} />
               <Row label="Check-out" value={booking.check_out_date} />
-              <Row label="Status" value={booking.status} />
+              <Row label="Status" value={booking.status === "needs_attention" ? "Paid — finalising with partner" : booking.status} />
               <div className="border-t border-border pt-2 flex justify-between font-extrabold">
                 <span>Total paid</span>
                 <span className="text-primary">{fmt(booking.total_price)}</span>

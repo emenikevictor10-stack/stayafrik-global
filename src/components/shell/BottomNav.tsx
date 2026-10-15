@@ -2,30 +2,7 @@ import { NavLink, useLocation, matchPath } from "react-router-dom";
 import { useRole } from "@/contexts/RoleContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
-import {
-  Search,
-  CalendarDays,
-  MessageSquare,
-  User,
-  LayoutDashboard,
-  Building2,
-  ShieldCheck,
-} from "lucide-react";
-
-const clientTabs = [
-  { to: "/", Icon: Search, label: "Explore", key: "explore" },
-  { to: "/bookings", Icon: CalendarDays, label: "Bookings", key: "bookings" },
-  { to: "/messages", Icon: MessageSquare, label: "Inbox", key: "messages" },
-  { to: "/profile", Icon: User, label: "Profile", key: "profile" },
-];
-
-const agentTabs = [
-  { to: "/", Icon: LayoutDashboard, label: "Dashboard", key: "dashboard" },
-  { to: "/listings", Icon: Building2, label: "Listings", key: "listings" },
-  { to: "/escrow", Icon: ShieldCheck, label: "Escrow", key: "escrow" },
-  { to: "/messages", Icon: MessageSquare, label: "Inbox", key: "messages" },
-  { to: "/profile", Icon: User, label: "Profile", key: "profile" },
-];
+import { clientTabs, agentTabs, badgeFor } from "./navTabs";
 
 export const BottomNav = () => {
   const { role } = useRole();
@@ -34,21 +11,9 @@ export const BottomNav = () => {
   if (matchPath("/messages/:id", pathname)) return null;
   const tabs = role === "client" ? clientTabs : agentTabs;
 
-  const badgeFor = (key: string): number => {
-    const unread = items.filter((n) => !n.read_at);
-    switch (key) {
-      case "messages": return unread.filter((n) => n.type === "message").length;
-      case "bookings": return unread.filter((n) => n.type === "booking" || n.type === "reservation").length;
-      case "escrow":   return unread.filter((n) => n.type === "booking" || n.type === "payout").length;
-      case "listings": return unread.filter((n) => n.type === "listing").length;
-      case "profile":  return unread.filter((n) => n.type === "system" || n.type === "kyc").length;
-      default: return 0;
-    }
-  };
-
   return (
     <nav
-      className="fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl safe-bottom"
+      className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl safe-bottom"
       aria-label="Primary"
     >
       <ul
@@ -58,7 +23,7 @@ export const BottomNav = () => {
         )}
       >
         {tabs.map(({ to, Icon, label, key }) => {
-          const count = badgeFor(key);
+          const count = badgeFor(key, items);
           return (
             <li key={to}>
               <NavLink
@@ -88,4 +53,3 @@ export const BottomNav = () => {
     </nav>
   );
 };
-

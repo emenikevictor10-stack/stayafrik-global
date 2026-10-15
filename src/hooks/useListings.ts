@@ -155,15 +155,8 @@ export const useListings = () => {
       } else if (error) {
         console.error("[stayglobal] listings unavailable", error);
       }
-      try {
-        const page = await fetchRayPropPage(1);
-        if (!active) return;
-        pageRef.current = 2;
-        setPartner(page.items);
-        setHasMore(page.hasMore);
-      } catch (raypropError) {
-        console.error("[rayprop] listings unavailable", raypropError);
-      }
+      // Partner stays are intentionally NOT loaded here — they cost partner API
+      // calls, so they only load when the guest searches (see searchPartner).
       if (active) setLoading(false);
     })();
     return () => {
@@ -171,9 +164,10 @@ export const useListings = () => {
     };
   }, []);
 
-  /** Fetch the next page of partner stays and append it (infinite scroll). */
+  /** Fetch the next page of partner search results and append it (infinite scroll).
+   *  Only active while a search query is set — the homepage never pages partner stays. */
   const loadMore = useCallback(async () => {
-    if (loadingMoreRef.current || !hasMore) return;
+    if (loadingMoreRef.current || !hasMore || !qRef.current) return;
     loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
@@ -190,18 +184,12 @@ export const useListings = () => {
     }
   }, [hasMore]);
 
-  /** Server-side partner text search; null restores the paged feed. */
+  /** Server-side partner text search; null clears partner results (back to local-only homepage). */
   const searchPartner = useCallback(async (q: string | null) => {
     if (!q) {
       qRef.current = null;
-      try {
-        const page = await fetchRayPropPage(1);
-        pageRef.current = 2;
-        setPartner(page.items);
-        setHasMore(page.hasMore);
-      } catch (error) {
-        console.error("[rayprop] listings unavailable", error);
-      }
+      setPartner([]);
+      setHasMore(false);
       return;
     }
     try {

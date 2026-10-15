@@ -39,7 +39,7 @@ const AMENITY_ALIASES: Record<string, string> = {
 export const prettyAmenity = (raw: unknown) => {
   const key = str(raw).toLowerCase();
   if (AMENITY_ALIASES[key]) return AMENITY_ALIASES[key];
-  return key.replace(/_/g, " ").replace(/\b[a-z]/g, (c) => c.toUpperCase());
+  return key.replace(/_/g, " ").replace(/^./, (c) => c.toUpperCase());
 };
 
 /** Collapses variants like "streaming" vs "streaming services" and "smart tv" vs "smart tvs". */

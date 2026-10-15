@@ -24,7 +24,7 @@ describe("RayProp rules", () => {
     expect(p.location).toBe("Lekki Phase 1, Lagos");
     expect(p.area).toBe("120 sqm");
     expect(p.maxGuests).toBe(4);
-    expect(p.amenities.map((a) => a.label)).toEqual(["WiFi", "24/7 security"]);
+    expect(p.amenities.map((a) => a.label)).toEqual(["Wi-Fi", "24/7 security"]);
     expect(p.agentTag).toBe("Verified Partner");
   });
 

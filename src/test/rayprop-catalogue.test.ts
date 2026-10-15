@@ -22,7 +22,7 @@ describe("RayProp amenity mapping", () => {
     expect(prettyAmenity("wifi")).toBe("Wi-Fi");
     expect(prettyAmenity("ps5")).toBe("PS5");
     expect(prettyAmenity("dstv")).toBe("DStv");
-    expect(prettyAmenity("24/7 electricity")).toBe("24/7 Electricity");
+    expect(prettyAmenity("24/7 electricity")).toBe("24/7 electricity");
     expect(prettyAmenity("bbq_grill")).toBe("BBQ grill");
   });
 

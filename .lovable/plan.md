@@ -24,7 +24,8 @@ The "search modal" is the dropdown under the search bar on Explore (`SmartSearch
 ## Plan
 
 1. **Remove Google Places from the search bar** — delete the "More places" section, the Maps/Places loading, and the session-token code from `SmartSearchBar.tsx`. Suggestions come only from real places with stays.
-2. **Server-side partner search** — extend the `rayprop-api` search action to accept a free-text `q` and pass it to RayProp's search; Explore calls it (debounced) when the guest types 3+ letters and merges results into the listing list before filtering.
+2. **Load the full partner catalogue** — today Explore asks RayProp for 30 stays per city (3 cities), which is why guests see ~30 of RayProp's ~1000 stays. Add pagination to the `rayprop-api` search action (fetch pages until exhausted, capped at a sane max like 500, still cached 10 minutes) so the whole catalogue is browsable and searchable.
+3. **Server-side partner search** — extend the `rayprop-api` search action to accept a free-text `q` and pass it to RayProp's search; Explore calls it (debounced) when the guest types 3+ letters and merges results into the listing list before filtering.
 3. **Empty-result rescue** — when a search yields nothing, use the area→city table to suggest "Stays in Lagos" style fallback chips instead of a dead-end message.
 4. **Remove hardcoded Popular chips** — always derive from real places; hide the section when nothing is loaded yet.
 5. **Loading state** — small status line in the dropdown while listings load.

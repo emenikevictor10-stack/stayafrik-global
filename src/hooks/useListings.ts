@@ -90,7 +90,7 @@ export const rowToProperty = (r: ListingRow, host?: HostInfo): Property => {
 };
 
 const fetchRayProp = async (): Promise<Property[]> => {
-  const results = await Promise.allSettled(RAYPROP_CITIES.map((city) => searchRayProp(city, 10)));
+  const results = await Promise.allSettled(RAYPROP_CITIES.map((city) => searchRayProp(city, 30)));
   const rows = results.flatMap((r) => (r.status === "fulfilled" && Array.isArray(r.value) ? r.value : []));
   const seen = new Set<string>();
   return rows

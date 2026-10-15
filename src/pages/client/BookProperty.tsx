@@ -248,18 +248,66 @@ const BookProperty = () => {
                 <CalIcon className="w-4 h-4 text-primary" />
                 <h3 className="font-bold text-sm">Select dates</h3>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <DateField label="Check-in" date={checkIn} onChange={setCheckIn} minDate={new Date()} />
-                <DateField label="Check-out" date={checkOut} onChange={setCheckOut} minDate={checkIn ? addDays(checkIn, 1) : addDays(new Date(), 1)} />
-              </div>
+              <button
+                onClick={() => setCalOpen(true)}
+                className="w-full rounded-xl bg-secondary border border-border px-3 py-3 text-left"
+              >
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Check-in → Check-out</div>
+                <div className="text-sm font-bold mt-0.5">
+                  {checkIn ? format(checkIn, "EEE, d MMM") : "Pick a date"}
+                  {" → "}
+                  {checkOut ? format(checkOut, "EEE, d MMM") : "Pick a date"}
+                </div>
+              </button>
               <div className="mt-4 text-center text-xs text-muted-foreground">
                 {datesValid ? (
                   <><span className="text-primary font-bold">{nights}</span> night{nights > 1 ? "s" : ""} · {fmt(subtotal)}</>
                 ) : (
-                  "Pick check-in and check-out"
+                  "Tap to open the calendar"
                 )}
               </div>
             </div>
+
+            <Dialog open={calOpen} onOpenChange={setCalOpen}>
+              <DialogContent className="max-w-3xl w-[calc(100vw-2rem)] p-4 sm:p-6">
+                <DialogHeader>
+                  <DialogTitle className="text-sm font-bold">
+                    {checkIn && !checkOut
+                      ? "Now pick your check-out date"
+                      : datesValid
+                        ? `${nights} night${nights > 1 ? "s" : ""} · ${format(checkIn!, "d MMM")} → ${format(checkOut!, "d MMM")}`
+                        : "Pick your check-in date"}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="flex justify-center overflow-x-auto">
+                  <Calendar
+                    mode="range"
+                    selected={range}
+                    onSelect={onRangeSelect}
+                    numberOfMonths={2}
+                    disabled={(d) =>
+                      d < new Date(new Date().setHours(0, 0, 0, 0)) ||
+                      isBlocked(blocked, d) ||
+                      (!!checkIn && !checkOut && !!nextBlockedAfter(blocked, checkIn) && d > nextBlockedAfter(blocked, checkIn)!)
+                    }
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  <p className="text-[11px] text-muted-foreground">
+                    {blockedLoaded ? "Greyed-out dates are taken." : "Checking availability…"}
+                  </p>
+                  <button
+                    onClick={() => setCalOpen(false)}
+                    disabled={!datesValid}
+                    className="bg-primary text-primary-foreground rounded-full px-5 h-10 font-bold text-sm disabled:opacity-50"
+                  >
+                    Done
+                  </button>
+                </div>
+              </DialogContent>
+            </Dialog>
             <div className="rounded-2xl bg-primary/5 border border-primary/20 p-3.5 flex gap-3">
               <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
               <p className="text-[11px] text-muted-foreground leading-relaxed">

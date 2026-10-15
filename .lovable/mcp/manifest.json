@@ -11,9 +11,9 @@
   },
   "mcp": {
     "server": {
-      "name": "stayglobal-mcp",
+      "name": "stayafrik-living",
       "version": "0.1.0",
-      "title": "StayGlobal"
+      "title": "Stayafrik Living"
     },
     "tools": [
       {

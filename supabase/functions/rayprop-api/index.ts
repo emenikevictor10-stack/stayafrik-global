@@ -2,7 +2,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import {
   RayPropError, markupPerNightKobo, raypropAvailability, raypropCancel, raypropHold, raypropQuote,
-  raypropRegisterWebhook, raypropReservationStatus, raypropSearch, raypropWalletBalance, unwrapRayProp,
+  raypropRegisterWebhook, raypropReservationStatus, raypropList, raypropSearch, raypropWalletBalance, unwrapRayProp,
 } from "../_shared/rayprop.ts";
 import { mapRayPropStatus } from "../_shared/rayprop-core.ts";
 import { fulfilRayProp } from "../_shared/rayprop-fulfil.ts";
@@ -48,6 +48,24 @@ Deno.serve(async (req) => {
     const action = text(body?.action, 32);
     if (!action) return json(400, { error: "Missing action" });
     const configured = !!Deno.env.get("RAYPROP_API_KEY");
+
+    if (action === "probe") {
+      if (!configured) return json(200, { disabled: true });
+      const out: Record<string, unknown> = {};
+      for (const [label, params] of [
+        ["none", { limit: "50" }], ["none_p2", { limit: "50", page: "2" }], ["none_off", { limit: "50", offset: "50" }],
+        ["lim200", { limit: "200" }], ["fct", { city: "FCT", limit: "50" }], ["state_fct", { state: "FCT", limit: "50" }],
+        ["abuja_p2", { city: "Abuja", limit: "50", page: "2" }],
+      ] as [string, Record<string, string>][]) {
+        try {
+          const p = await raypropList(params); const d = unwrapRayProp(p) as any[];
+          const tally: Record<string, number> = {};
+          for (const r of d || []) { const k = `${r.city}|${r.state ?? ""}`; tally[k] = (tally[k] || 0) + 1; }
+          out[label] = { n: d?.length, meta: p?.meta ?? null, first: d?.[0]?.id, tally, keys: Object.keys(p || {}) };
+        } catch (e) { out[label] = { error: String((e as Error).message) }; }
+      }
+      return json(200, out);
+    }
 
     if (action === "search") {
       if (!configured) return json(200, { data: [], disabled: true });

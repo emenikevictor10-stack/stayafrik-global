@@ -78,6 +78,19 @@ export const searchProperties = (list: Property[], q: string) => {
   return { results: scored.map((x) => x.p), fallbackCity, exactCount };
 };
 
+/** Cities with stays to offer when a search finds nothing, best first. */
+export const rescueCities = (list: Property[], q: string, max = 3): string[] => {
+  const tokens = tokenize(q);
+  const idx = buildLocationIndex(list).filter((e) => e.kind === "city");
+  const hinted = tokens.map(cityOf).find(Boolean);
+  const sorted = idx.sort((a, b) => {
+    const aHit = hinted && norm(a.name) === hinted ? 1 : 0;
+    const bHit = hinted && norm(b.name) === hinted ? 1 : 0;
+    return bHit - aHit || b.count - a.count;
+  });
+  return sorted.slice(0, max).map((e) => e.name);
+};
+
 export type LocationEntry = {
   kind: "area" | "city" | "state";
   name: string;

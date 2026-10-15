@@ -9,7 +9,7 @@ import { PropertiesMap } from "@/components/map/PropertyMap";
 import { useListings } from "@/hooks/useListings";
 import { Seo } from "@/components/seo/Seo";
 import { SmartSearchBar } from "@/components/search/SmartSearchBar";
-import { searchProperties, buildLocationIndex } from "@/lib/location-search";
+import { searchProperties, buildLocationIndex, rescueCities } from "@/lib/location-search";
 
 // Haversine in km
 const distKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }) => {
@@ -52,7 +52,28 @@ const Explore = () => {
   const [view, setView] = useState<"list" | "map">("list");
   const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
   const [selected, setSelected] = useState<Property | null>(null);
-  const { data: properties, loading } = useListings();
+  const { data: properties, loading, loadingMore, hasMore, loadMore, searchPartner } = useListings();
+  const sentinelRef = useRef<HTMLDivElement | null>(null);
+
+  // Debounced server-side partner search so any RayProp area is findable
+  useEffect(() => {
+    const t = window.setTimeout(() => {
+      const query = q.trim();
+      searchPartner(query.length >= 3 ? query : null);
+    }, 400);
+    return () => window.clearTimeout(t);
+  }, [q, searchPartner]);
+
+  // Auto-load more partner stays as the guest scrolls near the bottom
+  useEffect(() => {
+    const el = sentinelRef.current;
+    if (!el || !hasMore) return;
+    const obs = new IntersectionObserver((entries) => {
+      if (entries.some((e) => e.isIntersecting)) loadMore();
+    }, { rootMargin: "600px" });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [hasMore, loadMore]);
 
   const toggleSmart = (k: SmartFilter) =>
     setSmart((s) => (s.includes(k) ? s.filter((x) => x !== k) : [...s, k]));

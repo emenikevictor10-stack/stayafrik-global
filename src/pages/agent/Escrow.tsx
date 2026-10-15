@@ -46,7 +46,7 @@ const Escrow = () => {
     <>
       <TopBar title="Escrow" subtitle="Funds you've received" />
       <main className="px-5 pt-4 pb-8 space-y-4">
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 p-4">
             <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary uppercase"><Lock className="w-3 h-3" /> Held</div>
             <div className="text-xl font-extrabold mt-1">{fmt(totalHeld)}</div>

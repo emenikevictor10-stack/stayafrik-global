@@ -64,7 +64,7 @@ const PinSettings = () => {
   return (
     <>
       <TopBar title="Unlock PIN" subtitle="4-digit quick unlock" />
-      <main className="px-5 pt-4 pb-8 max-w-md mx-auto">
+      <main className="px-5 pt-4 pb-8 max-w-md md:max-w-xl mx-auto">
         <div className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3 mb-5">
           {exists
             ? <ShieldCheck className="w-5 h-5 text-primary" />

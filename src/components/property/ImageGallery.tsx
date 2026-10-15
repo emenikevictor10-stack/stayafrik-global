@@ -20,7 +20,7 @@ export const ImageGallery = ({ images, alt }: { images: string[]; alt: string })
 
   return (
     <div
-      className="relative aspect-[4/3] bg-secondary overflow-hidden"
+      className="relative aspect-[4/3] lg:aspect-[16/9] lg:max-h-[560px] bg-secondary overflow-hidden"
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
     >

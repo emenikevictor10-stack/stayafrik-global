@@ -200,7 +200,7 @@ const BookProperty = () => {
         </div>
       </header>
 
-      <div className="px-5 pt-5 max-w-md mx-auto">
+      <div className="px-5 pt-5 max-w-md md:max-w-xl mx-auto">
         {/* Property summary */}
         <section className="flex gap-3 rounded-2xl bg-card border border-border p-3 mb-5">
           <img src={p.image} alt={p.title} className="w-20 h-20 rounded-xl object-cover" />
@@ -340,7 +340,7 @@ const BookProperty = () => {
       </div>
 
       {/* Sticky CTA */}
-      <div className="fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
+      <div className="fixed bottom-0 inset-x-0 md:left-60 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
         <div className="max-w-md mx-auto px-5 py-3 pb-20 flex items-center gap-3">
           <div className="flex-1">
             <div className="text-primary font-extrabold text-base leading-none">{datesValid ? fmt(total) : "—"}</div>

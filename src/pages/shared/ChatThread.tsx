@@ -170,7 +170,7 @@ const ChatThread = () => {
       )}
 
 
-      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 pb-40">
+      <div className="flex-1 overflow-y-auto px-4 py-3 space-y-3 pb-40 w-full max-w-md md:max-w-2xl mx-auto">
         {msgs.length === 0 && (
           <p className="text-center text-xs text-muted-foreground pt-10">No messages yet. Say hello!</p>
         )}
@@ -191,8 +191,8 @@ const ChatThread = () => {
         <div ref={endRef} />
       </div>
 
-      <div className="fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
-        <div className="max-w-md mx-auto px-3 pb-3">
+      <div className="fixed bottom-0 inset-x-0 md:left-60 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
+        <div className="max-w-md md:max-w-2xl mx-auto px-3 pb-3">
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide py-2">
             {quick.map((q) => (
               <button key={q} onClick={() => setDraft(q)}

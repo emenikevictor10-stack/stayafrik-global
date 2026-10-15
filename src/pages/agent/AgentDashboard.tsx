@@ -108,7 +108,7 @@ export const AgentDashboard = () => {
         </section>
 
         {/* Quick actions */}
-        <section className="mt-5 grid grid-cols-4 gap-2">
+        <section className="mt-5 grid grid-cols-4 gap-2 lg:gap-3">
           {quickActions.map((a) => (
             <Link
               key={a.label}
@@ -126,7 +126,7 @@ export const AgentDashboard = () => {
         </section>
 
         {/* Stats grid */}
-        <section className="grid grid-cols-2 gap-3 mt-5">
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 mt-5">
           {stats.map((s) => (
             <Link
               key={s.l}

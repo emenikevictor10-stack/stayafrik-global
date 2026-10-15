@@ -126,7 +126,8 @@ const PropertyDetail = () => {
       </div>
 
 
-      <div className="px-5 pt-5">
+      <div className="px-5 pt-5 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10 lg:items-start">
+        <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 border border-primary/30 text-[10px] font-bold text-primary">
             {p.emoji} {p.type}
@@ -312,6 +313,47 @@ const PropertyDetail = () => {
             Your payment is held safely. {p.type === "Shortlet" ? "Released to the host 24h after check-in." : "Released only when you confirm receipt of original title documents."}
           </p>
         </section>
+        </div>
+
+        {/* Desktop booking card */}
+        <aside className="hidden lg:block sticky top-24">
+          <div className="rounded-2xl bg-card border border-border p-5 shadow-xl">
+            <div className="text-primary font-extrabold text-2xl leading-none">{p.price}</div>
+            <div className="text-xs text-muted-foreground mt-1.5">
+              {p.type === "Shortlet" ? "per night · taxes incl." : "Escrow protected"}
+            </div>
+            <div className="flex items-center gap-2 mt-3 text-sm">
+              <Star className="w-4 h-4 fill-primary text-primary" />
+              <span className="font-semibold">{p.rating}</span>
+              <span className="text-muted-foreground">· {p.reviews} reviews</span>
+            </div>
+            {role === "agent" ? (
+              <Button
+                onClick={() => navigate(`/listings/${p.id}/edit`)}
+                className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12 font-bold"
+              >
+                ✏️ Edit listing
+              </Button>
+            ) : p.type === "Shortlet" ? (
+              <Button
+                onClick={handleBook}
+                className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12 font-bold"
+              >
+                Book stay
+              </Button>
+            ) : (
+              <Button
+                onClick={() => toast.success("✓ Inspection request sent")}
+                className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12 font-bold"
+              >
+                Request inspection
+              </Button>
+            )}
+            <p className="mt-3 text-[11px] text-muted-foreground text-center">
+              🔐 Secured by PropertyEscrow™ — payment held safely until after check-in.
+            </p>
+          </div>
+        </aside>
       </div>
 
       {session && p.hostId && (
@@ -327,8 +369,8 @@ const PropertyDetail = () => {
 
 
       {/* Sticky CTA */}
-      <div className="fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
-        <div className="max-w-md mx-auto px-5 py-3 pb-20 flex items-center gap-3">
+      <div className="lg:hidden fixed bottom-0 inset-x-0 md:left-60 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
+        <div className="max-w-md mx-auto px-5 py-3 pb-20 md:pb-3 flex items-center gap-3">
           <div className="flex-1">
             <div className="text-primary font-extrabold text-lg leading-none">{p.price}</div>
             <div className="text-[11px] text-muted-foreground mt-1">

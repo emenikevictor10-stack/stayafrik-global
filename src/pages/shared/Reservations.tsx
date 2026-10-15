@@ -136,7 +136,7 @@ const Reservations = () => {
   }, [items, user]);
 
   return (
-    <main className="px-5 pt-6 pb-32 max-w-md mx-auto">
+    <main className="px-5 pt-6 pb-32 max-w-md md:max-w-2xl mx-auto">
       <Seo title="Reservations — Stay" description="Manage 4-hour viewing holds." />
       <h1 className="text-2xl font-extrabold tracking-tight">Reservations</h1>
       <p className="text-sm text-muted-foreground mt-1">Request a 4-hour hold to visit before booking.</p>

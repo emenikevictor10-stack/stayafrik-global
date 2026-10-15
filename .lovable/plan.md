@@ -4,9 +4,9 @@
 
 The "search modal" is the dropdown under the search bar on Explore (`SmartSearchBar.tsx` + `src/lib/location-search.ts`):
 
-1. **Typing** (2+ letters) triggers two suggestion sources after a 220ms pause:
+1. **Typing** (2+ letters) triggers suggestions after a 220ms pause:
    - **"Places with stays"** — built from the listings already loaded on the page (your own + the ~30 RayProp stays fetched for Lagos, Abuja, Port Harcourt). Each shows stay count and a "Partner" tag.
-   - **"More places"** — Google Places autocomplete for anywhere in Nigeria, even places with zero stays.
+   - **"More places"** — Google Places autocomplete for anywhere in Nigeria, even places with zero stays. **(To be removed — see below.)**
 2. **Empty box** shows Recent searches (last 5, saved on the device) and Popular places chips.
 3. **Picking a suggestion or pressing Enter** filters the loaded listings by neighbourhood → city → known-area lookup, ranked best-first. If nothing matches the exact area but the area maps to a known city, it falls back to that city's stays.
 4. **"Near me"** uses the phone's GPS to sort by distance.

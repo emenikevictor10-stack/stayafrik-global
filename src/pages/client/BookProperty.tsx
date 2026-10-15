@@ -57,6 +57,22 @@ const BookProperty = () => {
     return () => clearInterval(t);
   }, [hold]);
 
+  const isPartnerListing = p?.source === "rayprop";
+  const { blocked, loaded: blockedLoaded } = useBlockedDates(
+    isPartnerListing ? p?.raypropListingId || p?.id : p?.id,
+    isPartnerListing,
+  );
+
+  // Range select that never spans a blocked night.
+  const onRangeSelect = (r: DateRange | undefined) => {
+    if (!r?.from) return setRange(undefined);
+    if (r.from && r.to && rangeHitsBlocked(blocked, r.from, r.to)) {
+      // Restart the selection at the new start date instead of allowing a blocked span.
+      return setRange({ from: r.to, to: undefined });
+    }
+    setRange(r);
+  };
+
   const nights = useMemo(() => {
     if (!checkIn || !checkOut) return 0;
     return Math.max(0, differenceInCalendarDays(checkOut, checkIn));

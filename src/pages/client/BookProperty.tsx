@@ -7,7 +7,10 @@ import { useListing } from "@/hooks/useListings";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import type { DateRange } from "react-day-picker";
+import { useBlockedDates } from "@/hooks/useBlockedDates";
+import { isBlocked, rangeHitsBlocked, nextBlockedAfter } from "@/lib/blocked-dates";
 import { cn } from "@/lib/utils";
 import {
   ChevronLeft, Calendar as CalIcon, Users, ShieldCheck, CreditCard,
@@ -26,8 +29,10 @@ const BookProperty = () => {
   const { data: p, loading } = useListing(id);
 
   const [step, setStep] = useState<Step>(1);
-  const [checkIn, setCheckIn] = useState<Date | undefined>(addDays(new Date(), 2));
-  const [checkOut, setCheckOut] = useState<Date | undefined>(addDays(new Date(), 5));
+  const [range, setRange] = useState<DateRange | undefined>({ from: addDays(new Date(), 2), to: addDays(new Date(), 5) });
+  const [calOpen, setCalOpen] = useState(false);
+  const checkIn = range?.from;
+  const checkOut = range?.to;
   const [guests, setGuests] = useState(2);
   const [paying, setPaying] = useState(false);
   const [guestName, setGuestName] = useState<string>(user?.user_metadata?.full_name || "");
@@ -51,6 +56,22 @@ const BookProperty = () => {
     const t = setInterval(() => setNowMs(Date.now()), 1000);
     return () => clearInterval(t);
   }, [hold]);
+
+  const isPartnerListing = p?.source === "rayprop";
+  const { blocked, loaded: blockedLoaded } = useBlockedDates(
+    isPartnerListing ? p?.raypropListingId || p?.id : p?.id,
+    isPartnerListing,
+  );
+
+  // Range select that never spans a blocked night.
+  const onRangeSelect = (r: DateRange | undefined) => {
+    if (!r?.from) return setRange(undefined);
+    if (r.from && r.to && rangeHitsBlocked(blocked, r.from, r.to)) {
+      // Restart the selection at the new start date instead of allowing a blocked span.
+      return setRange({ from: r.to, to: undefined });
+    }
+    setRange(r);
+  };
 
   const nights = useMemo(() => {
     if (!checkIn || !checkOut) return 0;
@@ -227,18 +248,66 @@ const BookProperty = () => {
                 <CalIcon className="w-4 h-4 text-primary" />
                 <h3 className="font-bold text-sm">Select dates</h3>
               </div>
-              <div className="grid grid-cols-2 gap-3">
-                <DateField label="Check-in" date={checkIn} onChange={setCheckIn} minDate={new Date()} />
-                <DateField label="Check-out" date={checkOut} onChange={setCheckOut} minDate={checkIn ? addDays(checkIn, 1) : addDays(new Date(), 1)} />
-              </div>
+              <button
+                onClick={() => setCalOpen(true)}
+                className="w-full rounded-xl bg-secondary border border-border px-3 py-3 text-left"
+              >
+                <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">Check-in → Check-out</div>
+                <div className="text-sm font-bold mt-0.5">
+                  {checkIn ? format(checkIn, "EEE, d MMM") : "Pick a date"}
+                  {" → "}
+                  {checkOut ? format(checkOut, "EEE, d MMM") : "Pick a date"}
+                </div>
+              </button>
               <div className="mt-4 text-center text-xs text-muted-foreground">
                 {datesValid ? (
                   <><span className="text-primary font-bold">{nights}</span> night{nights > 1 ? "s" : ""} · {fmt(subtotal)}</>
                 ) : (
-                  "Pick check-in and check-out"
+                  "Tap to open the calendar"
                 )}
               </div>
             </div>
+
+            <Dialog open={calOpen} onOpenChange={setCalOpen}>
+              <DialogContent className="max-w-3xl w-[calc(100vw-2rem)] p-4 sm:p-6">
+                <DialogHeader>
+                  <DialogTitle className="text-sm font-bold">
+                    {checkIn && !checkOut
+                      ? "Now pick your check-out date"
+                      : datesValid
+                        ? `${nights} night${nights > 1 ? "s" : ""} · ${format(checkIn!, "d MMM")} → ${format(checkOut!, "d MMM")}`
+                        : "Pick your check-in date"}
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="flex justify-center overflow-x-auto">
+                  <Calendar
+                    mode="range"
+                    selected={range}
+                    onSelect={onRangeSelect}
+                    numberOfMonths={2}
+                    disabled={(d) =>
+                      d < new Date(new Date().setHours(0, 0, 0, 0)) ||
+                      isBlocked(blocked, d) ||
+                      (!!checkIn && !checkOut && !!nextBlockedAfter(blocked, checkIn) && d > nextBlockedAfter(blocked, checkIn)!)
+                    }
+                    initialFocus
+                    className="p-3 pointer-events-auto"
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-3 pt-1">
+                  <p className="text-[11px] text-muted-foreground">
+                    {blockedLoaded ? "Greyed-out dates are taken." : "Checking availability…"}
+                  </p>
+                  <button
+                    onClick={() => setCalOpen(false)}
+                    disabled={!datesValid}
+                    className="bg-primary text-primary-foreground rounded-full px-5 h-10 font-bold text-sm disabled:opacity-50"
+                  >
+                    Done
+                  </button>
+                </div>
+              </DialogContent>
+            </Dialog>
             <div className="rounded-2xl bg-primary/5 border border-primary/20 p-3.5 flex gap-3">
               <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
               <p className="text-[11px] text-muted-foreground leading-relaxed">
@@ -362,34 +431,6 @@ const BookProperty = () => {
     </main>
   );
 };
-
-const DateField = ({
-  label, date, onChange, minDate,
-}: { label: string; date?: Date; onChange: (d?: Date) => void; minDate?: Date }) => (
-  <Popover>
-    <PopoverTrigger asChild>
-      <button
-        className={cn(
-          "w-full rounded-xl bg-secondary border border-border px-3 py-3 text-left",
-          !date && "text-muted-foreground"
-        )}
-      >
-        <div className="text-[10px] font-semibold uppercase tracking-wide text-muted-foreground">{label}</div>
-        <div className="text-sm font-bold mt-0.5">{date ? format(date, "EEE, d MMM") : "Pick a date"}</div>
-      </button>
-    </PopoverTrigger>
-    <PopoverContent align="start" className="w-auto p-0">
-      <Calendar
-        mode="single"
-        selected={date}
-        onSelect={onChange}
-        disabled={(d) => (minDate ? d < minDate : false)}
-        initialFocus
-        className={cn("p-3 pointer-events-auto")}
-      />
-    </PopoverContent>
-  </Popover>
-);
 
 const Counter = ({
   children, onClick, disabled,

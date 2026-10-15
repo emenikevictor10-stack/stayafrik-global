@@ -8,6 +8,13 @@
       "when": 1792100714936,
       "tag": "0000_rayprop_partner_bookings",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1792105822159,
+      "tag": "0001_listing_booked_ranges",
+      "breakpoints": true
     }
   ]
 }

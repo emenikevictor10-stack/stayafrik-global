@@ -801,6 +801,13 @@ export type Database = {
         }
         Returns: boolean
       }
+      listing_booked_ranges: {
+        Args: { _listing_id: string }
+        Returns: {
+          check_in: string
+          check_out: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string

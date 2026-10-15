@@ -41,11 +41,11 @@ export const raypropFetch = async ({ path, method = "GET", body }: RayPropReques
 
 export const unwrapRayProp = (payload: any) => payload?.data ?? payload;
 
-export const raypropSearch = (city: string, limit: number, listingId?: string, q?: string, offset?: number) => {
+export const raypropSearch = (city: string, limit: number, listingId?: string, q?: string, page?: number) => {
   const query = new URLSearchParams({ city, limit: String(limit) });
   if (listingId) query.set("listing_id", listingId);
   if (q) query.set("q", q);
-  if (offset) query.set("offset", String(offset));
+  if (page && page > 1) query.set("page", String(page));
   return raypropFetch({ path: `/listings?${query.toString()}` });
 };
 

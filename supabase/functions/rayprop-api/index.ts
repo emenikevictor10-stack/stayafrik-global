@@ -53,13 +53,16 @@ Deno.serve(async (req) => {
       if (!configured) return json(200, { data: [], disabled: true });
       const city = text(body?.city, 40);
       const limit = Number(body?.limit || 10);
+      const offset = Number(body?.offset || 0);
+      const q = body?.q ? text(body.q, 80) ?? undefined : undefined;
       const listingId = body?.listing_id ? text(stripRp(String(body.listing_id)), 120) ?? undefined : undefined;
       if (!city || !CITIES.has(city)) return json(400, { error: "Unsupported city" });
       if (!Number.isInteger(limit) || limit < 1 || limit > 50) return json(400, { error: "Invalid limit" });
-      const key = `${city}|${limit}|${listingId || ""}`;
+      if (!Number.isInteger(offset) || offset < 0 || offset > 5000) return json(400, { error: "Invalid offset" });
+      const key = `${city}|${limit}|${offset}|${listingId || ""}|${q || ""}`;
       const hit = cache.get(key);
       if (hit && Date.now() - hit.at < TTL) return json(200, { data: hit.data });
-      const data = unwrapRayProp(await raypropSearch(city, limit, listingId));
+      const data = unwrapRayProp(await raypropSearch(city, limit, listingId, q, offset));
       cache.set(key, { at: Date.now(), data });
       return json(200, { data });
     }

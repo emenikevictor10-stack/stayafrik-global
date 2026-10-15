@@ -26,7 +26,8 @@ const call = async <T>(body: Record<string, unknown>) => {
 
 export const RAYPROP_CITIES = ["Lagos", "Abuja", "Port Harcourt"];
 
-export const searchRayProp = (city: string, limit = 10) => call<RayPropRecord[]>({ action: "search", city, limit });
+export const searchRayProp = (city: string, limit = 10, opts: { offset?: number; q?: string } = {}) =>
+  call<RayPropRecord[]>({ action: "search", city, limit, ...(opts.offset ? { offset: opts.offset } : {}), ...(opts.q ? { q: opts.q } : {}) });
 
 export const getRayPropListing = async (listingId: string) => {
   const results = await Promise.allSettled(RAYPROP_CITIES.map((city) => call<RayPropRecord[]>({ action: "search", city, listing_id: listingId, limit: 1 })));

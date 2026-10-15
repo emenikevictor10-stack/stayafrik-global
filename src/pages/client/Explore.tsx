@@ -1,7 +1,7 @@
 import { TopBar } from "@/components/shell/TopBar";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { type Property } from "@/data/properties";
-import { Map as MapIcon, List as ListIcon, X } from "lucide-react";
+import { Map as MapIcon, List as ListIcon, X, Sparkles, Wallet, Star, Users, Zap, Laptop, Gem, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -23,13 +23,13 @@ const distKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }
 
 type SmartFilter = "budget" | "toprated" | "family" | "power" | "workstay" | "luxury";
 
-const SMART_FILTERS: { key: SmartFilter; label: string; emoji: string; hint: string }[] = [
-  { key: "budget", label: "Budget friendly", emoji: "💸", hint: "Under ₦100k / night" },
-  { key: "toprated", label: "Top rated", emoji: "⭐", hint: "4.5+ rating" },
-  { key: "family", label: "Family size", emoji: "👨‍👩‍👧", hint: "3+ bedrooms" },
-  { key: "power", label: "Never dark", emoji: "🔌", hint: "Generator / inverter" },
-  { key: "workstay", label: "Work stay", emoji: "💻", hint: "Fast Wi-Fi" },
-  { key: "luxury", label: "Luxury", emoji: "💎", hint: "Premium homes" },
+const SMART_FILTERS: { key: SmartFilter; label: string; Icon: LucideIcon; hint: string }[] = [
+  { key: "budget", label: "Budget friendly", Icon: Wallet, hint: "Under ₦100k / night" },
+  { key: "toprated", label: "Top rated", Icon: Star, hint: "4.5+ rating" },
+  { key: "family", label: "Family size", Icon: Users, hint: "3+ bedrooms" },
+  { key: "power", label: "Never dark", Icon: Zap, hint: "Generator / inverter" },
+  { key: "workstay", label: "Work stay", Icon: Laptop, hint: "Fast Wi-Fi" },
+  { key: "luxury", label: "Luxury", Icon: Gem, hint: "Premium homes" },
 ];
 
 const hasAmenity = (p: Property, words: string[]) =>
@@ -139,13 +139,13 @@ const Explore = () => {
           <button
             onClick={() => setSmart([])}
             className={cn(
-              "shrink-0 px-3.5 py-2 rounded-full text-xs font-semibold border transition-colors",
+              "shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold border transition-colors",
               smart.length === 0
                 ? "bg-primary text-primary-foreground border-primary"
                 : "bg-card text-muted-foreground border-border",
             )}
           >
-            ✨ All
+            <Sparkles className="w-3.5 h-3.5" aria-hidden /> All
           </button>
           {SMART_FILTERS.map((f) => (
             <button
@@ -159,7 +159,7 @@ const Explore = () => {
                   : "bg-card text-muted-foreground border-border",
               )}
             >
-              <span>{f.emoji}</span>
+              <f.Icon className="w-3.5 h-3.5" aria-hidden />
               {f.label}
             </button>
           ))}
@@ -215,7 +215,7 @@ const Explore = () => {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-5">
             {loading && (
-              <div className="text-center py-16 text-muted-foreground text-sm">
+              <div className="col-span-full text-center py-16 text-muted-foreground text-sm">
                 <div className="w-6 h-6 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin mb-2" />
                 Loading properties…
               </div>

@@ -249,6 +249,11 @@ const Explore = () => {
                     <button type="button" onClick={() => setQ("")} className="mt-3 text-xs font-semibold text-primary underline">Show all stays</button>
                   </div>
                 )}
+                {smart.length > 0 && (
+                  <div>
+                    <button type="button" onClick={() => setSmart([])} className="mt-3 text-xs font-semibold text-primary underline">Clear filters</button>
+                  </div>
+                )}
               </div>
             )}
           </div>

@@ -53,6 +53,7 @@ export type Database = {
           guest_count: number | null
           guest_id: string
           id: string
+          listing_code: string | null
           listing_id: string | null
           partner_city: string | null
           partner_image: string | null
@@ -78,6 +79,7 @@ export type Database = {
           guest_count?: number | null
           guest_id: string
           id?: string
+          listing_code?: string | null
           listing_id?: string | null
           partner_city?: string | null
           partner_image?: string | null
@@ -103,6 +105,7 @@ export type Database = {
           guest_count?: number | null
           guest_id?: string
           id?: string
+          listing_code?: string | null
           listing_id?: string | null
           partner_city?: string | null
           partner_image?: string | null
@@ -271,6 +274,7 @@ export type Database = {
           images: string[]
           is_available: boolean
           lat: number | null
+          listing_code: string | null
           lng: number | null
           location: string | null
           price_per_night: number
@@ -296,6 +300,7 @@ export type Database = {
           images?: string[]
           is_available?: boolean
           lat?: number | null
+          listing_code?: string | null
           lng?: number | null
           location?: string | null
           price_per_night?: number
@@ -321,6 +326,7 @@ export type Database = {
           images?: string[]
           is_available?: boolean
           lat?: number | null
+          listing_code?: string | null
           lng?: number | null
           location?: string | null
           price_per_night?: number
@@ -828,6 +834,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      generate_listing_code: { Args: never; Returns: string }
       get_public_profiles: {
         Args: { _user_ids: string[] }
         Returns: {

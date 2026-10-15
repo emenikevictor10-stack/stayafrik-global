@@ -12,7 +12,8 @@ export const partnerTotalKobo = (ratePerNight: number, markupPerNight: number, n
   return subtotal + Math.round(subtotal * 0.075);
 };
 
-const str = (v: unknown) => (v == null ? "" : String(v));
+const str = (v: unknown) => (v == null ? "" : String(v).replace(/[\u200B-\u200D\u2060\uFEFF]/g, "").trim());
+const hhmm = (v: unknown) => str(v).slice(0, 5);
 const num = (v: unknown, d = 0) => { const n = Number(v); return Number.isFinite(n) ? n : d; };
 const list = (v: unknown): string[] =>
   Array.isArray(v) ? v.map((x) => (typeof x === "object" && x ? str((x as any).name ?? (x as any).label) : str(x))).filter(Boolean) : [];
@@ -56,8 +57,8 @@ export const raypropToProperty = (raw: Record<string, any>, fallbackImage: strin
     raypropListingId: rawId,
     city,
     maxGuests: num(raw.max_guests) || undefined,
-    checkInTime: str(raw.check_in_time) || undefined,
-    checkOutTime: str(raw.check_out_time) || undefined,
+    checkInTime: hhmm(raw.check_in_time) || undefined,
+    checkOutTime: hhmm(raw.check_out_time) || undefined,
     houseRules: list(raw.house_rules),
     createdAt: str(raw.created_at) || undefined,
   };

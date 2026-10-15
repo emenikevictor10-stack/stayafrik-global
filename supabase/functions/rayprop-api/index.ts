@@ -62,8 +62,10 @@ Deno.serve(async (req) => {
       const key = `${city}|${limit}|${offset}|${listingId || ""}|${q || ""}`;
       const hit = cache.get(key);
       if (hit && Date.now() - hit.at < TTL) return json(200, { data: hit.data });
-      const data = unwrapRayProp(await raypropSearch(city, limit, listingId, q, offset));
+      const payload = await raypropSearch(city, limit, listingId, q, offset);
+      const data = unwrapRayProp(payload);
       cache.set(key, { at: Date.now(), data });
+      if (body?.include_meta) return json(200, { data, meta: payload?.meta ?? null });
       return json(200, { data });
     }
 

@@ -33,6 +33,7 @@ import AdminDashboard from "./pages/admin/AdminDashboard";
 import AdminUsers from "./pages/admin/AdminUsers";
 import AdminUserDetail from "./pages/admin/AdminUserDetail";
 import AdminBookings from "./pages/admin/AdminBookings";
+import AdminPartnerBookings from "./pages/admin/AdminPartnerBookings";
 import AdminPayouts from "./pages/admin/AdminPayouts";
 import AdminKyc from "./pages/admin/AdminKyc";
 import AdminAudit from "./pages/admin/AdminAudit";
@@ -135,6 +136,7 @@ const App = () => (
                     <Route path="/admin/users" element={<AdminUsers />} />
                     <Route path="/admin/users/:id" element={<AdminUserDetail />} />
                     <Route path="/admin/bookings" element={<AdminBookings />} />
+                    <Route path="/admin/partner-bookings" element={<AdminPartnerBookings />} />
                     <Route path="/admin/payouts" element={<AdminPayouts />} />
                     <Route path="/admin/kyc" element={<AdminKyc />} />
                     <Route path="/admin/audit" element={<AdminAudit />} />

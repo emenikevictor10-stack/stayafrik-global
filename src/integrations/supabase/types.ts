@@ -46,16 +46,23 @@ export type Database = {
       }
       bookings: {
         Row: {
+          attention_reason: string | null
           check_in_date: string
           check_out_date: string
           created_at: string
+          guest_count: number | null
           guest_id: string
           id: string
           listing_id: string | null
+          partner_city: string | null
+          partner_image: string | null
+          partner_title: string | null
           payment_reference: string | null
+          rayprop_hold_expires_at: string | null
           rayprop_hold_id: string | null
           rayprop_listing_id: string | null
           rayprop_quote_id: string | null
+          rayprop_quote_total_kobo: number | null
           rayprop_reservation_id: string | null
           released_at: string | null
           source: string
@@ -64,16 +71,23 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          attention_reason?: string | null
           check_in_date: string
           check_out_date: string
           created_at?: string
+          guest_count?: number | null
           guest_id: string
           id?: string
           listing_id?: string | null
+          partner_city?: string | null
+          partner_image?: string | null
+          partner_title?: string | null
           payment_reference?: string | null
+          rayprop_hold_expires_at?: string | null
           rayprop_hold_id?: string | null
           rayprop_listing_id?: string | null
           rayprop_quote_id?: string | null
+          rayprop_quote_total_kobo?: number | null
           rayprop_reservation_id?: string | null
           released_at?: string | null
           source?: string
@@ -82,16 +96,23 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          attention_reason?: string | null
           check_in_date?: string
           check_out_date?: string
           created_at?: string
+          guest_count?: number | null
           guest_id?: string
           id?: string
           listing_id?: string | null
+          partner_city?: string | null
+          partner_image?: string | null
+          partner_title?: string | null
           payment_reference?: string | null
+          rayprop_hold_expires_at?: string | null
           rayprop_hold_id?: string | null
           rayprop_listing_id?: string | null
           rayprop_quote_id?: string | null
+          rayprop_quote_total_kobo?: number | null
           rayprop_reservation_id?: string | null
           released_at?: string | null
           source?: string
@@ -578,6 +599,30 @@ export type Database = {
           updated_at?: string
           user_id?: string
           whatsapp?: string | null
+        }
+        Relationships: []
+      }
+      rayprop_events: {
+        Row: {
+          event_id: string
+          event_type: string | null
+          payload: Json | null
+          received_at: string
+          reservation_id: string | null
+        }
+        Insert: {
+          event_id: string
+          event_type?: string | null
+          payload?: Json | null
+          received_at?: string
+          reservation_id?: string | null
+        }
+        Update: {
+          event_id?: string
+          event_type?: string | null
+          payload?: Json | null
+          received_at?: string
+          reservation_id?: string | null
         }
         Relationships: []
       }

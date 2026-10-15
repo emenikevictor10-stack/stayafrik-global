@@ -35,6 +35,12 @@ export type Property = {
   hostWhatsapp?: string | null;
   source?: "stayglobal" | "rayprop";
   raypropListingId?: string;
+  city?: string;
+  maxGuests?: number;
+  checkInTime?: string;
+  checkOutTime?: string;
+  houseRules?: string[];
+  createdAt?: string;
 };
 
 

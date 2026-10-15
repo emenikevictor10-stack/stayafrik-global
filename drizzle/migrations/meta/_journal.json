@@ -1,0 +1,13 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1792100714936,
+      "tag": "0000_rayprop_partner_bookings",
+      "breakpoints": true
+    }
+  ]
+}

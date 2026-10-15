@@ -211,6 +211,22 @@ const PropertyDetail = () => {
           <p className="text-sm text-muted-foreground leading-relaxed">{p.desc}</p>
         </section>
 
+        {(p.maxGuests || p.checkInTime || p.checkOutTime || (p.houseRules && p.houseRules.length > 0)) && (
+          <section className="mt-6">
+            <h2 className="font-bold text-sm mb-3">Good to know</h2>
+            <div className="grid grid-cols-3 gap-2 text-center">
+              {p.maxGuests ? <div className="rounded-xl bg-card border border-border p-2"><div className="text-[10px] text-muted-foreground">Max guests</div><div className="text-sm font-bold">{p.maxGuests}</div></div> : null}
+              {p.checkInTime ? <div className="rounded-xl bg-card border border-border p-2"><div className="text-[10px] text-muted-foreground">Check-in</div><div className="text-sm font-bold">{p.checkInTime}</div></div> : null}
+              {p.checkOutTime ? <div className="rounded-xl bg-card border border-border p-2"><div className="text-[10px] text-muted-foreground">Check-out</div><div className="text-sm font-bold">{p.checkOutTime}</div></div> : null}
+            </div>
+            {p.houseRules && p.houseRules.length > 0 && (
+              <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
+                {p.houseRules.map((r) => <li key={r}>• {r}</li>)}
+              </ul>
+            )}
+          </section>
+        )}
+
         <section className="mt-6">
           <h2 className="font-bold text-sm mb-3">What's included</h2>
           <div className="grid grid-cols-2 gap-2">

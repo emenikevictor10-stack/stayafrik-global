@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { raypropGetHold, raypropGetQuote, unwrapRayProp } from "../_shared/rayprop.ts";
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
@@ -29,6 +30,48 @@ Deno.serve(async (req) => {
 
     if (!listing_id || !check_in || !check_out || !callback_url) {
       return json(400, { error: "Missing required fields" });
+    }
+
+    // ---------- Partner (RayProp) stays: charge the server-verified quote total ----------
+    if (body.source === "rayprop") {
+      const quote_id = String(body.quote_id || "");
+      const hold_id = String(body.hold_id || "");
+      const g = body.guest || {};
+      if (!quote_id || !hold_id || !g.name || !g.email || !g.phone) return json(400, { error: "Missing partner booking details" });
+      let quote: any, hold: any;
+      try {
+        quote = unwrapRayProp(await raypropGetQuote(quote_id));
+        hold = unwrapRayProp(await raypropGetHold(hold_id));
+      } catch (e) {
+        return json(409, { error: (e as Error).message || "Your price or hold expired. Please get a new price." });
+      }
+      if (quote?.status && quote.status !== "valid") return json(409, { error: "Your price expired. Please get a new price." });
+      if (hold?.status && hold.status !== "active") return json(409, { error: "Your hold expired. Please get a new price." });
+      const amountKobo = Math.round(Number(quote?.pricing?.total_amount || 0));
+      if (!amountKobo) return json(400, { error: "Invalid partner price" });
+      const pkey = Deno.env.get("PAYSTACK_SECRET_KEY")?.trim();
+      if (!pkey) return json(500, { error: "Paystack is not configured" });
+      const reference = `STAYRP_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
+      const title = String(body.title || quote?.listing?.title || "Partner stay").slice(0, 200);
+      const r = await fetch("https://api.paystack.co/transaction/initialize", {
+        method: "POST",
+        headers: { Authorization: `Bearer ${pkey}`, "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email, amount: amountKobo, currency: "NGN", reference, callback_url,
+          channels: ["card", "bank", "ussd", "bank_transfer", "qr", "mobile_money"],
+          metadata: {
+            source: "rayprop", user_id: userId, rayprop_listing_id: String(listing_id).replace(/^rp_/, ""),
+            quote_id, hold_id, amount_kobo: amountKobo, check_in, check_out, guests,
+            title, image: String(body.image || "").slice(0, 500), city: String(body.city || quote?.listing?.city || "").slice(0, 80),
+            hold_expires_at: hold?.expires_at || null,
+            guest_name: String(g.name).slice(0, 120), guest_email: String(g.email).slice(0, 254), guest_phone: String(g.phone).slice(0, 20),
+            custom_fields: [{ display_name: "Stay", variable_name: "listing", value: title }],
+          },
+        }),
+      });
+      const j = await r.json().catch(() => ({} as any));
+      if (!r.ok || !j?.status) return json(400, { error: j?.message || "Paystack could not start this payment" });
+      return json(200, { access_code: j.data.access_code, reference: j.data.reference, total: amountKobo / 100 });
     }
 
     // Re-compute price server-side from the listing (never trust client totals)

@@ -86,6 +86,24 @@ Deno.serve(async (req) => {
     const ci = new Date(check_in).getTime();
     const co = new Date(check_out).getTime();
     if (!ci || !co || co <= ci) return json(400, { error: "Invalid dates" });
+
+    // Double-booking guard: refuse payment if any active booking overlaps these nights.
+    // Overlap rule: existing.check_in_date < requested check_out AND existing.check_out_date > requested check_in.
+    const { data: clashes, error: cerr } = await supabase
+      .from("bookings")
+      .select("id")
+      .eq("listing_id", listing_id)
+      .not("status", "in", '("cancelled","refunded","failed")')
+      .lt("check_in_date", check_out)
+      .gt("check_out_date", check_in)
+      .limit(1);
+    if (cerr) {
+      console.error("[paystack-init] overlap check failed", cerr);
+      return json(500, { error: "Could not check availability. Please try again." });
+    }
+    if (clashes && clashes.length > 0) {
+      return json(409, { error: "Those dates were just booked — please pick different dates." });
+    }
     const nights = Math.max(1, Math.round((co - ci) / 86400000));
     const subtotal = Number(listing.price_per_night) * nights;
     const fees = Math.round(subtotal * 0.08);

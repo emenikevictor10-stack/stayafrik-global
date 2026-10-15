@@ -7,7 +7,10 @@ import { useListing } from "@/hooks/useListings";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import type { DateRange } from "react-day-picker";
+import { useBlockedDates } from "@/hooks/useBlockedDates";
+import { isBlocked, rangeHitsBlocked, nextBlockedAfter } from "@/lib/blocked-dates";
 import { cn } from "@/lib/utils";
 import {
   ChevronLeft, Calendar as CalIcon, Users, ShieldCheck, CreditCard,
@@ -26,8 +29,10 @@ const BookProperty = () => {
   const { data: p, loading } = useListing(id);
 
   const [step, setStep] = useState<Step>(1);
-  const [checkIn, setCheckIn] = useState<Date | undefined>(addDays(new Date(), 2));
-  const [checkOut, setCheckOut] = useState<Date | undefined>(addDays(new Date(), 5));
+  const [range, setRange] = useState<DateRange | undefined>({ from: addDays(new Date(), 2), to: addDays(new Date(), 5) });
+  const [calOpen, setCalOpen] = useState(false);
+  const checkIn = range?.from;
+  const checkOut = range?.to;
   const [guests, setGuests] = useState(2);
   const [paying, setPaying] = useState(false);
   const [guestName, setGuestName] = useState<string>(user?.user_metadata?.full_name || "");

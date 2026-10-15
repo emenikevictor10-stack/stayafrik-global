@@ -24,27 +24,20 @@ const call = async <T>(body: Record<string, unknown>) => {
   return data?.data as T;
 };
 
-export const RAYPROP_CITIES = ["Lagos", "Abuja", "Port Harcourt"];
-
 export type RayPropPage = { items: RayPropRecord[]; hasMore: boolean; total: number };
 
-export const searchRayProp = async (city: string, limit = 10, opts: { page?: number; q?: string } = {}): Promise<RayPropPage> => {
+/** One page of the full partner catalogue (all cities), optionally filtered by free text. */
+export const searchRayProp = async (limit = 30, opts: { page?: number; q?: string } = {}): Promise<RayPropPage> => {
   const { data, error } = await supabase.functions.invoke("rayprop-api", {
-    body: { action: "search", city, limit, ...(opts.page && opts.page > 1 ? { page: opts.page } : {}), ...(opts.q ? { q: opts.q } : {}) },
+    body: { action: "search", limit, page: opts.page || 1, ...(opts.q ? { q: opts.q } : {}) },
   });
   if (data?.error) throw new Error(data.error);
-  if (error) {
-    let msg = error.message;
-    try { const j = await (error as any).context?.json?.(); if (j?.error) msg = j.error; } catch { /* ignore */ }
-    throw new Error(msg || "Partner stays are unavailable right now");
-  }
+  if (error) throw new Error(error.message || "Partner stays are unavailable right now");
   return { items: (data?.data as RayPropRecord[]) || [], hasMore: !!data?.meta?.hasMore, total: Number(data?.meta?.total || 0) };
 };
 
-export const getRayPropListing = async (listingId: string) => {
-  const results = await Promise.allSettled(RAYPROP_CITIES.map((city) => call<RayPropRecord[]>({ action: "search", city, listing_id: listingId, limit: 1 })));
-  return results.flatMap((r) => (r.status === "fulfilled" && Array.isArray(r.value) ? r.value : []));
-};
+export const getRayPropListing = (listingId: string) =>
+  call<RayPropRecord[]>({ action: "search", listing_id: listingId, limit: 1 }).then((r) => (Array.isArray(r) ? r : []));
 
 export const raypropAvailability = (listing_id: string, start_date: string, end_date: string) =>
   call<RayPropRecord | null>({ action: "availability", listing_id, start_date, end_date });

@@ -85,3 +85,7 @@ export const raypropWalletBalance = () => raypropFetch({ path: "/wallet/balance"
 
 /** Markup per night in kobo, configurable via RAYPROP_MARKUP_PER_NIGHT_NAIRA (default 0). */
 export const markupPerNightKobo = () => Math.max(0, Math.round(Number(Deno.env.get("RAYPROP_MARKUP_PER_NIGHT_NAIRA") || 0) * 100));
+
+/** Raw listings call with arbitrary query params (used to page the full catalogue). */
+export const raypropList = (params: Record<string, string>) =>
+  raypropFetch({ path: `/listings?${new URLSearchParams(params).toString()}` });

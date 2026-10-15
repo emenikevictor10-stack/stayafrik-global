@@ -5,6 +5,7 @@ import {
   raypropRegisterWebhook, raypropReservationStatus, raypropSearch, raypropWalletBalance, unwrapRayProp,
 } from "../_shared/rayprop.ts";
 import { mapRayPropStatus } from "../_shared/rayprop-core.ts";
+import { fulfilRayProp } from "../_shared/rayprop-fulfil.ts";
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -123,6 +124,23 @@ Deno.serve(async (req) => {
       const mapped = mapRayPropStatus(String(r?.status || ""));
       if (mapped) await db.from("bookings").update({ status: mapped }).eq("id", b.id);
       return json(200, { data: r });
+    }
+
+    if (action === "retry") {
+      await requireAdmin(userId);
+      const booking_id = text(body?.booking_id, 64);
+      const db = admin();
+      const { data: b } = await db.from("bookings").select("*").eq("id", booking_id).maybeSingle();
+      if (!b || b.source !== "rayprop") return json(404, { error: "Booking not found" });
+      const { data: prof } = await db.from("profiles").select("full_name,email,phone").eq("user_id", b.guest_id).maybeSingle();
+      const result = await fulfilRayProp({
+        reference: b.payment_reference || b.id, hold_id: b.rayprop_hold_id || "", quote_id: b.rayprop_quote_id || "",
+        listing_id: b.rayprop_listing_id || "", check_in: b.check_in_date, check_out: b.check_out_date, guests: b.guest_count || 1,
+        guest: { name: prof?.full_name || "Guest", email: prof?.email || "", phone: prof?.phone || "" },
+        existingReservationId: b.rayprop_reservation_id,
+      });
+      await db.from("bookings").update(result).eq("id", b.id);
+      return json(200, { data: result });
     }
 
     if (action === "wallet") {

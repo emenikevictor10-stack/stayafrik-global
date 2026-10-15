@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { tokenize, searchProperties, buildLocationIndex, matchLocations } from "@/lib/location-search";
+import { tokenize, searchProperties, buildLocationIndex, matchLocations, rescueCities } from "@/lib/location-search";
 import type { Property } from "@/data/properties";
 
 const mk = (id: string, location: string, city: string, source: "rayprop" | "stayglobal" = "rayprop") =>

@@ -311,7 +311,7 @@ const BookProperty = () => {
             <div className="rounded-2xl bg-primary/5 border border-primary/20 p-3.5 flex gap-3">
               <ShieldCheck className="w-5 h-5 text-primary shrink-0 mt-0.5" />
               <p className="text-[11px] text-muted-foreground leading-relaxed">
-                Free cancellation up to 48h before check-in. Funds held in escrow until 24h after arrival.
+                Full refund up to 48h before check-in, 50% within 48h, none after check-in. Funds held in escrow until 24h after arrival.
               </p>
             </div>
           </section>

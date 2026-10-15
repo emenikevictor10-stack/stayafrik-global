@@ -5,3 +5,4 @@
 - Partner bookings are reserved and wallet-paid server-side in `paystack-verify` after Paystack succeeds; failures are saved as `needs_attention`, never dropped. Why: a paying guest must always have a booking record.
 - Pure RayProp helpers live in `_shared/rayprop-core.ts` (no Deno APIs). Why: vitest can test them.
 - `rayprop-api` loads the whole RayProp catalogue (all pages, unfiltered) into a 10-minute server cache and serves search/paging from it; text matching lives in `raypropMatches` (`_shared/rayprop-core.ts`). Why: RayProp city filters miss stays labelled by area/state (e.g. FCT).
+- Local-stay cancellation/refunds go only through the `cancel-booking` edge function using `_shared/cancellation-core.ts` (pure, tested). Why: refund math and Paystack refund must be server-side and single-sourced.

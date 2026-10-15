@@ -88,6 +88,16 @@ const Bookings = () => {
     setReleasing(null);
   };
 
+  const cancelLocal = async (b: BookingRow) => {
+    setReleasing(b.id);
+    const { data, error } = await supabase.functions.invoke("cancel-booking", { body: { booking_id: b.id } });
+    setReleasing(null);
+    if (error || (data as any)?.error) return toast.error((data as any)?.error || "Could not cancel right now");
+    const amt = (data as any)?.amount || 0;
+    toast.success(amt > 0 ? `Booking cancelled. ${fmt(amt)} refund is on its way.` : "Booking cancelled.");
+    load();
+  };
+
   if (loading) {
     return (
       <>
@@ -153,6 +163,23 @@ const Bookings = () => {
                     <AlertDialogFooter>
                       <AlertDialogCancel>Keep booking</AlertDialogCancel>
                       <AlertDialogAction onClick={() => cancelPartner(b)}>Cancel stay</AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              )}
+              {!partner && b.status === "confirmed" && (
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <button disabled={releasing === b.id} className="mt-3 w-full rounded-xl border border-border py-2.5 text-xs font-bold text-destructive disabled:opacity-50">Cancel booking</button>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Cancel this stay?</AlertDialogTitle>
+                      <AlertDialogDescription>Full refund if you cancel 48 hours or more before check-in, 50% within 48 hours, and no refund after check-in. Refunds reach your account in 3–10 working days.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Keep booking</AlertDialogCancel>
+                      <AlertDialogAction onClick={() => cancelLocal(b)}>Cancel stay</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>

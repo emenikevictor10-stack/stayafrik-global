@@ -626,6 +626,50 @@ export type Database = {
         }
         Relationships: []
       }
+      refunds: {
+        Row: {
+          amount: number
+          booking_id: string
+          created_at: string
+          failure_reason: string | null
+          id: string
+          initiated_by: string
+          paystack_reference: string | null
+          reason: string | null
+          status: string
+        }
+        Insert: {
+          amount: number
+          booking_id: string
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          initiated_by: string
+          paystack_reference?: string | null
+          reason?: string | null
+          status?: string
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          created_at?: string
+          failure_reason?: string | null
+          id?: string
+          initiated_by?: string
+          paystack_reference?: string | null
+          reason?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refunds_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reservations: {
         Row: {
           approved_at: string | null

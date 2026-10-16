@@ -77,6 +77,7 @@ export const raypropToProperty = (raw: Record<string, any>, fallbackImage: strin
   const sqm = num(raw.property_size_sqm);
   return {
     id: `rp_${rawId}`,
+    listingCode: partnerListingCode(rawId),
     title: str(raw.title) || "Verified partner stay",
     location: [hood, city].filter(Boolean).join(", ") || "Nigeria",
     type: "Shortlet",
@@ -108,3 +109,12 @@ export const raypropToProperty = (raw: Record<string, any>, fallbackImage: strin
     createdAt: str(raw.created_at) || undefined,
   };
 };
+
+/** Trackable partner listing code stored on bookings, e.g. RP-1C1F9KRZ. */
+export const partnerListingCode = (rawId: string) => `RP-${String(rawId).replace(/^rp_/, "")}`;
+
+/** Local listing code format: SG + 4 digits + 2 letters, e.g. SG2345LT. */
+export const LOCAL_LISTING_CODE = /^SG[0-9]{4}[A-Z]{2}$/;
+
+/** Display form: RP-XXXX → RP·XXXX, local codes unchanged. */
+export const displayListingCode = (code?: string | null) => (code ? code.replace(/^RP-/, "RP·") : "");

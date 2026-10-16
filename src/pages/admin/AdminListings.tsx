@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { CheckCircle2, ShieldX, Loader2, ChevronLeft, MapPin, BedDouble, Bath, Ruler, Tag, User2, Mail, Phone, X, ChevronRight } from "lucide-react";
+import { CheckCircle2, ShieldX, Loader2, ChevronLeft, MapPin, BedDouble, Bath, Ruler, Tag, User2, Mail, Phone, X, ChevronRight, Search } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -42,6 +42,7 @@ type ListingRow = {
   is_available: boolean;
   created_at: string;
   host_id: string;
+  listing_code: string | null;
 };
 
 type HostProfile = {
@@ -79,6 +80,7 @@ const AdminListings = () => {
   const [confirmAction, setConfirmAction] = useState<{ kind: "approve" | "reject" | "revoke"; row: ListingRow } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [q, setQ] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -106,7 +108,7 @@ const AdminListings = () => {
     if (hostIds.length) {
       const { data: profs } = await supabase
         .from("profiles")
-        .select("id,email,full_name,phone,avatar_url")
+        .select("id:user_id,email,full_name,phone,avatar_url")
         .in("id", hostIds);
       const map: Record<string, HostProfile> = {};
       (profs as HostProfile[] | null)?.forEach((p) => (map[p.id] = p));
@@ -116,6 +118,11 @@ const AdminListings = () => {
     }
     setBusy(false);
   };
+
+  const term = q.trim().toLowerCase();
+  const shown = term
+    ? rows.filter((r) => [r.listing_code, r.title, r.city, r.location, r.address].some((v) => (v || "").toLowerCase().includes(term)))
+    : rows;
 
   useEffect(() => {
     if (isAdmin) load();
@@ -211,6 +218,11 @@ const AdminListings = () => {
           <h1 className="text-base font-extrabold">Listings</h1>
           <p className="text-[11px] text-muted-foreground">{rows.length} {tab === "pending" ? "pending review" : "approved & live"}</p>
         </div>
+        <div className="relative w-40 sm:w-64">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Listing ID, title, city"
+            className="w-full h-9 rounded-full bg-card border border-border pl-9 pr-3 text-xs outline-none focus:border-primary" />
+        </div>
       </header>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 pt-4">
@@ -231,13 +243,16 @@ const AdminListings = () => {
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 pt-5 space-y-6">
         {busy && <div className="text-center py-8 text-sm text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>}
+        {!busy && rows.length > 0 && shown.length === 0 && (
+          <div className="text-center py-12 text-sm text-muted-foreground">No listings match "{q}".</div>
+        )}
         {!busy && rows.length === 0 && (
           <div className="text-center py-16 text-sm text-muted-foreground">
             <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" />
             {tab === "pending" ? "All caught up." : "No approved listings yet."}
           </div>
         )}
-        {rows.map((r) => {
+        {shown.map((r) => {
           const host = hosts[r.host_id];
           const images = r.images || [];
           const hero = images[0];
@@ -280,6 +295,12 @@ const AdminListings = () => {
                 {/* Header */}
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div className="min-w-0">
+                    {r.listing_code && (
+                      <button type="button" onClick={() => { navigator.clipboard?.writeText(r.listing_code!); toast.success("Listing ID copied"); }}
+                        className="mb-1 font-mono text-[11px] px-2 py-0.5 rounded-md bg-secondary text-muted-foreground hover:text-foreground">
+                        {r.listing_code}
+                      </button>
+                    )}
                     <h2 className="text-xl md:text-2xl font-extrabold leading-tight">{r.title}</h2>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
                       <MapPin className="w-3.5 h-3.5" /> {r.address || r.location || r.city || "No address provided"}

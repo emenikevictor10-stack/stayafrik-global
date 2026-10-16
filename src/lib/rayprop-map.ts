@@ -77,6 +77,7 @@ export const raypropToProperty = (raw: Record<string, any>, fallbackImage: strin
   const sqm = num(raw.property_size_sqm);
   return {
     id: `rp_${rawId}`,
+    listingCode: partnerListingCode(rawId),
     title: str(raw.title) || "Verified partner stay",
     location: [hood, city].filter(Boolean).join(", ") || "Nigeria",
     type: "Shortlet",

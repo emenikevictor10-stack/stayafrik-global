@@ -1,17 +1,22 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { toast } from "sonner";
+import { Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/seo/Seo";
 import { logAdminAction } from "@/lib/admin-audit";
+import { Input } from "@/components/ui/input";
 
 type Row = {
   id: string;
-  listing_id: string;
+  listing_id: string | null;
   guest_id: string;
   check_in_date: string;
   check_out_date: string;
-  total_amount: number;
+  total_price: number;
   status: string;
+  source: string;
+  listing_code: string | null;
+  partner_title: string | null;
   created_at: string;
   listing?: { title: string; host_id: string } | null;
 };
@@ -25,27 +30,40 @@ const STATUS_COLORS: Record<string, string> = {
   released: "bg-success/15 text-success",
   cancelled: "bg-muted text-muted-foreground",
   refunded: "bg-destructive/15 text-destructive",
+  needs_attention: "bg-warning/15 text-warning",
 };
+
+const STATUSES = ["all", "pending", "confirmed", "released", "cancelled", "refunded", "needs_attention"];
 
 const AdminBookings = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [filter, setFilter] = useState<string>("all");
+  const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
 
   const load = async () => {
     setLoading(true);
-    let q = supabase
+    let query = supabase
       .from("bookings")
-      .select("id, listing_id, guest_id, check_in_date, check_out_date, total_amount, status, created_at, listing:listings(title, host_id)")
+      .select("id, listing_id, guest_id, check_in_date, check_out_date, total_price, status, source, listing_code, partner_title, created_at, listing:listings(title, host_id)")
       .order("created_at", { ascending: false })
-      .limit(200);
-    if (filter !== "all") q = q.eq("status", filter);
-    const { data } = await q;
+      .limit(300);
+    if (filter !== "all") query = query.eq("status", filter);
+    const { data, error } = await query;
+    if (error) toast.error(error.message);
     setRows((data as any) || []);
     setLoading(false);
   };
 
   useEffect(() => { load(); }, [filter]);
+
+  const shown = useMemo(() => {
+    const t = q.trim().toLowerCase().replace(/[·\s]/g, "");
+    if (!t) return rows;
+    return rows.filter((r) =>
+      [r.listing_code, r.listing?.title, r.partner_title, r.id].some((v) => (v || "").toLowerCase().replace(/[·\s]/g, "").includes(t)),
+    );
+  }, [rows, q]);
 
   const setStatus = async (id: string, status: string) => {
     const { error } = await supabase.from("bookings").update({ status, ...(status === "released" ? { released_at: new Date().toISOString() } : {}) }).eq("id", id);
@@ -55,66 +73,65 @@ const AdminBookings = () => {
     load();
   };
 
+  const title = (r: Row) => r.listing?.title || r.partner_title || "Listing";
+
   return (
     <>
       <Seo title="Bookings | Stay admin" description="Manage bookings and escrow." noindex />
-      <header className="mb-5 flex items-center justify-between gap-3 flex-wrap">
+      <header className="mb-5 flex items-end justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-extrabold">Bookings</h1>
-          <p className="text-sm text-muted-foreground">{rows.length} shown</p>
+          <p className="text-sm text-muted-foreground">Local and partner bookings, escrow release and refunds.</p>
         </div>
-        <div className="flex gap-1 flex-wrap">
-          {["all", "pending", "confirmed", "released", "cancelled", "refunded"].map((s) => (
-            <button
-              key={s}
-              onClick={() => setFilter(s)}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full ${filter === s ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}
-            >
-              {s}
-            </button>
-          ))}
+        <div className="relative w-full sm:w-64">
+          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
+          <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search listing ID or title" className="pl-9" />
         </div>
       </header>
 
-      <div className="rounded-xl border border-border bg-card overflow-x-auto">
-        <table className="w-full text-sm min-w-[720px]">
-          <thead className="bg-secondary/50 text-xs uppercase text-muted-foreground">
-            <tr>
-              <th className="text-left px-4 py-2.5">Listing</th>
-              <th className="text-left px-4 py-2.5">Dates</th>
-              <th className="text-left px-4 py-2.5">Amount</th>
-              <th className="text-left px-4 py-2.5">Status</th>
-              <th className="text-right px-4 py-2.5">Actions</th>
-            </tr>
-          </thead>
-          <tbody>
-            {loading ? (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">Loading…</td></tr>
-            ) : rows.length === 0 ? (
-              <tr><td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">No bookings</td></tr>
-            ) : rows.map((r) => (
-              <tr key={r.id} className="border-t border-border">
-                <td className="px-4 py-2.5 font-semibold">{r.listing?.title || r.listing_id.slice(0, 8)}</td>
-                <td className="px-4 py-2.5 text-xs text-muted-foreground">
+      <div className="flex gap-1 flex-wrap mb-4">
+        {STATUSES.map((s) => (
+          <button key={s} onClick={() => setFilter(s)}
+            className={`text-xs font-semibold px-3 py-1.5 rounded-full capitalize ${filter === s ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
+            {s.replace("_", " ")}
+          </button>
+        ))}
+      </div>
+
+      {loading ? (
+        <div className="space-y-2">{[0, 1, 2, 3].map((i) => <div key={i} className="h-14 rounded-xl bg-secondary animate-pulse" />)}</div>
+      ) : shown.length === 0 ? (
+        <div className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">No bookings match.</div>
+      ) : (
+        <div className="space-y-2">
+          {shown.map((r) => (
+            <div key={r.id} className="rounded-xl border border-border bg-card p-3 md:px-4 flex flex-col md:flex-row md:items-center gap-2 md:gap-4">
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="font-semibold truncate">{title(r)}</span>
+                  {r.listing_code && <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.listing_code.replace(/^RP-/, "RP·")}</span>}
+                  {r.source === "rayprop" && <span className="text-[10px] font-bold text-primary">Partner</span>}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">
                   {new Date(r.check_in_date).toLocaleDateString()} → {new Date(r.check_out_date).toLocaleDateString()}
-                </td>
-                <td className="px-4 py-2.5 font-bold">{formatNaira(Number(r.total_amount))}</td>
-                <td className="px-4 py-2.5">
-                  <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${STATUS_COLORS[r.status] || "bg-secondary"}`}>{r.status}</span>
-                </td>
-                <td className="px-4 py-2.5 text-right space-x-1">
-                  {r.status === "confirmed" && (
+                </p>
+              </div>
+              <div className="flex items-center gap-3 justify-between md:justify-end">
+                <span className="font-bold text-sm">{formatNaira(Number(r.total_price))}</span>
+                <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${STATUS_COLORS[r.status] || "bg-secondary"}`}>{r.status.replace("_", " ")}</span>
+                <div className="flex gap-1">
+                  {r.status === "confirmed" && r.source !== "rayprop" && (
                     <button onClick={() => setStatus(r.id, "released")} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-success/40 text-success hover:bg-success/10">Release</button>
                   )}
-                  {(r.status === "pending" || r.status === "confirmed") && (
+                  {(r.status === "pending" || r.status === "confirmed") && r.source !== "rayprop" && (
                     <button onClick={() => setStatus(r.id, "refunded")} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-destructive/40 text-destructive hover:bg-destructive/10">Refund</button>
                   )}
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 };

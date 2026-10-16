@@ -49,6 +49,7 @@ export type ListingRow = {
   rating: number;
   reviews_count: number;
   created_at: string;
+  listing_code?: string | null;
 };
 
 type HostInfo = { full_name?: string | null; avatar_url?: string | null; whatsapp?: string | null };
@@ -86,6 +87,7 @@ export const rowToProperty = (r: ListingRow, host?: HostInfo): Property => {
     source: "stayglobal",
     city: r.city || undefined,
     createdAt: r.created_at,
+    listingCode: r.listing_code || undefined,
   };
 };
 

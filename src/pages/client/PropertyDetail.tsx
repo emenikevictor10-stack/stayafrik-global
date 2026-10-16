@@ -228,6 +228,17 @@ const PropertyDetail = () => {
           </section>
         )}
 
+        {p.listingCode && (
+          <button
+            type="button"
+            onClick={() => { navigator.clipboard?.writeText(p.listingCode!); toast.success("Listing ID copied"); }}
+            className="mt-4 inline-flex items-center gap-2 rounded-lg bg-card border border-border px-3 py-1.5 text-xs"
+          >
+            <span className="text-muted-foreground">Listing ID</span>
+            <span className="font-mono font-bold">{p.listingCode.replace(/^RP-/, "RP·")}</span>
+          </button>
+        )}
+
         <section className="mt-6">
           <h2 className="font-bold text-sm mb-3">What's included</h2>
           <div className="grid grid-cols-2 gap-2">

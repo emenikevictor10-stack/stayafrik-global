@@ -137,7 +137,7 @@ export const SmartSearchBar = ({
                   <div className="min-w-0 flex-1">
                     <div className="text-sm font-medium truncate">{e.label}</div>
                     <div className="text-[11px] text-muted-foreground truncate">
-                      {kindLabel[e.kind]} · {e.count} {e.count === 1 ? "stay" : "stays"}
+                      {kindLabel[e.kind]}
                     </div>
                   </div>
                   {e.partner && (

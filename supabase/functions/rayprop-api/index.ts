@@ -65,6 +65,21 @@ async function syncPartnerLocations(rows: any[], force = false) {
   return todo.length;
 }
 
+/** partner listing id → its place ids, cached alongside the catalogue. */
+let placeMap: { at: number; rows: Map<string, string[]> } | null = null;
+const loadPlaceMap = async () => {
+  if (placeMap && Date.now() - placeMap.at < TTL) return placeMap.rows;
+  const rows = new Map<string, string[]>();
+  for (let from = 0; ; from += 1000) {
+    const { data } = await admin().from("partner_location_map")
+      .select("rayprop_listing_id,state_id,city_id,neighbourhood_id").in("status", ["ok", "confirmed"]).range(from, from + 999);
+    (data || []).forEach((d: any) => rows.set(d.rayprop_listing_id, [d.state_id, d.city_id, d.neighbourhood_id].filter(Boolean)));
+    if (!data || data.length < 1000) break;
+  }
+  placeMap = { at: Date.now(), rows };
+  return rows;
+};
+
 const admin = () => createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
 const requireUser = async (req: Request) => {
@@ -122,7 +137,13 @@ Deno.serve(async (req) => {
         if (!hit.length) hit = (unwrapRayProp(await raypropList({ listing_id: listingId, limit: "1" })) as any[]) || [];
         return json(200, { data: hit, meta: { total: hit.length, hasMore: false } });
       }
-      const rows = q ? all.filter((r) => raypropMatches(r, q)) : all;
+      const locationId = body?.location_id ? text(body.location_id, 64) : null;
+      let rows: any[];
+      if (locationId) {
+        // Place picked from the list: State/City/Neighbourhood match, top-down (Lekki includes Chevron).
+        const map = await loadPlaceMap();
+        rows = all.filter((r) => map.get(String(r.id))?.includes(locationId));
+      } else rows = q ? all.filter((r) => raypropMatches(r, q)) : all;
       const slice = rows.slice((page - 1) * limit, page * limit);
       return json(200, { data: slice, meta: { total: rows.length, page, hasMore: page * limit < rows.length } });
     }

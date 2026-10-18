@@ -64,6 +64,13 @@
       "when": 1792356023501,
       "tag": "0008_match_location_ranking",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792356054237,
+      "tag": "0009_location_fn_grants",
+      "breakpoints": true
     }
   ]
 }

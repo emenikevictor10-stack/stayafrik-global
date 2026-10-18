@@ -32,7 +32,8 @@ const loadCatalogue = async (): Promise<any[]> => {
     const seen = new Set<string>();
     const unique = rows.filter((r) => r?.id && !seen.has(String(r.id)) && !!seen.add(String(r.id)));
     catalogue = { at: Date.now(), rows: unique };
-    syncPartnerLocations(unique).catch((e) => console.error("[rayprop-api] location sync failed", e));
+    const sync = syncPartnerLocations(unique).catch((e) => console.error("[rayprop-api] location sync failed", e));
+    (globalThis as any).EdgeRuntime?.waitUntil?.(sync);
     return unique;
   })().finally(() => { inflight = null; });
   return inflight;

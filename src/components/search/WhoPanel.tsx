@@ -40,6 +40,9 @@ export const WhoPanel = ({ value, onChange }: { value: SearchState; onChange: (p
       <GuestStepperRow label="Pets" value={value.pets}
         hint={<button type="button" onClick={() => setInfo(true)} className="underline font-medium">Bringing a service animal?</button>}
         canDec={value.pets > 0} canInc={value.pets < LIMITS.pets} onDec={() => set("pets", -1)} onInc={() => set("pets", 1)} />
+      <GuestStepperRow label="Bedrooms" hint="Minimum" value={value.bedrooms}
+        canDec={value.bedrooms > 0} canInc={value.bedrooms < 10}
+        onDec={() => onChange({ bedrooms: value.bedrooms - 1 })} onInc={() => onChange({ bedrooms: value.bedrooms + 1 })} />
       <Dialog open={info} onOpenChange={setInfo}>
         <DialogContent className="max-w-sm rounded-3xl">
           <DialogTitle>Service animals</DialogTitle>

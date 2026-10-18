@@ -134,3 +134,13 @@ export const WherePanel = ({
     </div>
   );
 };
+
+/** What picking a place writes into the search (a place from the list, not free text). */
+export const placePatch = (p: PlaceSuggestion) => ({ where: p.name, loc: p.slug, locType: p.type });
+
+/** Typed text but nothing picked → use the top suggestion when there is one. */
+export const autoPick = <T extends { where: string; loc?: string }>(draft: T, r: ReturnType<typeof useWhereResults>): T => {
+  if (!draft.where.trim() || draft.loc) return draft;
+  const top = r.places[0];
+  return top ? { ...draft, ...placePatch(top) } : draft;
+};

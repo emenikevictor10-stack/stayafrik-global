@@ -1,9 +1,11 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { rememberPlace } from "@/hooks/useLocationSearch";
 import { Search, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { whenSummary, whoSummary } from "@/lib/search-state";
 import { useSearch, type Segment } from "./SearchProvider";
-import { WherePanel, useWhereResults, requestNearby } from "./WherePanel";
+import { WherePanel, useWhereResults, requestNearby, placePatch, autoPick, type WhereItem } from "./WherePanel";
 import { WhenPanel } from "./WhenPanel";
 import { WhoPanel } from "./WhoPanel";
 
@@ -15,6 +17,7 @@ export const SearchBar = ({ className, onClosed, panels = true }: { className?: 
   const [hovered, setHovered] = useState<Segment | null>(null);
   const [cursor, setCursor] = useState(-1);
   const where = useWhereResults(places, draft.where);
+  const navigate = useNavigate();
 
   const close = () => { setActive(null); onClosed?.(); };
 
@@ -34,14 +37,19 @@ export const SearchBar = ({ className, onClosed, panels = true }: { className?: 
   useEffect(() => { setCursor(-1); }, [draft.where]);
   useEffect(() => { if (panels && active === "where") inputRef.current?.focus(); }, [active, panels]);
 
-  const pickPlace = (label: string) => { patch({ where: label }); setActive("when"); };
-  const submit = () => { commit(); onClosed?.(); };
+  const pickPlace = (item: WhereItem) => {
+    if (item.kind === "stay") { close(); navigate(`/property/${item.id}`); return; }
+    rememberPlace(item);
+    patch(placePatch(item));
+    setActive("when");
+  };
+  const submit = () => { commit(autoPick(draft, where)); onClosed?.(); };
 
   const values: Record<Segment, string> = { where: draft.where, when: whenSummary(draft), who: whoSummary(draft) };
   const clear: Record<Segment, () => void> = {
-    where: () => patch({ where: "" }),
+    where: () => patch({ where: "", loc: undefined, locType: undefined }),
     when: () => patch({ checkIn: undefined, checkOut: undefined, flex: 0, months: [] }),
-    who: () => patch({ adults: 0, children: 0, infants: 0, pets: 0 }),
+    who: () => patch({ adults: 0, children: 0, infants: 0, pets: 0, bedrooms: 0 }),
   };
 
   const order: Segment[] = ["where", "when", "who"];
@@ -79,12 +87,16 @@ export const SearchBar = ({ className, onClosed, panels = true }: { className?: 
               aria-controls="where-list"
               aria-activedescendant={cursor >= 0 ? `where-list-${cursor}` : undefined}
               value={draft.where}
-              onChange={(e) => patch({ where: e.target.value })}
+              onChange={(e) => patch({ where: e.target.value, loc: undefined, locType: undefined })}
               onFocus={() => setActive("where")}
               onKeyDown={(e) => {
-                if (e.key === "ArrowDown") { e.preventDefault(); setCursor((c) => Math.min(c + 1, where.results.length - 1)); }
+                if (e.key === "ArrowDown") { e.preventDefault(); setCursor((c) => Math.min(c + 1, where.items.length - 1)); }
                 else if (e.key === "ArrowUp") { e.preventDefault(); setCursor((c) => Math.max(c - 1, -1)); }
-                else if (e.key === "Enter") { e.preventDefault(); if (cursor >= 0 && where.results[cursor]) pickPlace(where.results[cursor].label); else setActive("when"); }
+                else if (e.key === "Enter") {
+                  e.preventDefault();
+                  const item = where.items[cursor >= 0 ? cursor : 0];
+                  if (item && (cursor >= 0 || where.typing)) pickPlace(item); else setActive("when");
+                } else if (e.key === "Tab" && !e.shiftKey) { e.preventDefault(); patch(autoPick(draft, where)); setActive("when"); }
               }}
               placeholder="Search destinations"
               className="w-full bg-transparent text-sm outline-none placeholder:text-muted-foreground truncate"
@@ -131,8 +143,9 @@ export const SearchBar = ({ className, onClosed, panels = true }: { className?: 
           )}
         >
           {active === "where" && (
-            <WherePanel listId="where-list" query={draft.where} places={places} {...where} cursor={cursor}
-              onPick={pickPlace} onNearby={onLocate ? () => requestNearby(onLocate, close) : undefined} />
+            <WherePanel listId="where-list" query={draft.where} results={where} cursor={cursor >= 0 ? cursor : where.typing ? 0 : -1}
+              onPick={pickPlace} onNearby={onLocate ? () => requestNearby(onLocate, close) : undefined}
+              onFlexible={() => { patch({ where: "", loc: undefined, locType: undefined }); setActive("when"); }} />
           )}
           {active === "when" && <WhenPanel layout="pair" value={draft} onChange={patch} hints={hints} />}
           {active === "who" && <WhoPanel value={draft} onChange={patch} />}

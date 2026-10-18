@@ -117,12 +117,12 @@ export const SearchModal = ({
     );
   };
 
-  const onRange = (r: DateRange | undefined) => {
-    if (!r?.from) return set({ checkIn: undefined, checkOut: undefined });
-    // Re-tapping after a full range starts a new one
-    if (draft.checkIn && draft.checkOut) { set({ checkIn: ymd(r.from === range?.from ? (r.to || r.from) : r.from), checkOut: undefined }); return; }
-    if (r.to && ymd(r.to) > ymd(r.from)) { set({ checkIn: ymd(r.from), checkOut: ymd(r.to) }); setStep("who"); return; }
-    set({ checkIn: ymd(r.from), checkOut: undefined });
+  const onDay = (d: Date | undefined) => {
+    if (!d) return;
+    const k = ymd(d);
+    if (!draft.checkIn || draft.checkOut || k <= draft.checkIn) { set({ checkIn: k, checkOut: undefined }); return; }
+    set({ checkOut: k });
+    setStep("who");
   };
 
   const weekend = () => {
@@ -212,7 +212,7 @@ export const SearchModal = ({
         <Calendar
           mode="range"
           selected={range}
-          onSelect={onRange}
+          onSelect={(_r, d) => onDay(d)}
           numberOfMonths={isMobile ? 1 : 2}
           disabled={{ before: new Date() }}
           className="p-0 pointer-events-auto"

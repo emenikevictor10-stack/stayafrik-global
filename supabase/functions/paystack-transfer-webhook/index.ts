@@ -2,6 +2,7 @@
 import { createClient } from "npm:@supabase/supabase-js@2.45.0";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createHmac } from "node:crypto";
+import { fulfilPartnerBooking } from "../_shared/partner-fulfil-booking.ts";
 
 const PAYSTACK_KEY = Deno.env.get("PAYSTACK_SECRET_KEY")!;
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -22,10 +23,23 @@ Deno.serve(async (req) => {
   let event: any;
   try { event = JSON.parse(raw); } catch { return json({ error: "bad_json" }, 400); }
 
+  const svc = createClient(SUPABASE_URL, SERVICE_KEY);
+
+  // Guest payments: save the booking even if the guest closed the page before confirmation.
+  if (event.event === "charge.success") {
+    const tx = event.data || {};
+    if (tx.metadata?.source !== "rayprop") return json({ ok: true, ignored: "local" });
+    try {
+      await fulfilPartnerBooking(svc, tx);
+      return json({ ok: true });
+    } catch (e) {
+      console.error("[paystack-webhook] partner fulfil failed", tx.reference, (e as Error).message);
+      return json({ error: "fulfil_failed" }, 500); // Paystack will retry
+    }
+  }
+
   const transferCode: string | undefined = event?.data?.transfer_code;
   if (!transferCode) return json({ ok: true, ignored: true });
-
-  const svc = createClient(SUPABASE_URL, SERVICE_KEY);
 
   let status: string | null = null;
   let failureReason: string | null = null;

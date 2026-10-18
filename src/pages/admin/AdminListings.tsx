@@ -133,7 +133,15 @@ const AdminListings = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, tab]);
 
+  const notifyHost = async (row: ListingRow, type: string, title: string, body: string) => {
+    const { error } = await supabase.from("notifications").insert({
+      user_id: row.host_id, type, title, body, link: "/listings",
+    });
+    if (error) console.error("[admin] host notification failed", error);
+  };
+
   const doApprove = async (id: string) => {
+    const row = rows.find((x) => x.id === id);
     setSubmitting(true);
     const { error } = await supabase
       .from("listings")
@@ -141,6 +149,10 @@ const AdminListings = () => {
       .eq("id", id);
     setSubmitting(false);
     if (error) return toast.error(error.message);
+    if (row) {
+      await notifyHost(row, "listing_approved", "Listing approved 🎉", `Your listing "${row.title}" is now live.`);
+      await logAdminAction({ action: "listing_approved", entityType: "listing", entityId: id, metadata: { listing_code: row.listing_code } });
+    }
     toast.success("Listing approved and live");
     setRows((r) => r.filter((x) => x.id !== id));
     setConfirmAction(null);
@@ -152,21 +164,11 @@ const AdminListings = () => {
       .from("listings")
       .update({ verified: false, is_available: false })
       .eq("id", row.id);
-    if (!error) {
-      try {
-        await supabase.from("notifications").insert({
-          user_id: row.host_id,
-          type: "listing_revoked",
-          title: "Listing moved back to pending",
-          body: reason
-            ? `Your listing "${row.title}" was moved back to pending review. Reason: ${reason}`
-            : `Your listing "${row.title}" was moved back to pending review.`,
-          metadata: { listing_id: row.id, reason: reason || null },
-        } as any);
-      } catch { /* non-blocking */ }
-    }
     setSubmitting(false);
     if (error) return toast.error(error.message);
+    await notifyHost(row, "listing_revoked", "Listing moved back to pending",
+      `Your listing "${row.title}" was moved back to pending review.${reason ? ` Reason: ${reason}` : ""}`);
+    await logAdminAction({ action: "listing_revoked", entityType: "listing", entityId: row.id, metadata: { listing_code: row.listing_code, reason: reason || null } });
     toast.success("Listing reverted to pending");
     setRows((r) => r.filter((x) => x.id !== row.id));
     setConfirmAction(null);
@@ -175,20 +177,12 @@ const AdminListings = () => {
 
   const doReject = async (row: ListingRow, reason: string) => {
     setSubmitting(true);
-    try {
-      await supabase.from("notifications").insert({
-        user_id: row.host_id,
-        type: "listing_rejected",
-        title: "Listing rejected",
-        body: reason
-          ? `Your listing "${row.title}" was not approved. Reason: ${reason}`
-          : `Your listing "${row.title}" was not approved.`,
-        metadata: { listing_id: row.id, reason: reason || null },
-      } as any);
-    } catch { /* non-blocking */ }
     const { error } = await supabase.from("listings").delete().eq("id", row.id);
     setSubmitting(false);
     if (error) return toast.error(error.message);
+    await notifyHost(row, "listing_rejected", "Listing rejected",
+      `Your listing "${row.title}" was not approved.${reason ? ` Reason: ${reason}` : ""}`);
+    await logAdminAction({ action: "listing_rejected", entityType: "listing", entityId: row.id, metadata: { listing_code: row.listing_code, title: row.title, reason: reason || null } });
     toast.success("Listing removed");
     setRows((r) => r.filter((x) => x.id !== row.id));
     setConfirmAction(null);

@@ -8,7 +8,7 @@ import { WhenPanel } from "./WhenPanel";
 import { WhoPanel } from "./WhoPanel";
 
 /** Desktop/tablet expanding pill with dropdown panels. */
-export const SearchBar = ({ className, onClosed }: { className?: string; onClosed?: () => void }) => {
+export const SearchBar = ({ className, onClosed, panels = true }: { className?: string; onClosed?: () => void; panels?: boolean }) => {
   const { draft, patch, commit, active, setActive, places, hints, onLocate } = useSearch();
   const rootRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -19,7 +19,7 @@ export const SearchBar = ({ className, onClosed }: { className?: string; onClose
   const close = () => { setActive(null); onClosed?.(); };
 
   useEffect(() => {
-    if (!active) return;
+    if (!active || !panels) return;
     const onDown = (e: MouseEvent) => {
       const t = e.target as HTMLElement;
       if (rootRef.current?.contains(t) || t.closest("[role=dialog],[data-radix-popper-content-wrapper]")) return;
@@ -32,7 +32,7 @@ export const SearchBar = ({ className, onClosed }: { className?: string; onClose
   }, [active]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => { setCursor(-1); }, [draft.where]);
-  useEffect(() => { if (active === "where") inputRef.current?.focus(); }, [active]);
+  useEffect(() => { if (panels && active === "where") inputRef.current?.focus(); }, [active, panels]);
 
   const pickPlace = (label: string) => { patch({ where: label }); setActive("when"); };
   const submit = () => { commit(); onClosed?.(); };
@@ -120,7 +120,7 @@ export const SearchBar = ({ className, onClosed }: { className?: string; onClose
         </div>
       </div>
 
-      {active && (
+      {active && panels && (
         <div
           id="search-panel"
           className={cn(

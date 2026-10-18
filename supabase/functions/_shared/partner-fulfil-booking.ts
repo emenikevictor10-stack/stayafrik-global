@@ -61,11 +61,11 @@ export const fulfilPartnerBooking = async (admin: any, tx: any) => {
   if (uerr) console.error("[partner-fulfil] update failed", reference, uerr.message);
   const final = updated || { ...booking, ...result };
 
-  await notify(admin, final, userId).catch((e) => console.error("[partner-fulfil] notify failed", e));
+  await notifyPartnerBooking(admin, final, userId).catch((e) => console.error("[partner-fulfil] notify failed", e));
   return final;
 };
 
-const notify = async (admin: any, b: any, userId: string) => {
+export const notifyPartnerBooking = async (admin: any, b: any, userId: string) => {
   const title = b.partner_title || "your stay";
   const dates = `${b.check_in_date} to ${b.check_out_date}`;
   if (b.status === "confirmed") {

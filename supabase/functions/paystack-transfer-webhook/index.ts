@@ -1,5 +1,5 @@
 // Paystack Transfer webhook -> marks payouts paid/failed.
-import { createClient } from "npm:@supabase/supabase-js@2.45.0";
+import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { createHmac } from "node:crypto";
 import { fulfilPartnerBooking } from "../_shared/partner-fulfil-booking.ts";

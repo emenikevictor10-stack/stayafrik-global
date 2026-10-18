@@ -1,4 +1,4 @@
-import { PlaceFields } from "@/components/agent/PlaceFields";
+import { PlaceFields, usePlaceIsValid } from "@/components/agent/PlaceFields";
 import { TopBar } from "@/components/shell/TopBar";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useListing } from "@/hooks/useListings";
@@ -22,6 +22,7 @@ const EditListing = () => {
   const [baths, setBaths] = useState(0);
   const [area, setArea] = useState("");
   const [place, setPlace] = useState({ state: "", city: "", neighborhood: "" });
+  const placeOk = usePlaceIsValid(place.state, place.city);
   const [live, setLive] = useState(true);
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -84,6 +85,7 @@ const EditListing = () => {
   const removeImage = (url: string) => setImages((p) => p.filter((x) => x !== url));
 
   const save = async () => {
+    if (!placeOk) return toast.error("Choose the state and pick the city from the list");
     setSaving(true);
     const { error } = await supabase
       .from("listings")

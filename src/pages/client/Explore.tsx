@@ -8,8 +8,12 @@ import { cn } from "@/lib/utils";
 import { PropertiesMap } from "@/components/map/PropertyMap";
 import { useListings } from "@/hooks/useListings";
 import { Seo } from "@/components/seo/Seo";
-import { SearchPill, SearchModal } from "@/components/search/AirbnbSearch";
-import { parseSearch, serializeSearch, rememberSearch, guestCount, nightsOf, fitsGuests, summarize, type SearchState } from "@/lib/search-state";
+import { SearchProvider, useSearch, type Segment } from "@/components/search/SearchProvider";
+import { SearchBar, CompactSearchBar } from "@/components/search/SearchBar";
+import { MobileSearchPill, MobileSearchModal } from "@/components/search/MobileSearchModal";
+import { usePriceHints } from "@/hooks/usePriceHints";
+import { useIsMobile } from "@/hooks/use-mobile";
+import { parseSearch, serializeSearch, guestCount, nightsOf, fitsGuests, summarize, type SearchState } from "@/lib/search-state";
 import { useSearchAvailability } from "@/hooks/useSearchAvailability";
 import { searchProperties, buildLocationIndex, rescueCities } from "@/lib/location-search";
 
@@ -48,14 +52,63 @@ const matchesSmart = (p: Property, f: SmartFilter) => {
   }
 };
 
+/** Search area: desktop pill + compact sticky bar, or phone pill + full-screen sheet. */
+const ExploreSearch = ({ mapToggle }: { mapToggle: React.ReactNode }) => {
+  const isMobile = useIsMobile();
+  const { setActive, active } = useSearch();
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
+  const [floating, setFloating] = useState(false);
+  const anchor = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    const el = anchor.current;
+    if (!el) return;
+    const obs = new IntersectionObserver(([e]) => setScrolled(!e.isIntersecting), { rootMargin: "-80px 0px 0px 0px" });
+    obs.observe(el);
+    return () => obs.disconnect();
+  }, [isMobile]);
+  useEffect(() => { if (!active) setFloating(false); }, [active]);
+
+  if (isMobile) {
+    return (
+      <div className="flex items-center gap-2">
+        <div className="flex-1 min-w-0"><MobileSearchPill onOpen={() => setMobileOpen(true)} /></div>
+        {mapToggle}
+        <MobileSearchModal open={mobileOpen} onOpenChange={setMobileOpen} />
+      </div>
+    );
+  }
+  const openFloating = (s: Segment) => { setFloating(true); setActive(s); };
+  return (
+    <>
+      <div ref={anchor} className="flex items-center gap-3">
+        <SearchBar panels={!floating} className="flex-1" />
+        {mapToggle}
+      </div>
+      {scrolled && !floating && (
+        <div className="fixed top-[76px] left-0 right-0 z-40 px-4 pointer-events-none">
+          <div className="pointer-events-auto"><CompactSearchBar onOpen={openFloating} /></div>
+        </div>
+      )}
+      {floating && (
+        <>
+          <div className="fixed inset-0 z-40 bg-background/60 backdrop-blur-[2px] animate-fade-in" aria-hidden />
+          <div className="fixed top-[76px] left-0 right-0 z-50 px-4">
+            <SearchBar onClosed={() => setFloating(false)} />
+          </div>
+        </>
+      )}
+    </>
+  );
+};
+
 const Explore = () => {
   const [params, setParams] = useSearchParams();
   const search = useMemo(() => parseSearch(params), [params]);
   const q = search.where;
-  const applySearch = (s: SearchState) => { setParams(serializeSearch(s)); rememberSearch(s); };
+  const applySearch = (s: SearchState) => setParams(serializeSearch(s));
   const setQ = (where: string) => applySearch({ ...search, where });
-  const [modal, setModal] = useState<{ open: boolean; step: "where" | "when" | "who" }>({ open: false, step: "where" });
-  useEffect(() => { rememberSearch(search); }, [search]);
   const [smart, setSmart] = useState<SmartFilter[]>([]);
   const [view, setView] = useState<"list" | "map">("list");
   const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
@@ -102,13 +155,16 @@ const Explore = () => {
     }
     const g = guestCount(search);
     if (g) out = out.filter((p) => fitsGuests(p, g));
+    if (search.pets) out = out.filter((p) => hasAmenity(p, ["pet"]));
+    if (search.mode === "flexible" && !smart.length && !nearMe) out = [...out].sort((a, b) => (a.priceNum || Infinity) - (b.priceNum || Infinity));
     return { list: out, fallbackCity };
   }, [properties, q, smart, nearMe, search]);
 
-  const { unavailable, checking } = useSearchAvailability(list, search.checkIn, search.checkOut);
+  const { unavailable, checking } = useSearchAvailability(list, search.mode === "dates" ? search.checkIn : undefined, search.mode === "dates" ? search.checkOut : undefined, search.flex);
+  const hints = usePriceHints(useMemo(() => (q ? list.filter((p) => p.source === "rayprop") : []), [list, q]), q);
   const visible = useMemo(() => list.filter((p) => !unavailable.has(p.id)), [list, unavailable]);
   const nights = nightsOf(search);
-  const hasSearch = !!(q || search.checkIn || guestCount(search));
+  const hasSearch = !!(q || search.checkIn || search.months.length || guestCount(search) || search.pets);
 
 
   return (
@@ -119,28 +175,19 @@ const Explore = () => {
       />
       <TopBar title="Explore" />
       <main className="px-5 pt-5 pb-8">
-        <SearchPill
-          value={search}
-          onOpen={(step) => setModal({ open: true, step })}
-          rightSlot={
-            <button
-              onClick={() => setView(view === "list" ? "map" : "list")}
-              className="shrink-0 w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center text-primary"
-              aria-label="Toggle map view"
-            >
-              {view === "list" ? <MapIcon className="w-4 h-4" /> : <ListIcon className="w-4 h-4" />}
-            </button>
-          }
-        />
-        <SearchModal
-          open={modal.open}
-          onOpenChange={(open) => setModal((m) => ({ ...m, open }))}
-          initialStep={modal.step}
-          value={search}
-          onSearch={applySearch}
-          places={places}
-          onLocate={(c) => { setNearMe(c); setView("map"); }}
-        />
+        <SearchProvider places={places} hints={hints} onLocate={(c) => { setNearMe(c); setView("map"); }}>
+          <ExploreSearch
+            mapToggle={
+              <button
+                onClick={() => setView(view === "list" ? "map" : "list")}
+                className="shrink-0 w-12 h-12 rounded-full bg-search-surface border border-border shadow-search flex items-center justify-center text-primary"
+                aria-label="Toggle map view"
+              >
+                {view === "list" ? <MapIcon className="w-4 h-4" /> : <ListIcon className="w-4 h-4" />}
+              </button>
+            }
+          />
+        </SearchProvider>
 
         {nearMe && (
           <button
@@ -189,7 +236,7 @@ const Explore = () => {
             {fallbackCity && (
               <span>No exact match for "{q}" — showing other {fallbackCity} stays</span>
             )}
-            <button type="button" onClick={() => applySearch({ where: "", flex: 0, adults: 0, children: 0, infants: 0 })} className="font-semibold text-primary underline">Clear search</button>
+            <button type="button" onClick={() => setParams(new URLSearchParams())} className="font-semibold text-primary underline">Clear search</button>
           </div>
         )}
         {smart.length > 0 && (

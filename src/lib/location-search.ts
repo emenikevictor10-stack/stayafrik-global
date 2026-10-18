@@ -40,7 +40,7 @@ export const tokenize = (q: string): string[] => {
 };
 
 const placeParts = (p: Property) => {
-  if (p.neighborhood || p.state) {
+  if (p.neighborhood) {
     const city = (p.city || "").trim();
     const hood = p.neighborhood && norm(p.neighborhood) !== norm(city) ? p.neighborhood.trim() : "";
     return { hood, city };

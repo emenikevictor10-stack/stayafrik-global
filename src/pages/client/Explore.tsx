@@ -114,7 +114,7 @@ const Explore = () => {
   const [view, setView] = useState<"list" | "map">("list");
   const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
   const [selected, setSelected] = useState<Property | null>(null);
-  const { data: properties, loading, loadingMore, hasMore, loadMore, searchPartner } = useListings();
+  const { data: properties, loading: listLoading, loadingMore, hasMore, loadMore, searchPartner, searching } = useListings();
   const { all: allPlaces, byId: placeById } = useLocations();
   const picked = useMemo(() => (search.loc ? allPlaces.find((l) => l.slug === search.loc) : undefined), [allPlaces, search.loc]);
   const pickedParent = picked?.parent_id ? placeById.get(picked.parent_id) : undefined;
@@ -147,6 +147,8 @@ const Explore = () => {
 
   const places = useMemo(() => buildLocationIndex(properties), [properties]);
 
+  // While a place search is still fetching partner stays, show the loading cards instead of "no results".
+  const loading = listLoading || (searching && !!(picked || q));
   const { list, fallbackCity } = useMemo(() => {
     const shortlets = properties.filter((p) => p.type === "Shortlet");
     // Place picked from the list → match by place (Lekki includes Chevron); partner stays already come filtered by place.

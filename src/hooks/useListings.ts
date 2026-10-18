@@ -148,6 +148,7 @@ export const useListings = () => {
   const loadingMoreRef = useRef(false);
   const qRef = useRef<string | null>(null);
   const locRef = useRef<string | undefined>(undefined);
+  const [searching, setSearching] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -205,6 +206,7 @@ export const useListings = () => {
       setHasMore(false);
       return;
     }
+    setSearching(true);
     try {
       // Search results page through the whole catalogue too (searchQ drives loadMore).
       const page = await fetchRayPropPage(1, q, locationId);
@@ -215,12 +217,14 @@ export const useListings = () => {
       setHasMore(page.hasMore);
     } catch (error) {
       console.error("[rayprop] search unavailable", error);
+    } finally {
+      setSearching(false);
     }
   }, []);
 
   const data = useMemo(() => mixListings(local, partner), [local, partner]);
 
-  return { data, loading, loadingMore, hasMore, loadMore, searchPartner };
+  return { data, loading, loadingMore, hasMore, loadMore, searchPartner, searching };
 };
 
 export const useListing = (id: string | undefined) => {

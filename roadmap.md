@@ -13,3 +13,5 @@
 - [x] Admin view of 4h viewing reservations + viewing expiry rules
 
 Blocked: Paystack test/live mode unconfirmed; Phase 0 test payments to be run by the user; WhatsApp skipped for launch.
+- [ ] Admin Listings review + detail/grid view toggle (detail default)
+- [ ] Admin Users review: confirm all fields mapped

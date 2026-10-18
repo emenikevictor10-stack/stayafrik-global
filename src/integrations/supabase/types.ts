@@ -1094,6 +1094,17 @@ export type Database = {
         }
         Returns: number
       }
+      popular_locations: {
+        Args: { _limit?: number }
+        Returns: {
+          breadcrumb: string
+          id: string
+          listing_count: number
+          name: string
+          slug: string
+          type: string
+        }[]
+      }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {
@@ -1104,6 +1115,27 @@ export type Database = {
       }
       refresh_location_counts: { Args: never; Returns: undefined }
       retag_local_listings: { Args: never; Returns: number }
+      search_locations: {
+        Args: { _include_empty?: boolean; _limit?: number; q: string }
+        Returns: {
+          breadcrumb: string
+          id: string
+          listing_count: number
+          name: string
+          rank: number
+          slug: string
+          type: string
+        }[]
+      }
+      search_stays: {
+        Args: { _limit?: number; q: string }
+        Returns: {
+          id: string
+          kind: string
+          subtitle: string
+          title: string
+        }[]
+      }
       send_alert_email: {
         Args: {
           _body: string

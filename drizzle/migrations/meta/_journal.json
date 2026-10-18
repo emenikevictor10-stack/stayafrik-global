@@ -71,6 +71,13 @@
       "when": 1792356054237,
       "tag": "0009_location_fn_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792356881178,
+      "tag": "0010_search_locations",
+      "breakpoints": true
     }
   ]
 }

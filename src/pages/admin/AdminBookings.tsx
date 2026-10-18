@@ -73,6 +73,18 @@ const AdminBookings = () => {
     load();
   };
 
+  const refund = async (r: Row) => {
+    const input = window.prompt(`Refund amount in ₦ (max ${Number(r.total_price)}). This cancels the booking and sends the money back via Paystack.`, String(Number(r.total_price)));
+    if (input === null) return;
+    const amount = Number(input.replace(/[^\d.]/g, ""));
+    if (!Number.isFinite(amount) || amount < 0 || amount > Number(r.total_price)) return toast.error("Invalid amount");
+    const { data, error } = await supabase.functions.invoke("cancel-booking", { body: { booking_id: r.id, amount, reason: "Admin refund" } });
+    if (error || (data as any)?.error) return toast.error((data as any)?.error || error?.message || "Refund failed");
+    await logAdminAction({ action: "booking_refund", entityType: "booking", entityId: r.id, metadata: { amount, listing_code: r.listing_code } });
+    toast.success("Refund started");
+    load();
+  };
+
   const title = (r: Row) => r.listing?.title || r.partner_title || "Listing";
 
   return (
@@ -123,8 +135,8 @@ const AdminBookings = () => {
                   {r.status === "confirmed" && r.source !== "rayprop" && (
                     <button onClick={() => setStatus(r.id, "released")} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-success/40 text-success hover:bg-success/10">Release</button>
                   )}
-                  {(r.status === "pending" || r.status === "confirmed") && r.source !== "rayprop" && (
-                    <button onClick={() => setStatus(r.id, "refunded")} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-destructive/40 text-destructive hover:bg-destructive/10">Refund</button>
+                  {r.status === "confirmed" && r.source !== "rayprop" && (
+                    <button onClick={() => refund(r)} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-destructive/40 text-destructive hover:bg-destructive/10">Refund</button>
                   )}
                 </div>
               </div>

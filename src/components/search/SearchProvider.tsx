@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
+import type { PriceHints } from "./DatesCalendar";
 import type { LocationEntry } from "@/lib/location-search";
 import { EMPTY_SEARCH, parseSearch, rememberSearch, serializeSearch, type SearchState } from "@/lib/search-state";
 
@@ -15,12 +16,13 @@ type Ctx = {
   active: Segment | null;
   setActive: (s: Segment | null) => void;
   places: LocationEntry[];
+  hints: PriceHints;
   onLocate?: (c: { lat: number; lng: number }) => void;
 };
 
 const SearchCtx = createContext<Ctx | null>(null);
 
-export const SearchProvider = ({ places, onLocate, children }: { places: LocationEntry[]; onLocate?: Ctx["onLocate"]; children: React.ReactNode }) => {
+export const SearchProvider = ({ places, hints, onLocate, children }: { places: LocationEntry[]; hints: PriceHints; onLocate?: Ctx["onLocate"]; children: React.ReactNode }) => {
   const [params, setParams] = useSearchParams();
   const search = useMemo(() => parseSearch(params), [params]);
   const [draft, setDraft] = useState<SearchState>(search);
@@ -39,7 +41,7 @@ export const SearchProvider = ({ places, onLocate, children }: { places: Locatio
   const clearAll = useCallback(() => setDraft(EMPTY_SEARCH), []);
 
   return (
-    <SearchCtx.Provider value={{ search, draft, patch, setDraft, commit, clearAll, active, setActive, places, onLocate }}>
+    <SearchCtx.Provider value={{ search, draft, patch, setDraft, commit, clearAll, active, setActive, places, hints, onLocate }}>
       {children}
     </SearchCtx.Provider>
   );

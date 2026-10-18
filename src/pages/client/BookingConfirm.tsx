@@ -62,7 +62,12 @@ const BookingConfirm = () => {
             <div className="w-20 h-20 rounded-full bg-success/15 border-2 border-success flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-10 h-10 text-success" />
             </div>
-            <h1 className="mt-5 text-2xl font-extrabold tracking-tight">Booking confirmed!</h1>
+            <h1 className="mt-5 text-2xl font-extrabold tracking-tight">
+              {booking.status === "confirmed" ? "Booking confirmed!" : "Payment received"}
+            </h1>
+            {booking.status !== "confirmed" && (
+              <p className="text-sm text-muted-foreground mt-2">We're finalising your booking with the property and will email you shortly. Your payment is safe.</p>
+            )}
             <p className="text-sm text-muted-foreground mt-2">
               Reference <span className="font-mono text-foreground">{booking.payment_reference}</span>
             </p>

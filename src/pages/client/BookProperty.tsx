@@ -154,6 +154,7 @@ const BookProperty = () => {
     if (!datesValid) return toast.error("Pick valid dates");
     if (isPartner && (!quote || !hold)) return toast.error("Get a price first");
     if (holdExpired) return toast.error("Your hold expired — get a new price");
+    if (isPartner && holdSecsLeft !== null && holdSecsLeft < 120) return toast.error("Less than 2 minutes left on your hold — get a fresh price first");
     setPaying(true);
     try {
       const callback_url = `${window.location.origin}/booking/confirm`;

@@ -120,6 +120,13 @@
       "when": 1792360320091,
       "tag": "0016_bookings_payment_reference_unique",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1792360572612,
+      "tag": "0017_booking_details_and_reviews",
+      "breakpoints": true
     }
   ]
 }

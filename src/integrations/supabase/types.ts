@@ -48,6 +48,7 @@ export type Database = {
         Row: {
           attention_reason: string | null
           check_in_date: string
+          check_in_time: string | null
           check_out_date: string
           created_at: string
           guest_count: number | null
@@ -55,6 +56,7 @@ export type Database = {
           id: string
           listing_code: string | null
           listing_id: string | null
+          partner_address: string | null
           partner_city: string | null
           partner_image: string | null
           partner_title: string | null
@@ -66,6 +68,7 @@ export type Database = {
           rayprop_quote_total_kobo: number | null
           rayprop_reservation_id: string | null
           released_at: string | null
+          review_prompted_at: string | null
           source: string
           status: string
           total_price: number
@@ -74,6 +77,7 @@ export type Database = {
         Insert: {
           attention_reason?: string | null
           check_in_date: string
+          check_in_time?: string | null
           check_out_date: string
           created_at?: string
           guest_count?: number | null
@@ -81,6 +85,7 @@ export type Database = {
           id?: string
           listing_code?: string | null
           listing_id?: string | null
+          partner_address?: string | null
           partner_city?: string | null
           partner_image?: string | null
           partner_title?: string | null
@@ -92,6 +97,7 @@ export type Database = {
           rayprop_quote_total_kobo?: number | null
           rayprop_reservation_id?: string | null
           released_at?: string | null
+          review_prompted_at?: string | null
           source?: string
           status?: string
           total_price?: number
@@ -100,6 +106,7 @@ export type Database = {
         Update: {
           attention_reason?: string | null
           check_in_date?: string
+          check_in_time?: string | null
           check_out_date?: string
           created_at?: string
           guest_count?: number | null
@@ -107,6 +114,7 @@ export type Database = {
           id?: string
           listing_code?: string | null
           listing_id?: string | null
+          partner_address?: string | null
           partner_city?: string | null
           partner_image?: string | null
           partner_title?: string | null
@@ -118,6 +126,7 @@ export type Database = {
           rayprop_quote_total_kobo?: number | null
           rayprop_reservation_id?: string | null
           released_at?: string | null
+          review_prompted_at?: string | null
           source?: string
           status?: string
           total_price?: number
@@ -923,6 +932,7 @@ export type Database = {
           comment: string | null
           created_at: string
           guest_id: string
+          hidden: boolean
           id: string
           listing_id: string
           rating: number
@@ -932,6 +942,7 @@ export type Database = {
           comment?: string | null
           created_at?: string
           guest_id: string
+          hidden?: boolean
           id?: string
           listing_id: string
           rating: number
@@ -941,6 +952,7 @@ export type Database = {
           comment?: string | null
           created_at?: string
           guest_id?: string
+          hidden?: boolean
           id?: string
           listing_id?: string
           rating?: number
@@ -1106,6 +1118,7 @@ export type Database = {
           type: string
         }[]
       }
+      queue_review_prompts: { Args: never; Returns: number }
       read_email_batch: {
         Args: { batch_size: number; queue_name: string; vt: number }
         Returns: {

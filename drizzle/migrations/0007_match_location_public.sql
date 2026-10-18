@@ -1,0 +1,1 @@
+GRANT EXECUTE ON FUNCTION public.match_location(text, text, text, text, double precision, double precision) TO PUBLIC;

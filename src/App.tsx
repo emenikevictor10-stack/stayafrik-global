@@ -37,6 +37,7 @@ import AdminPartnerBookings from "./pages/admin/AdminPartnerBookings";
 import AdminPayouts from "./pages/admin/AdminPayouts";
 import AdminKyc from "./pages/admin/AdminKyc";
 import AdminAudit from "./pages/admin/AdminAudit";
+import AdminLocationAudit from "./pages/admin/AdminLocationAudit";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import Messages from "./pages/shared/Messages";
@@ -140,6 +141,7 @@ const App = () => (
                     <Route path="/admin/payouts" element={<AdminPayouts />} />
                     <Route path="/admin/kyc" element={<AdminKyc />} />
                     <Route path="/admin/audit" element={<AdminAudit />} />
+                    <Route path="/admin/location-audit" element={<AdminLocationAudit />} />
                   </Route>
                 </Route>
                 <Route path="*" element={<NotFound />} />

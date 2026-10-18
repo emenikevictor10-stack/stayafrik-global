@@ -267,6 +267,7 @@ export type Database = {
           bathrooms: number
           bedrooms: number
           city: string | null
+          city_id: string | null
           created_at: string
           description: string | null
           host_id: string
@@ -277,11 +278,17 @@ export type Database = {
           listing_code: string | null
           lng: number | null
           location: string | null
+          location_confidence: number | null
+          location_raw: string | null
+          location_status: string
+          location_suggestion_id: string | null
           neighborhood: string | null
+          neighbourhood_id: string | null
           price_per_night: number
           rating: number
           reviews_count: number
           state: string | null
+          state_id: string | null
           title: string
           type: string
           updated_at: string
@@ -295,6 +302,7 @@ export type Database = {
           bathrooms?: number
           bedrooms?: number
           city?: string | null
+          city_id?: string | null
           created_at?: string
           description?: string | null
           host_id: string
@@ -305,11 +313,17 @@ export type Database = {
           listing_code?: string | null
           lng?: number | null
           location?: string | null
+          location_confidence?: number | null
+          location_raw?: string | null
+          location_status?: string
+          location_suggestion_id?: string | null
           neighborhood?: string | null
+          neighbourhood_id?: string | null
           price_per_night?: number
           rating?: number
           reviews_count?: number
           state?: string | null
+          state_id?: string | null
           title: string
           type?: string
           updated_at?: string
@@ -323,6 +337,7 @@ export type Database = {
           bathrooms?: number
           bedrooms?: number
           city?: string | null
+          city_id?: string | null
           created_at?: string
           description?: string | null
           host_id?: string
@@ -333,11 +348,17 @@ export type Database = {
           listing_code?: string | null
           lng?: number | null
           location?: string | null
+          location_confidence?: number | null
+          location_raw?: string | null
+          location_status?: string
+          location_suggestion_id?: string | null
           neighborhood?: string | null
+          neighbourhood_id?: string | null
           price_per_night?: number
           rating?: number
           reviews_count?: number
           state?: string | null
+          state_id?: string | null
           title?: string
           type?: string
           updated_at?: string
@@ -346,11 +367,89 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "listings_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "listings_host_id_fkey"
             columns: ["host_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["user_id"]
+          },
+          {
+            foreignKeyName: "listings_location_suggestion_id_fkey"
+            columns: ["location_suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listings_neighbourhood_id_fkey"
+            columns: ["neighbourhood_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "listings_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locations: {
+        Row: {
+          aliases: string[]
+          created_at: string
+          id: string
+          is_active: boolean
+          lat: number | null
+          listing_count: number
+          lng: number | null
+          name: string
+          parent_id: string | null
+          slug: string
+          type: string
+        }
+        Insert: {
+          aliases?: string[]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lat?: number | null
+          listing_count?: number
+          lng?: number | null
+          name: string
+          parent_id?: string | null
+          slug: string
+          type: string
+        }
+        Update: {
+          aliases?: string[]
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          lat?: number | null
+          listing_count?: number
+          lng?: number | null
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "locations_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -457,6 +556,89 @@ export type Database = {
           purpose?: string
         }
         Relationships: []
+      }
+      partner_location_map: {
+        Row: {
+          city_id: string | null
+          confidence: number | null
+          lat: number | null
+          lng: number | null
+          neighbourhood_id: string | null
+          raw_address: string | null
+          raw_city: string | null
+          raw_neighbourhood: string | null
+          raw_state: string | null
+          rayprop_listing_id: string
+          state_id: string | null
+          status: string
+          suggestion_id: string | null
+          title: string | null
+          updated_at: string
+        }
+        Insert: {
+          city_id?: string | null
+          confidence?: number | null
+          lat?: number | null
+          lng?: number | null
+          neighbourhood_id?: string | null
+          raw_address?: string | null
+          raw_city?: string | null
+          raw_neighbourhood?: string | null
+          raw_state?: string | null
+          rayprop_listing_id: string
+          state_id?: string | null
+          status?: string
+          suggestion_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Update: {
+          city_id?: string | null
+          confidence?: number | null
+          lat?: number | null
+          lng?: number | null
+          neighbourhood_id?: string | null
+          raw_address?: string | null
+          raw_city?: string | null
+          raw_neighbourhood?: string | null
+          raw_state?: string | null
+          rayprop_listing_id?: string
+          state_id?: string | null
+          status?: string
+          suggestion_id?: string | null
+          title?: string | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "partner_location_map_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_location_map_neighbourhood_id_fkey"
+            columns: ["neighbourhood_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_location_map_state_id_fkey"
+            columns: ["state_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "partner_location_map_suggestion_id_fkey"
+            columns: ["suggestion_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       payment_methods: {
         Row: {
@@ -865,6 +1047,44 @@ export type Database = {
           check_out: string
         }[]
       }
+      loc_norm: { Args: { t: string }; Returns: string }
+      location_audit_summary: { Args: never; Returns: Json }
+      location_chain: {
+        Args: { _id: string }
+        Returns: {
+          city_id: string
+          neighbourhood_id: string
+          state_id: string
+        }[]
+      }
+      location_merge_report: {
+        Args: never
+        Returns: {
+          breadcrumb: string
+          listings: number
+          location_id: string
+          location_name: string
+          variants: string[]
+        }[]
+      }
+      match_location: {
+        Args: {
+          _address: string
+          _city: string
+          _lat: number
+          _lng: number
+          _neigh: string
+          _state: string
+        }
+        Returns: {
+          city_id: string
+          confidence: number
+          neighbourhood_id: string
+          state_id: string
+          status: string
+          suggestion_id: string
+        }[]
+      }
       move_to_dlq: {
         Args: {
           dlq_name: string
@@ -882,6 +1102,8 @@ export type Database = {
           read_ct: number
         }[]
       }
+      refresh_location_counts: { Args: never; Returns: undefined }
+      retag_local_listings: { Args: never; Returns: number }
       send_alert_email: {
         Args: {
           _body: string
@@ -891,6 +1113,14 @@ export type Database = {
           _user_id: string
         }
         Returns: undefined
+      }
+      set_listing_location: {
+        Args: { _id: string; _kind: string; _location_id: string }
+        Returns: undefined
+      }
+      tag_partner_locations: {
+        Args: { _force?: boolean; _rows: Json }
+        Returns: number
       }
     }
     Enums: {

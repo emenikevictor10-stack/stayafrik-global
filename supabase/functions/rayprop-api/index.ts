@@ -32,10 +32,38 @@ const loadCatalogue = async (): Promise<any[]> => {
     const seen = new Set<string>();
     const unique = rows.filter((r) => r?.id && !seen.has(String(r.id)) && !!seen.add(String(r.id)));
     catalogue = { at: Date.now(), rows: unique };
+    const sync = syncPartnerLocations(unique).catch((e) => console.error("[rayprop-api] location sync failed", e));
+    (globalThis as any).EdgeRuntime?.waitUntil?.(sync);
     return unique;
   })().finally(() => { inflight = null; });
   return inflight;
 };
+
+/** Run every partner stay we haven't seen before through the place matcher (unmatched ones land in admin review). */
+const partnerLocationRow = (r: any) => ({
+  id: String(r.id), title: r.title ?? null, state: r.state ?? null, city: r.city ?? null,
+  neighborhood: r.neighborhood ?? null, address: r.address ?? null,
+  lat: r.latitude ?? r.lat ?? null, lng: r.longitude ?? r.lng ?? null,
+});
+async function syncPartnerLocations(rows: any[], force = false) {
+  const db = admin();
+  let todo = rows;
+  if (!force) {
+    const seen = new Set<string>();
+    for (let from = 0; ; from += 1000) {
+      const { data } = await db.from("partner_location_map").select("rayprop_listing_id").range(from, from + 999);
+      (data || []).forEach((d: any) => seen.add(d.rayprop_listing_id));
+      if (!data || data.length < 1000) break;
+    }
+    todo = rows.filter((r) => !seen.has(String(r.id)));
+  }
+  for (let i = 0; i < todo.length; i += 200) {
+    const { error } = await db.rpc("tag_partner_locations", { _rows: todo.slice(i, i + 200).map(partnerLocationRow), _force: force });
+    if (error) throw error;
+  }
+  if (todo.length) await db.rpc("refresh_location_counts");
+  return todo.length;
+}
 
 const admin = () => createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
@@ -185,6 +213,13 @@ Deno.serve(async (req) => {
       const mapped = mapRayPropStatus(String(r?.status || ""));
       if (mapped) await db.from("bookings").update({ status: mapped }).eq("id", b.id);
       return json(200, { data: r });
+    }
+
+    if (action === "retag_locations") {
+      await requireAdmin(userId);
+      if (!configured) return json(200, { data: { tagged: 0 }, disabled: true });
+      const tagged = await syncPartnerLocations(await loadCatalogue(), true);
+      return json(200, { data: { tagged } });
     }
 
     if (action === "retry") {

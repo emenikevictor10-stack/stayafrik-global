@@ -1,7 +1,7 @@
 import { NavLink, Outlet, Link } from "react-router-dom";
 import {
   LayoutDashboard, Building2, Users, CalendarDays, Banknote, ShieldCheck, ScrollText, LogOut, Home,
-  Handshake,
+  Handshake, MapPinned,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
@@ -14,6 +14,7 @@ const NAV = [
   { to: "/admin/partner-bookings", label: "Partner bookings", Icon: Handshake },
   { to: "/admin/payouts", label: "Payouts", Icon: Banknote },
   { to: "/admin/kyc", label: "KYC", Icon: ShieldCheck },
+  { to: "/admin/location-audit", label: "Location audit", Icon: MapPinned },
   { to: "/admin/audit", label: "Audit log", Icon: ScrollText },
 ];
 

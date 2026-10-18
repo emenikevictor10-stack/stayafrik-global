@@ -1,4 +1,4 @@
-import { PlaceFields } from "@/components/agent/PlaceFields";
+import { PlaceFields, usePlaceIsValid } from "@/components/agent/PlaceFields";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ImagePlus, Home, Sparkles, X, Loader2, MapPin, Video } from "lucide-react";
@@ -33,6 +33,7 @@ const NewListing = () => {
   const [stateName, setStateName] = useState("");
   const [hood, setHood] = useState("");
   const [address, setAddress] = useState("");
+  const placeOk = usePlaceIsValid(stateName, city);
   const [beds, setBeds] = useState(2);
   const [baths, setBaths] = useState(2);
   const [area, setArea] = useState("");
@@ -73,6 +74,7 @@ const NewListing = () => {
     if (s === 1) {
       if (!stateName) return "Choose the state";
       if (!city.trim()) return "Add the city";
+      if (!placeOk) return "Pick the city from the list";
       if (!address.trim()) return "Add the full address";
       // Map pin is optional — we'll geocode from the address if not set
       return null;

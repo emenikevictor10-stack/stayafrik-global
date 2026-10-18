@@ -43,6 +43,34 @@
       "when": 1792354769657,
       "tag": "0005_listing_state_neighborhood",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792355914638,
+      "tag": "0006_locations_hierarchy",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1792355985044,
+      "tag": "0007_match_location_public",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1792356023501,
+      "tag": "0008_match_location_ranking",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
+      "when": 1792356054237,
+      "tag": "0009_location_fn_grants",
+      "breakpoints": true
     }
   ]
 }

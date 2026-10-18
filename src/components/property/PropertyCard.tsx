@@ -6,7 +6,7 @@ import { cn } from "@/lib/utils";
 import { approxLocation } from "@/hooks/useListingAccess";
 import { rememberRayPropListing } from "@/lib/rayprop";
 
-export const PropertyCard = ({ p }: { p: Property }) => {
+export const PropertyCard = ({ p, nights = 0 }: { p: Property; nights?: number }) => {
   const { has, toggle } = useWishlist();
   const saved = has(p.id);
 
@@ -53,10 +53,19 @@ export const PropertyCard = ({ p }: { p: Property }) => {
           </div>
         )}
         <div className="absolute bottom-3 right-3">
-          <div className="text-primary font-extrabold text-base drop-shadow-lg bg-background/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-primary/30">
-            {p.price}
-            {p.type === "Shortlet" && (
-              <span className="text-[10px] font-medium text-foreground/80"> /night</span>
+          <div className="text-primary font-extrabold text-base drop-shadow-lg bg-background/70 backdrop-blur-md px-2.5 py-1 rounded-full border border-primary/30 text-right">
+            {nights > 0 && p.priceNum > 0 ? (
+              <>
+                ₦{(p.priceNum * nights).toLocaleString()}
+                <span className="text-[10px] font-medium text-foreground/80"> for {nights} night{nights > 1 ? "s" : ""}</span>
+              </>
+            ) : (
+              <>
+                {p.price}
+                {p.type === "Shortlet" && (
+                  <span className="text-[10px] font-medium text-foreground/80"> /night</span>
+                )}
+              </>
             )}
           </div>
         </div>

@@ -9,6 +9,7 @@ import land from "@/assets/prop-land.jpg";
 import wuse from "@/assets/prop-wuse.jpg";
 import { searchRayProp, getRayPropListing } from "@/lib/rayprop";
 import { raypropToProperty } from "@/lib/rayprop-map";
+import { normalizeState, stateForCity } from "@/lib/nigeria-places";
 
 // Fallback image mapping for seeded listings whose images point to bundler paths
 const seedImageMap: Record<string, string> = {
@@ -37,6 +38,8 @@ export type ListingRow = {
   location: string | null;
   address: string | null;
   city: string | null;
+  state?: string | null;
+  neighborhood?: string | null;
   images: string[];
   bedrooms: number;
   bathrooms: number;
@@ -86,6 +89,8 @@ export const rowToProperty = (r: ListingRow, host?: HostInfo): Property => {
     hostWhatsapp: host?.whatsapp ?? null,
     source: "stayglobal",
     city: r.city || undefined,
+    state: normalizeState(r.state) || stateForCity(r.city) || undefined,
+    neighborhood: r.neighborhood || undefined,
     createdAt: r.created_at,
     listingCode: r.listing_code || undefined,
   };

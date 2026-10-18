@@ -1,3 +1,4 @@
+import { normalizeState, stateForCity } from "@/lib/nigeria-places";
 import type { Property } from "@/data/properties";
 
 /** RayProp sends every amount in kobo. */
@@ -102,6 +103,8 @@ export const raypropToProperty = (raw: Record<string, any>, fallbackImage: strin
     source: "rayprop",
     raypropListingId: rawId,
     city,
+    state: normalizeState(str(raw.state)) || stateForCity(city) || undefined,
+    neighborhood: hood || undefined,
     maxGuests: num(raw.max_guests) || undefined,
     checkInTime: hhmm(raw.check_in_time) || undefined,
     checkOutTime: hhmm(raw.check_out_time) || undefined,

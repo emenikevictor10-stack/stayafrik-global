@@ -36,6 +36,8 @@ export type Property = {
   source?: "stayglobal" | "rayprop";
   raypropListingId?: string;
   city?: string;
+  state?: string;
+  neighborhood?: string;
   maxGuests?: number;
   checkInTime?: string;
   checkOutTime?: string;

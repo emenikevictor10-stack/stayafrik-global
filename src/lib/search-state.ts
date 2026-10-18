@@ -6,7 +6,10 @@ export type StayLength = "weekend" | "week" | "month";
 
 /** The guest's whole search: place, dates and party. Kept in the web address. */
 export type SearchState = {
-  where: string;
+  where: string; // label shown in the bar, e.g. "Chevron"
+  loc?: string; // slug of the place picked from the list
+  locType?: "state" | "city" | "neighbourhood";
+  bedrooms: number; // minimum, 0 = any
   mode: "dates" | "flexible";
   checkIn?: string; // yyyy-MM-dd
   checkOut?: string; // yyyy-MM-dd, exclusive
@@ -20,7 +23,7 @@ export type SearchState = {
 };
 
 export const EMPTY_SEARCH: SearchState = {
-  where: "", mode: "dates", flex: 0, stayLength: "week", months: [], adults: 0, children: 0, infants: 0, pets: 0,
+  where: "", mode: "dates", flex: 0, stayLength: "week", months: [], adults: 0, children: 0, infants: 0, pets: 0, bedrooms: 0,
 };
 
 export const LIMITS = { guests: 16, infants: 5, pets: 5 };
@@ -32,14 +35,17 @@ const int = (v: string | null, min = 0, max = 16) => {
 const day = (v: string | null) => (v && /^\d{4}-\d{2}-\d{2}$/.test(v) && isValid(parseISO(v)) ? v : undefined);
 
 export const parseSearch = (params: URLSearchParams): SearchState => {
-  let checkIn = day(params.get("in"));
-  let checkOut = day(params.get("out"));
+  let checkIn = day(params.get("checkin") || params.get("in"));
+  let checkOut = day(params.get("checkout") || params.get("out"));
   if (!checkIn || !checkOut || checkOut <= checkIn) { checkIn = undefined; checkOut = undefined; }
   const f = Number(params.get("flex"));
   const len = params.get("len");
   const months = (params.get("months") || "").split(",").filter((m) => /^\d{4}-\d{2}$/.test(m)).slice(0, 12);
   const s: SearchState = {
     where: (params.get("where") || "").slice(0, 80),
+    loc: /^[a-z0-9-]{1,80}$/.test(params.get("loc") || "") ? params.get("loc")! : undefined,
+    locType: (["state", "city", "neighbourhood"] as const).find((t) => t === params.get("loc_type")),
+    bedrooms: int(params.get("bedrooms"), 0, 10),
     mode: params.get("mode") === "flexible" ? "flexible" : "dates",
     checkIn,
     checkOut,
@@ -56,19 +62,21 @@ export const parseSearch = (params: URLSearchParams): SearchState => {
 
 export const serializeSearch = (s: SearchState): URLSearchParams => {
   const p = new URLSearchParams();
+  if (s.loc) { p.set("loc", s.loc); if (s.locType) p.set("loc_type", s.locType); }
   if (s.where.trim()) p.set("where", s.where.trim());
   if (s.mode === "flexible") {
     p.set("mode", "flexible");
     if (s.stayLength !== "week") p.set("len", s.stayLength);
     if (s.months.length) p.set("months", s.months.join(","));
   } else {
-    if (s.checkIn && s.checkOut) { p.set("in", s.checkIn); p.set("out", s.checkOut); }
+    if (s.checkIn && s.checkOut) { p.set("checkin", s.checkIn); p.set("checkout", s.checkOut); }
     if (s.flex) p.set("flex", String(s.flex));
   }
   if (s.adults) p.set("adults", String(s.adults));
   if (s.children) p.set("children", String(s.children));
   if (s.infants) p.set("infants", String(s.infants));
   if (s.pets) p.set("pets", String(s.pets));
+  if (s.bedrooms) p.set("bedrooms", String(s.bedrooms));
   return p;
 };
 
@@ -150,12 +158,13 @@ export const whenSummary = (s: SearchState) => {
   return `${range}${s.flex ? ` ±${s.flex}` : ""}`;
 };
 
-export const whoSummary = (s: Party) => {
+export const whoSummary = (s: Party & { bedrooms?: number }) => {
   const g = guestCount(s);
-  if (!g && !s.infants && !s.pets) return "";
-  const parts = [plural(g, "guest")];
+  if (!g && !s.infants && !s.pets && !s.bedrooms) return "";
+  const parts = g ? [plural(g, "guest")] : [];
   if (s.infants) parts.push(plural(s.infants, "infant"));
   if (s.pets) parts.push(plural(s.pets, "pet"));
+  if (s.bedrooms) parts.push(`${s.bedrooms}+ bedroom${s.bedrooms === 1 ? "" : "s"}`);
   return parts.join(", ");
 };
 

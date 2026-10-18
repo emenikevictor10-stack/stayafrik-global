@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { ArrowLeft } from "lucide-react";
+import { rememberPlace } from "@/hooks/useLocationSearch";
 import { Search, X, Home, ChevronDown } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { cn } from "@/lib/utils";
 import { EMPTY_SEARCH, whenSummary, whoSummary } from "@/lib/search-state";
 import { useSearch, type Segment } from "./SearchProvider";
-import { WherePanel, useWhereResults, requestNearby } from "./WherePanel";
+import { WherePanel, useWhereResults, requestNearby, placePatch, autoPick, type WhereItem } from "./WherePanel";
 import { WhenPanel } from "./WhenPanel";
 import { WhoPanel } from "./WhoPanel";
 
@@ -33,7 +36,13 @@ export const MobileSearchModal = ({ open, onOpenChange }: { open: boolean; onOpe
 
   useEffect(() => { if (open) { setDraft(search); setStep("where"); } }, [open]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const submit = () => { commit(); onOpenChange(false); };
+  const navigate = useNavigate();
+  const submit = () => { commit(autoPick(draft, where)); onOpenChange(false); };
+  const pick = (item: WhereItem) => {
+    if (item.kind === "stay") { onOpenChange(false); navigate(`/property/${item.id}`); return; }
+    rememberPlace(item); patch(placePatch(item)); setStep("when");
+  };
+  const toWhen = () => { patch(autoPick(draft, where)); setStep("when"); };
 
   const card = (id: Segment, title: string, label: string, summary: string, body: React.ReactNode) =>
     step === id ? (
@@ -66,16 +75,18 @@ export const MobileSearchModal = ({ open, onOpenChange }: { open: boolean; onOpe
           {card("where", "Where?", "Where", draft.where || "I'm flexible", (
             <>
               <label className="flex items-center gap-3 h-14 px-4 rounded-xl border border-muted-foreground focus-within:border-foreground">
-                <Search className="w-4 h-4" />
-                <input autoFocus value={draft.where} onChange={(e) => patch({ where: e.target.value })}
-                  onKeyDown={(e) => { if (e.key === "Enter") setStep("when"); }}
+                {draft.where
+                  ? <button type="button" aria-label="Back" onClick={() => patch({ where: "", loc: undefined, locType: undefined })}><ArrowLeft className="w-4 h-4" /></button>
+                  : <Search className="w-4 h-4" />}
+                <input autoFocus value={draft.where} onChange={(e) => patch({ where: e.target.value, loc: undefined, locType: undefined })}
+                  onKeyDown={(e) => { if (e.key === "Enter") { const it = where.typing ? where.items[0] : undefined; if (it) pick(it); else toWhen(); } }}
                   role="combobox" aria-expanded aria-controls="m-where-list"
                   placeholder="Search destinations" className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
-                {draft.where && <button type="button" aria-label="Clear place" onClick={() => patch({ where: "" })}><X className="w-4 h-4" /></button>}
+                {draft.where && <button type="button" aria-label="Clear place" onClick={() => patch({ where: "", loc: undefined, locType: undefined })}><X className="w-4 h-4" /></button>}
               </label>
               <div className="mt-4 max-h-[42vh] overflow-y-auto -mx-2">
-                <WherePanel listId="m-where-list" query={draft.where} places={places} {...where} cursor={-2}
-                  onPick={(label) => { patch({ where: label }); setStep("when"); }}
+                <WherePanel listId="m-where-list" query={draft.where} results={where} cursor={where.typing ? 0 : -1}
+                  onPick={pick} onFlexible={() => { patch({ where: "", loc: undefined, locType: undefined }); setStep("when"); }}
                   onNearby={onLocate ? () => requestNearby(onLocate, () => onOpenChange(false)) : undefined} />
               </div>
               <ChevronDown className="w-4 h-4 mx-auto mt-2 text-muted-foreground" aria-hidden />
@@ -95,6 +106,11 @@ export const MobileSearchModal = ({ open, onOpenChange }: { open: boolean; onOpe
                 {draft.checkIn || draft.months.length ? "Reset" : "Skip"}
               </button>
               <button type="button" onClick={() => setStep("who")} className="px-8 py-3 rounded-xl bg-foreground text-background font-semibold text-sm">Next</button>
+            </>
+          ) : step === "where" ? (
+            <>
+              <button type="button" onClick={() => setDraft(EMPTY_SEARCH)} className="text-sm font-semibold underline">Clear all</button>
+              <button type="button" onClick={toWhen} className="px-8 py-3 rounded-xl bg-primary text-primary-foreground font-semibold text-sm">Next</button>
             </>
           ) : (
             <>

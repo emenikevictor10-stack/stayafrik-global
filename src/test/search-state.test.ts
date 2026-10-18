@@ -73,3 +73,20 @@ describe("summaries", () => {
     expect(whoSummary({ adults: 0, children: 0, infants: 0, pets: 0 })).toBe("");
   });
 });
+
+describe("place + bedrooms in the link", () => {
+  it("reads loc, loc_type, checkin/checkout and bedrooms", () => {
+    const s = parseSearch(new URLSearchParams("loc=chevron-lekki&loc_type=neighbourhood&where=Chevron&checkin=2026-11-08&checkout=2026-11-19&adults=2&children=1&bedrooms=2"));
+    expect([s.loc, s.locType, s.checkIn, s.checkOut, s.bedrooms, s.adults, s.children]).toEqual(["chevron-lekki", "neighbourhood", "2026-11-08", "2026-11-19", 2, 2, 1]);
+  });
+  it("still reads old in/out links", () => {
+    expect(parseSearch(new URLSearchParams("in=2026-11-08&out=2026-11-12")).checkOut).toBe("2026-11-12");
+  });
+  it("writes the brief's names and round-trips", () => {
+    const s = parseSearch(new URLSearchParams("loc=lekki&loc_type=city&where=Lekki&checkin=2026-11-08&checkout=2026-11-10&bedrooms=3"));
+    const p = serializeSearch(s);
+    expect([p.get("loc"), p.get("loc_type"), p.get("checkin"), p.get("bedrooms")]).toEqual(["lekki", "city", "2026-11-08", "3"]);
+  });
+  it("ignores a malformed place slug", () => expect(parseSearch(new URLSearchParams("loc=<script>")).loc).toBeUndefined());
+  it("summarises bedrooms", () => expect(whoSummary({ adults: 2, children: 0, infants: 1, pets: 0, bedrooms: 2 })).toBe("2 guests, 1 infant, 2+ bedrooms"));
+});

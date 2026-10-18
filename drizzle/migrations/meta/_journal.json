@@ -71,6 +71,27 @@
       "when": 1792356054237,
       "tag": "0009_location_fn_grants",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "7",
+      "when": 1792356881178,
+      "tag": "0010_search_locations",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "7",
+      "when": 1792356905124,
+      "tag": "0011_search_locations_typos_children",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "7",
+      "when": 1792356928143,
+      "tag": "0012_search_locations_typo_threshold",
+      "breakpoints": true
     }
   ]
 }

@@ -8,6 +8,8 @@ import wuse from "@/assets/prop-wuse.jpg";
 export type PropertyType = "Shortlet" | "For Sale" | "Land" | "Commercial";
 
 export type Property = {
+  /** Place ids from the master place list (local stays). */
+  placeIds?: string[];
   id: string;
   title: string;
   location: string;

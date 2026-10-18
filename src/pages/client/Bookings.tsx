@@ -3,7 +3,7 @@ import { TopBar } from "@/components/shell/TopBar";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
-import { Loader2, ShieldCheck, Clock, CheckCircle2 } from "lucide-react";
+import { Loader2, ShieldCheck, Clock, CheckCircle2, MapPin, Star } from "lucide-react";
 import { toast } from "sonner";
 import { cancelRayPropBooking } from "@/lib/rayprop";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -23,12 +23,17 @@ type BookingRow = {
   partner_image: string | null;
   partner_city: string | null;
   rayprop_listing_id: string | null;
+  partner_address: string | null;
+  check_in_time: string | null;
   listings: {
     id: string;
     title: string;
     location: string | null;
     city: string | null;
     images: string[];
+    address: string | null;
+    neighborhood: string | null;
+    state: string | null;
   } | null;
 };
 
@@ -42,21 +47,57 @@ const statusBadge = (s: string) =>
     ? "bg-primary/15 text-primary border-primary/30"
     : "bg-muted text-muted-foreground border-border";
 
+const ReviewForm = ({ booking, onDone }: { booking: BookingRow; onDone: () => void }) => {
+  const { user } = useAuth();
+  const [rating, setRating] = useState(0);
+  const [comment, setComment] = useState("");
+  const [busy, setBusy] = useState(false);
+  const submit = async () => {
+    if (!user || rating < 1) return toast.error("Pick a star rating");
+    setBusy(true);
+    const { error } = await supabase.from("reviews").insert({
+      booking_id: booking.id, listing_id: booking.listing_id, guest_id: user.id, rating, comment: comment.trim().slice(0, 1000) || null,
+    });
+    setBusy(false);
+    if (error) return toast.error(error.code === "23505" ? "You already reviewed this stay" : "Could not save your review");
+    toast.success("Thanks for your review!");
+    onDone();
+  };
+  return (
+    <div className="mt-3 rounded-xl border border-border p-3 space-y-2">
+      <p className="text-xs font-bold">How was your stay?</p>
+      <div className="flex gap-1">
+        {[1, 2, 3, 4, 5].map((n) => (
+          <button key={n} type="button" aria-label={`${n} stars`} onClick={() => setRating(n)}>
+            <Star className={`w-6 h-6 ${n <= rating ? "fill-primary text-primary" : "text-muted-foreground/40"}`} />
+          </button>
+        ))}
+      </div>
+      <textarea value={comment} onChange={(e) => setComment(e.target.value)} maxLength={1000} rows={2} placeholder="Tell other guests about it (optional)"
+        className="w-full rounded-lg bg-background border border-border p-2 text-xs" />
+      <button onClick={submit} disabled={busy} className="w-full rounded-xl bg-primary text-primary-foreground py-2 text-xs font-bold disabled:opacity-50">Submit review</button>
+    </div>
+  );
+};
+
 const Bookings = () => {
   const { user } = useAuth();
   const [items, setItems] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
   const [now, setNow] = useState(Date.now());
   const [releasing, setReleasing] = useState<string | null>(null);
+  const [reviewed, setReviewed] = useState<Record<string, boolean>>({});
 
   const load = async () => {
     if (!user) return;
     const { data } = await supabase
       .from("bookings")
-      .select("*, listings(id,title,location,city,images)")
+      .select("*, listings(id,title,location,city,images,address,neighborhood,state)")
       .eq("guest_id", user.id)
       .order("created_at", { ascending: false });
     setItems((data as any) || []);
+    const { data: revs } = await supabase.from("reviews").select("booking_id").eq("guest_id", user.id);
+    setReviewed(Object.fromEntries((revs || []).map((r) => [r.booking_id, true])));
     setLoading(false);
   };
 
@@ -211,6 +252,26 @@ const Bookings = () => {
                 <div className="mt-3 flex items-center gap-1.5 text-[11px] text-success font-semibold">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Released {new Date(b.released_at).toLocaleString()}
                 </div>
+              )}
+
+              {["confirmed", "released", "completed"].includes(b.status) && (() => {
+                const addr = partner
+                  ? b.partner_address
+                  : [b.listings?.address, b.listings?.neighborhood, b.listings?.city, b.listings?.state].filter(Boolean).join(", ");
+                return (
+                  <div className="mt-3 rounded-xl border border-border p-3 text-[11px] space-y-1">
+                    <div className="flex items-start gap-1.5"><MapPin className="w-3.5 h-3.5 mt-0.5 text-primary shrink-0" />
+                      <span><span className="font-bold">Address:</span> {addr || "Will be sent before check-in"}</span></div>
+                    {addr && <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`} target="_blank" rel="noreferrer" className="text-primary font-bold">Get directions →</a>}
+                    <p className="text-muted-foreground">Check-in {b.check_in_date}{b.check_in_time ? ` from ${b.check_in_time}` : partner ? "" : " from 2:00 PM"} · Ref <span className="font-mono">{b.payment_reference}</span></p>
+                  </div>
+                );
+              })()}
+
+              {!partner && ["confirmed", "released", "completed"].includes(b.status) && b.check_out_date <= new Date().toISOString().slice(0, 10) && (
+                reviewed[b.id]
+                  ? <p className="mt-3 text-[11px] text-success font-semibold">✓ Thanks for your review</p>
+                  : <ReviewForm booking={b} onDone={() => setReviewed((r) => ({ ...r, [b.id]: true }))} />
               )}
             </article>
           );

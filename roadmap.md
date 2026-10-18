@@ -14,5 +14,8 @@
 
 Blocked: Paystack test/live mode unconfirmed; Phase 0 test payments to be run by the user; WhatsApp skipped for launch.
 - [x] Admin Listings review + detail/grid view toggle (detail default)
-- [ ] Admin Users review: confirm all fields mapped
-- [ ] Admin Bookings: detail view default, search by many fields, gap review vs booking flow
+- [x] Admin Users review: confirm all fields mapped
+- [x] Admin Bookings: detail view default, search by many fields, gap review vs booking flow
+- [ ] Admin Partner bookings: detail view + search + gap review
+- [ ] Admin Payouts: detail view + search + gap review
+- [ ] Admin KYC: detail view + search + gap review

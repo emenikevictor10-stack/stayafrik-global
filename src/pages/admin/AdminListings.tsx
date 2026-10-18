@@ -86,6 +86,7 @@ const AdminListings = () => {
   const [q, setQ] = useState("");
   const [stateFilter, setStateFilter] = useState("");
   const [view, setView] = useState<"detail" | "grid">("detail");
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -267,13 +268,49 @@ const AdminListings = () => {
             {tab === "pending" ? "All caught up." : "No approved listings yet."}
           </div>
         )}
-        {view === "detail" && shown.map((r) => {
+        {view === "detail" && shown.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="hidden md:grid grid-cols-[56px_1.6fr_1.2fr_0.7fr_0.8fr_1fr_0.9fr_auto] gap-3 px-3 py-2 bg-secondary/50 text-[10px] font-bold uppercase text-muted-foreground">
+            <span />
+            <span>Listing</span><span>Place</span><span>Beds / baths</span><span>Price / night</span><span>Host</span><span>Submitted</span><span className="text-right">Actions</span>
+          </div>
+        {shown.map((r) => {
           const host = hosts[r.host_id];
           const images = r.images || [];
           const hero = images[0];
           const rest = images.slice(1);
+          const isOpen = expanded === r.id;
           return (
-            <article key={r.id} id={`listing-${r.id}`} className="scroll-mt-20 rounded-3xl border border-border bg-card overflow-hidden shadow-sm">
+            <div key={r.id} id={`listing-${r.id}`} className="scroll-mt-20 border-t border-border first:border-t-0">
+            <div role="button" tabIndex={0} onClick={() => setExpanded(isOpen ? null : r.id)} onKeyDown={(e) => e.key === "Enter" && setExpanded(isOpen ? null : r.id)}
+              className={`grid grid-cols-[56px_1fr_auto] md:grid-cols-[56px_1.6fr_1.2fr_0.7fr_0.8fr_1fr_0.9fr_auto] gap-3 px-3 py-2 items-center cursor-pointer hover:bg-secondary/40 ${isOpen ? "bg-secondary/40" : ""}`}>
+              <div className="w-14 h-11 rounded-lg overflow-hidden bg-secondary/50">
+                {hero ? <SafeImg src={hero} alt={r.title} className="w-full h-full object-cover" /> : null}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold truncate">{r.title}</p>
+                <p className="text-[11px] text-muted-foreground truncate"><span className="font-mono">{r.listing_code}</span> · {r.type} · {images.length} photo{images.length === 1 ? "" : "s"}{r.video_url ? " · video" : ""}</p>
+                <p className="md:hidden text-[11px] text-muted-foreground truncate">{[r.neighborhood, r.city, r.state].filter(Boolean).join(", ")} · ₦{Number(r.price_per_night).toLocaleString()}</p>
+              </div>
+              <p className="hidden md:block text-xs text-muted-foreground truncate">{[r.neighborhood, r.city, r.state].filter(Boolean).join(", ") || "—"}</p>
+              <p className="hidden md:block text-xs">{r.bedrooms} / {r.bathrooms}</p>
+              <p className="hidden md:block text-xs font-bold text-primary">₦{Number(r.price_per_night).toLocaleString()}</p>
+              <p className="hidden md:block text-xs truncate">{host?.full_name || "Unknown host"}</p>
+              <p className="hidden md:block text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
+              <div className="flex gap-1 justify-end" onClick={(e) => e.stopPropagation()}>
+                {tab === "pending" ? (
+                  <>
+                    <button onClick={() => setConfirmAction({ kind: "approve", row: r })} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-success text-success-foreground">Approve</button>
+                    <button onClick={() => { setRejectReason(""); setConfirmAction({ kind: "reject", row: r }); }} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-destructive/40 text-destructive">Reject</button>
+                  </>
+                ) : (
+                  <button onClick={() => { setRejectReason(""); setConfirmAction({ kind: "revoke", row: r }); }} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-destructive/40 text-destructive">Revoke</button>
+                )}
+                <ChevronRight className={`w-4 h-4 self-center text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`} />
+              </div>
+            </div>
+            {isOpen && (
+            <article className="m-2 rounded-3xl border border-border bg-background overflow-hidden">
               {/* Photo gallery */}
               {images.length > 0 ? (
                 <div className="grid grid-cols-4 gap-1.5 p-1.5 bg-secondary/30">
@@ -415,8 +452,12 @@ const AdminListings = () => {
                 </div>
               </div>
             </article>
+            )}
+            </div>
           );
         })}
+        </div>
+        )}
         {view === "grid" && (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {shown.map((r) => (

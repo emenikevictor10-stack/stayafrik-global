@@ -300,7 +300,7 @@ const AdminListings = () => {
               <div className="flex gap-1 justify-end" onClick={(e) => e.stopPropagation()}>
                 {tab === "pending" ? (
                   <>
-                    <button onClick={() => setConfirmAction({ kind: "approve", row: r })} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-success text-success-foreground">Approve</button>
+                    <button onClick={() => setConfirmAction({ kind: "approve", row: r })} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-success text-primary-foreground">Approve</button>
                     <button onClick={() => { setRejectReason(""); setConfirmAction({ kind: "reject", row: r }); }} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-destructive/40 text-destructive">Reject</button>
                   </>
                 ) : (

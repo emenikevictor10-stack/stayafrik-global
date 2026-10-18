@@ -19,4 +19,4 @@ Blocked: Paystack test/live mode unconfirmed; Phase 0 test payments to be run by
 - [x] Admin Partner bookings: detail view + search + gap review
 - [x] Admin Payouts: detail view + search + gap review
 - [x] Admin KYC: detail view + search + gap review
-- [ ] Admin Listings detail view: one row per listing with columns
+- [x] Admin Listings detail view: one row per listing with columns

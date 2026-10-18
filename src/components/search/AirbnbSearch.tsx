@@ -214,6 +214,7 @@ export const SearchModal = ({
           selected={range}
           onSelect={(_r, d) => onDay(d)}
           numberOfMonths={isMobile ? 1 : 2}
+          defaultMonth={range?.from}
           disabled={{ before: new Date() }}
           className="p-0 pointer-events-auto"
         />

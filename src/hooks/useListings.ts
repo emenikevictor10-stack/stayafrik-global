@@ -29,6 +29,9 @@ const typeEmoji = (t: string) =>
 const formatPrice = (n: number) => "₦" + Number(n || 0).toLocaleString();
 
 export type ListingRow = {
+  state_id?: string | null;
+  city_id?: string | null;
+  neighbourhood_id?: string | null;
   id: string;
   host_id: string;
   title: string;

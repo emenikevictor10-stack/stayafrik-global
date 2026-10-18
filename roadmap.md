@@ -16,6 +16,6 @@ Blocked: Paystack test/live mode unconfirmed; Phase 0 test payments to be run by
 - [x] Admin Listings review + detail/grid view toggle (detail default)
 - [x] Admin Users review: confirm all fields mapped
 - [x] Admin Bookings: detail view default, search by many fields, gap review vs booking flow
-- [ ] Admin Partner bookings: detail view + search + gap review
-- [ ] Admin Payouts: detail view + search + gap review
-- [ ] Admin KYC: detail view + search + gap review
+- [x] Admin Partner bookings: detail view + search + gap review
+- [x] Admin Payouts: detail view + search + gap review
+- [x] Admin KYC: detail view + search + gap review

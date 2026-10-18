@@ -87,14 +87,14 @@ const ExploreSearch = ({ mapToggle }: { mapToggle: React.ReactNode }) => {
         {mapToggle}
       </div>
       {scrolled && !floating && (
-        <div className="fixed top-3 left-0 right-0 z-40 px-4 pointer-events-none">
+        <div className="fixed top-[76px] left-0 right-0 z-40 px-4 pointer-events-none">
           <div className="pointer-events-auto"><CompactSearchBar onOpen={openFloating} /></div>
         </div>
       )}
       {floating && (
         <>
           <div className="fixed inset-0 z-40 bg-background/60 backdrop-blur-[2px] animate-fade-in" aria-hidden />
-          <div className="fixed top-3 left-0 right-0 z-50 px-4">
+          <div className="fixed top-[76px] left-0 right-0 z-50 px-4">
             <SearchBar onClosed={() => setFloating(false)} />
           </div>
         </>

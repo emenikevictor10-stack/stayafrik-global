@@ -105,7 +105,33 @@ Deno.serve(async (req) => {
       const start = text(body?.start_date, 10);
       const end = text(body?.end_date, 10);
       if (!listing_id || !DATE.test(start || "") || !DATE.test(end || "")) return json(400, { error: "Invalid availability request" });
-      return json(200, { data: unwrapRayProp(await raypropAvailability(stripRp(listing_id), start!, end!)) });
+      // RayProp rejects long ranges (VAL_001 "Date range too large"): fetch in 30-day chunks and merge.
+      const DAY = 86400000;
+      const s = Date.parse(start! + "T00:00:00Z");
+      const e = Math.min(Date.parse(end! + "T00:00:00Z"), s + 180 * DAY);
+      if (!(e > s)) return json(400, { error: "Invalid availability request" });
+      const iso = (t: number) => new Date(t).toISOString().slice(0, 10);
+      const parts: unknown[] = [];
+      try {
+        for (let c = s; c < e; c += 30 * DAY) {
+          parts.push(unwrapRayProp(await raypropAvailability(stripRp(listing_id), iso(c), iso(Math.min(c + 30 * DAY, e)))));
+        }
+      } catch (err) {
+        console.error("[rayprop-api] availability failed", err);
+        return json(200, { data: null, unavailable: true });
+      }
+      if (parts.length === 1) return json(200, { data: parts[0] });
+      const listOf = (p: any): any[] | null => Array.isArray(p) ? p
+        : p && typeof p === "object" ? (Object.values(p).find(Array.isArray) as any[] | undefined) ?? null : null;
+      const key = (p: any) => p && typeof p === "object" && !Array.isArray(p) ? Object.keys(p).find((k) => Array.isArray(p[k])) : undefined;
+      const seen = new Set<string>();
+      const merged = parts.flatMap((p) => listOf(p) ?? []).filter((d: any) => {
+        const k = String(d?.date ?? JSON.stringify(d));
+        if (seen.has(k)) return false; seen.add(k); return true;
+      });
+      const first: any = parts[0];
+      const k = key(first);
+      return json(200, { data: k ? { ...first, [k]: merged } : merged });
     }
 
     const userId = await requireUser(req);

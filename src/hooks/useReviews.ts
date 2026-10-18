@@ -22,6 +22,20 @@ export const useReviews = (listingId: string | undefined) => {
     }
     let active = true;
     (async () => {
+      if (listingId.startsWith("rp_")) {
+        // Partner stay: RayProp's reviews (none shown if RayProp has none).
+        const { data: res } = await supabase.functions.invoke("rayprop-api", { body: { action: "reviews", listing_id: listingId } });
+        const raw = res?.data;
+        const arr: any[] = Array.isArray(raw) ? raw : raw?.reviews || raw?.items || [];
+        if (!active) return;
+        setData(arr.filter((r) => Number(r?.rating) > 0).map((r, i) => ({
+          id: String(r.id || i), rating: Math.round(Number(r.rating)), comment: r.comment || r.text || r.body || null,
+          created_at: r.created_at || r.date || new Date().toISOString(), guest_id: "",
+          guest_name: r.guest_name || r.reviewer_name || r.author || "Verified guest", guest_avatar: null,
+        })));
+        setLoading(false);
+        return;
+      }
       const { data: rows } = await supabase
         .from("reviews")
         .select("id, rating, comment, created_at, guest_id")

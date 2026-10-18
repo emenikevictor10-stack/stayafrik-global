@@ -6,6 +6,8 @@ import {
 } from "../_shared/rayprop.ts";
 import { mapRayPropStatus, raypropMatches } from "../_shared/rayprop-core.ts";
 import { fulfilRayProp } from "../_shared/rayprop-fulfil.ts";
+import { notifyPartnerBooking } from "../_shared/partner-fulfil-booking.ts";
+import { raypropFetch as rpFetch } from "../_shared/rayprop.ts";
 
 const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
@@ -183,6 +185,17 @@ Deno.serve(async (req) => {
       return json(200, { data: k ? { ...first, [k]: merged } : merged });
     }
 
+    if (action === "reviews") {
+      const listing_id = stripRp(text(body?.listing_id, 120) || "");
+      if (!listing_id) return json(400, { error: "listing_id required" });
+      try {
+        const r = await rpFetch({ path: `/reviews?${new URLSearchParams({ listing_id, limit: "20" })}` });
+        return json(200, { data: unwrapRayProp(r) });
+      } catch {
+        return json(200, { data: [] }); // RayProp reviews unavailable — show none
+      }
+    }
+
     const userId = await requireUser(req);
 
     if (action === "quote") {
@@ -256,7 +269,8 @@ Deno.serve(async (req) => {
         guest: { name: prof?.full_name || "Guest", email: prof?.email || "", phone: prof?.phone || "" },
         existingReservationId: b.rayprop_reservation_id,
       });
-      await db.from("bookings").update(result).eq("id", b.id);
+      const { data: nb } = await db.from("bookings").update(result).eq("id", b.id).select("*").single();
+      if (nb && result.status === "confirmed" && b.status !== "confirmed") await notifyPartnerBooking(db, nb, b.guest_id).catch(() => {});
       return json(200, { data: result });
     }
 

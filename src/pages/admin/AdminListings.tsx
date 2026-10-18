@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { CheckCircle2, ShieldX, Loader2, ChevronLeft, MapPin, BedDouble, Bath, Ruler, Tag, User2, Mail, Phone, X, ChevronRight, Search } from "lucide-react";
+import { CheckCircle2, ShieldX, Loader2, ChevronLeft, MapPin, BedDouble, Bath, Ruler, Tag, User2, Mail, Phone, X, ChevronRight, Search, List, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Seo } from "@/components/seo/Seo";
+import { logAdminAction } from "@/lib/admin-audit";
 
 /** Image that degrades gracefully when the browser can't decode the file (e.g. legacy HEIC uploads). */
 const SafeImg = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
@@ -84,6 +85,7 @@ const AdminListings = () => {
   const [submitting, setSubmitting] = useState(false);
   const [q, setQ] = useState("");
   const [stateFilter, setStateFilter] = useState("");
+  const [view, setView] = useState<"detail" | "grid">("detail");
 
   useEffect(() => {
     if (!user) return;
@@ -242,6 +244,16 @@ const AdminListings = () => {
             </button>
           ))}
         </div>
+        <div className="inline-flex p-1 rounded-xl bg-secondary border border-border ml-2 align-top" role="group" aria-label="View">
+          {([["detail", List, "Detail"], ["grid", LayoutGrid, "Grid"]] as const).map(([v, Icon, label]) => (
+            <button key={v} type="button" onClick={() => setView(v)} aria-pressed={view === v}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition inline-flex items-center gap-1.5 ${
+                view === v ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}>
+              <Icon className="w-3.5 h-3.5" /> {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 pt-5 space-y-6">
@@ -255,13 +267,13 @@ const AdminListings = () => {
             {tab === "pending" ? "All caught up." : "No approved listings yet."}
           </div>
         )}
-        {shown.map((r) => {
+        {view === "detail" && shown.map((r) => {
           const host = hosts[r.host_id];
           const images = r.images || [];
           const hero = images[0];
           const rest = images.slice(1);
           return (
-            <article key={r.id} className="rounded-3xl border border-border bg-card overflow-hidden shadow-sm">
+            <article key={r.id} id={`listing-${r.id}`} className="scroll-mt-20 rounded-3xl border border-border bg-card overflow-hidden shadow-sm">
               {/* Photo gallery */}
               {images.length > 0 ? (
                 <div className="grid grid-cols-4 gap-1.5 p-1.5 bg-secondary/30">
@@ -405,6 +417,27 @@ const AdminListings = () => {
             </article>
           );
         })}
+        {view === "grid" && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {shown.map((r) => (
+              <button key={r.id} type="button"
+                onClick={() => { setView("detail"); setTimeout(() => document.getElementById(`listing-${r.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); }}
+                className="text-left rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/50 transition-colors">
+                <div className="aspect-[4/3] bg-secondary/40">
+                  {r.images?.[0] ? <SafeImg src={r.images[0]} alt={r.title} className="w-full h-full object-cover" />
+                    : <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">No photo</div>}
+                </div>
+                <div className="p-2.5 space-y-0.5">
+                  {r.listing_code && <p className="font-mono text-[10px] text-muted-foreground">{r.listing_code}</p>}
+                  <p className="text-xs font-bold line-clamp-2 leading-snug">{r.title}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{[r.neighborhood, r.city, r.state].filter(Boolean).join(", ") || "No place"}</p>
+                  <p className="text-xs font-extrabold text-primary">₦{Number(r.price_per_night).toLocaleString()}<span className="text-[10px] font-normal text-muted-foreground"> /night</span></p>
+                  <p className="text-[10px] text-muted-foreground truncate">{hosts[r.host_id]?.full_name || "Unknown host"} · {r.images?.length || 0} photos</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {lightbox && <Lightbox images={lightbox.images} start={lightbox.start} onClose={() => setLightbox(null)} />}

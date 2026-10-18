@@ -462,7 +462,7 @@ const AdminListings = () => {
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {shown.map((r) => (
               <button key={r.id} type="button"
-                onClick={() => { setView("detail"); setTimeout(() => document.getElementById(`listing-${r.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); }}
+                onClick={() => { setView("detail"); setExpanded(r.id); setTimeout(() => document.getElementById(`listing-${r.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); }}
                 className="text-left rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/50 transition-colors">
                 <div className="aspect-[4/3] bg-secondary/40">
                   {r.images?.[0] ? <SafeImg src={r.images[0]} alt={r.title} className="w-full h-full object-cover" />

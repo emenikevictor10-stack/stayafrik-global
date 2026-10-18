@@ -43,3 +43,27 @@ describe("location search", () => {
     expect(rescueCities([], "Lekki")).toEqual([]);
   });
 });
+
+import { normalizeState, stateForCity } from "@/lib/nigeria-places";
+describe("state / city / neighbourhood", () => {
+  const rp = (id: string, city: string, state: string, neighborhood = "") =>
+    ({ id, title: "Apt", location: [neighborhood, city].filter(Boolean).join(", "), city, state, neighborhood, type: "Shortlet", amenities: [], source: "rayprop" } as unknown as Property);
+  const stays = [rp("1", "Lekki", "Lagos", "Chevron"), rp("2", "Magodo", "Lagos", "Magodo GRA"), rp("3", "Abuja", "FCT")];
+  it("normalises FCT spellings", () => {
+    expect(normalizeState("fct")).toBe("FCT Abuja");
+    expect(normalizeState("Federal Capital Territory")).toBe("FCT Abuja");
+    expect(normalizeState("lagos state")).toBe("Lagos");
+  });
+  it("links Lekki to Lagos State", () => {
+    expect(stateForCity("Lekki")).toBe("Lagos");
+    const idx = buildLocationIndex(stays);
+    expect(idx.find((e) => e.kind === "city" && e.name === "Lekki")?.city).toBe("Lagos");
+    expect(idx.find((e) => e.kind === "state" && e.name === "Lagos State")?.count).toBe(2);
+  });
+  it("picking a state includes all its cities", () => {
+    expect(searchProperties(stays, "Lagos State").results.map((p) => p.id).sort()).toEqual(["1", "2"]);
+  });
+  it("picking a neighbourhood ranks it first", () => {
+    expect(searchProperties(stays, "Chevron, Lekki").results[0].id).toBe("1");
+  });
+});

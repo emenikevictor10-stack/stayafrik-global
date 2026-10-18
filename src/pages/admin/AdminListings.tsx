@@ -27,6 +27,8 @@ type ListingRow = {
   description: string | null;
   type: string | null;
   city: string | null;
+  state?: string | null;
+  neighborhood?: string | null;
   address: string | null;
   location: string | null;
   price_per_night: number;
@@ -81,6 +83,7 @@ const AdminListings = () => {
   const [rejectReason, setRejectReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [q, setQ] = useState("");
+  const [stateFilter, setStateFilter] = useState("");
 
   useEffect(() => {
     if (!user) return;
@@ -120,9 +123,10 @@ const AdminListings = () => {
   };
 
   const term = q.trim().toLowerCase();
-  const shown = term
-    ? rows.filter((r) => [r.listing_code, r.title, r.city, r.location, r.address].some((v) => (v || "").toLowerCase().includes(term)))
-    : rows;
+  const states = Array.from(new Set(rows.map((r) => r.state).filter(Boolean) as string[])).sort();
+  const shown = rows
+    .filter((r) => !stateFilter || r.state === stateFilter)
+    .filter((r) => !term || [r.listing_code, r.title, r.city, r.state, r.neighborhood, r.location, r.address].some((v) => (v || "").toLowerCase().includes(term)));
 
   useEffect(() => {
     if (isAdmin) load();
@@ -218,6 +222,11 @@ const AdminListings = () => {
           <h1 className="text-base font-extrabold">Listings</h1>
           <p className="text-[11px] text-muted-foreground">{rows.length} {tab === "pending" ? "pending review" : "approved & live"}</p>
         </div>
+        <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)} aria-label="Filter by state"
+          className="h-9 rounded-full bg-card border border-border px-3 text-xs">
+          <option value="">All states</option>
+          {states.map((s) => <option key={s} value={s}>{s}</option>)}
+        </select>
         <div className="relative w-40 sm:w-64">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
           <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Listing ID, title, city"
@@ -303,7 +312,7 @@ const AdminListings = () => {
                     )}
                     <h2 className="text-xl md:text-2xl font-extrabold leading-tight">{r.title}</h2>
                     <p className="text-xs text-muted-foreground flex items-center gap-1 mt-1">
-                      <MapPin className="w-3.5 h-3.5" /> {r.address || r.location || r.city || "No address provided"}
+                      <MapPin className="w-3.5 h-3.5" /> {r.address || r.location || r.city || "No address provided"}{(r.neighborhood || r.city || r.state) && <span className="text-muted-foreground"> · {[r.neighborhood, r.city, r.state].filter(Boolean).join(", ")}</span>}
                     </p>
                   </div>
                   <div className="text-right">

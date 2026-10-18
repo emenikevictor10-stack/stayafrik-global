@@ -52,7 +52,7 @@ const placeParts = (p: Property) => {
 };
 
 /** Real state from the listing, else a guess from its city. */
-const stateOf = (p: Property) => normalizeState(p.state) || stateForCity(p.city) || CITY_STATE[norm(p.city || "")] || "";
+const stateOf = (p: Property) => normalizeState(p.state) || stateForCity(p.city) || "";
 
 /** City a token points at: the city itself or the city a known area belongs to. */
 const cityOf = (t: string) => {

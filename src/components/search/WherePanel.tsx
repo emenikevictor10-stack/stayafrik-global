@@ -79,7 +79,7 @@ export const WherePanel = ({
                   </span>
                   <span className="min-w-0">
                     <span className={cn("block text-sm truncate", typing ? "text-muted-foreground" : "font-medium")}>{typing ? <Bold text={e.label} q={query.trim()} /> : e.label}</span>
-                    <span className="block text-xs text-muted-foreground truncate">{KIND[e.kind]}{e.city ? ` · ${e.city}` : ""}{!typing && e.partner && e.local ? " · Popular" : ""}</span>
+                    <span className="block text-xs text-muted-foreground truncate">{KIND[e.kind]}{e.city && e.city !== e.name ? ` · ${e.city}` : ""}{!typing && e.partner && e.local ? " · Popular" : ""}</span>
                   </span>
                 </button>
               </li>

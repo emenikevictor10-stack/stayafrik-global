@@ -29,6 +29,17 @@ export default {
           dim: "hsl(var(--primary-dim))",
         },
         success: "hsl(var(--success))",
+        search: {
+          surface: "hsl(var(--search-surface))",
+          muted: "hsl(var(--search-muted))",
+          hover: "hsl(var(--search-hover))",
+        },
+        hint: {
+          low: "hsl(var(--hint-low))",
+          "low-foreground": "hsl(var(--hint-low-foreground))",
+          high: "hsl(var(--hint-high))",
+          "high-foreground": "hsl(var(--hint-high-foreground))",
+        },
         info: "hsl(var(--info))",
         warn: "hsl(var(--warn))",
         secondary: {
@@ -71,7 +82,15 @@ export default {
         md: "calc(var(--radius) - 4px)",
         sm: "calc(var(--radius) - 8px)",
       },
+      boxShadow: {
+        search: "var(--search-shadow)",
+        "search-open": "var(--search-shadow-open)",
+      },
       keyframes: {
+        "panel-in": {
+          from: { opacity: "0", transform: "translateY(-8px) scale(0.98)" },
+          to: { opacity: "1", transform: "translateY(0) scale(1)" },
+        },
         "accordion-down": {
           from: { height: "0" },
           to: { height: "var(--radix-accordion-content-height)" },
@@ -94,6 +113,7 @@ export default {
         },
       },
       animation: {
+        "panel-in": "panel-in 220ms ease-out",
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fade-in": "fade-in 0.5s cubic-bezier(0.32, 0.72, 0, 1)",

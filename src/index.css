@@ -52,6 +52,17 @@
     --shadow-glow: 0 8px 32px hsl(73 100% 62% / 0.28);
     --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
 
+    /* Search bar */
+    --search-surface: 240 8% 15%;
+    --search-muted: 240 8% 9%;
+    --search-hover: 240 8% 20%;
+    --search-shadow: 0 3px 12px hsl(0 0% 0% / 0.35);
+    --search-shadow-open: 0 8px 28px hsl(0 0% 0% / 0.55);
+    --hint-low: 142 60% 18%;
+    --hint-low-foreground: 142 71% 60%;
+    --hint-high: 0 60% 20%;
+    --hint-high-foreground: 0 84% 70%;
+
     /* Motion */
     --ease-smooth: cubic-bezier(0.32, 0.72, 0, 1);
 

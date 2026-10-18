@@ -277,9 +277,11 @@ export type Database = {
           listing_code: string | null
           lng: number | null
           location: string | null
+          neighborhood: string | null
           price_per_night: number
           rating: number
           reviews_count: number
+          state: string | null
           title: string
           type: string
           updated_at: string
@@ -303,9 +305,11 @@ export type Database = {
           listing_code?: string | null
           lng?: number | null
           location?: string | null
+          neighborhood?: string | null
           price_per_night?: number
           rating?: number
           reviews_count?: number
+          state?: string | null
           title: string
           type?: string
           updated_at?: string
@@ -329,9 +333,11 @@ export type Database = {
           listing_code?: string | null
           lng?: number | null
           location?: string | null
+          neighborhood?: string | null
           price_per_night?: number
           rating?: number
           reviews_count?: number
+          state?: string | null
           title?: string
           type?: string
           updated_at?: string

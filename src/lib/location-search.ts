@@ -1,4 +1,5 @@
 import type { Property } from "@/data/properties";
+import { normalizeState, stateForCity } from "@/lib/nigeria-places";
 
 /** Words that carry no location meaning in a search. */
 const STOPWORDS = new Set(["nigeria", "state", "lga", "fct", "the", "in", "near", "city", "area", "of", "and"]);
@@ -39,11 +40,19 @@ export const tokenize = (q: string): string[] => {
 };
 
 const placeParts = (p: Property) => {
+  if (p.neighborhood || p.state) {
+    const city = (p.city || "").trim();
+    const hood = p.neighborhood && norm(p.neighborhood) !== norm(city) ? p.neighborhood.trim() : "";
+    return { hood, city };
+  }
   const [hoodRaw = "", ...rest] = (p.location || "").split(",").map((s) => s.trim()).filter(Boolean);
   const city = (p.city || rest[rest.length - 1] || "").trim();
   const hood = norm(hoodRaw) === norm(city) ? "" : hoodRaw;
   return { hood, city };
 };
+
+/** Real state from the listing, else a guess from its city. */
+const stateOf = (p: Property) => normalizeState(p.state) || stateForCity(p.city) || "";
 
 /** City a token points at: the city itself or the city a known area belongs to. */
 const cityOf = (t: string) => {
@@ -61,6 +70,7 @@ export const scoreProperty = (p: Property, tokens: string[]): number => {
   for (const tok of tokens) {
     if ((h && (h.includes(tok) || tok.includes(h))) || t.includes(tok)) best = Math.max(best, 3);
     else if (c && (c === tok || loc.includes(tok))) best = Math.max(best, 2);
+    else if (stateOf(p) && norm(stateOf(p)).split(" ").includes(tok)) best = Math.max(best, 2);
     else if (p.amenities.some((a) => norm(a.label).includes(tok))) best = Math.max(best, 2);
     else if (c && cityOf(tok) === c) best = Math.max(best, 1);
   }
@@ -115,12 +125,11 @@ export const buildLocationIndex = (list: Property[]): LocationEntry[] => {
     if (p.type !== "Shortlet") continue;
     const { hood, city } = placeParts(p);
     const cityName = city ? title(norm(city)) : "";
+    const st = stateOf(p);
+    const stLabel = st ? (st === "FCT Abuja" ? st : `${st} State`) : "";
     if (hood) add("area", title(norm(hood)), cityName || undefined, cityName ? `${title(norm(hood))}, ${cityName}` : title(norm(hood)), p);
-    if (cityName) {
-      add("city", cityName, undefined, cityName, p);
-      const st = CITY_STATE[norm(cityName)];
-      if (st) add("state", st, undefined, st, p);
-    }
+    if (cityName) add("city", cityName, st || undefined, cityName, p);
+    if (stLabel) add("state", stLabel, undefined, stLabel, p);
   }
   return Array.from(map.values()).sort((a, b) => b.count - a.count);
 };

@@ -1,3 +1,4 @@
+import { PlaceFields } from "@/components/agent/PlaceFields";
 import { TopBar } from "@/components/shell/TopBar";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { useListing } from "@/hooks/useListings";
@@ -20,6 +21,7 @@ const EditListing = () => {
   const [beds, setBeds] = useState(0);
   const [baths, setBaths] = useState(0);
   const [area, setArea] = useState("");
+  const [place, setPlace] = useState({ state: "", city: "", neighborhood: "" });
   const [live, setLive] = useState(true);
   const [images, setImages] = useState<string[]>([]);
   const [uploading, setUploading] = useState(false);
@@ -35,10 +37,11 @@ const EditListing = () => {
     setArea(p.area);
     // load images from db
     (async () => {
-      const { data } = await supabase.from("listings").select("images, is_available").eq("id", p.id).maybeSingle();
+      const { data } = await supabase.from("listings").select("images, is_available, state, city, neighborhood").eq("id", p.id).maybeSingle();
       if (data) {
         setImages((data.images as string[]) || []);
         setLive(data.is_available);
+        setPlace({ state: data.state || "", city: data.city || "", neighborhood: data.neighborhood || "" });
       }
     })();
   }, [p]);
@@ -93,6 +96,9 @@ const EditListing = () => {
         area,
         is_available: live,
         images,
+        state: place.state || null,
+        city: place.city.trim() || null,
+        neighborhood: place.neighborhood.trim() || null,
       })
       .eq("id", p.id);
     setSaving(false);
@@ -116,6 +122,11 @@ const EditListing = () => {
         <Link to="/listings" className="inline-flex items-center gap-1 text-xs text-muted-foreground mb-4">
           <ChevronLeft className="w-3.5 h-3.5" /> Back to listings
         </Link>
+
+        <section className="rounded-2xl bg-card border border-border p-4 mb-4">
+          <h3 className="text-sm font-bold mb-3">Location</h3>
+          <PlaceFields {...place} onChange={(v) => setPlace((x) => ({ ...x, ...v }))} />
+        </section>
 
         <section className="rounded-2xl bg-card border border-border p-4 flex items-center gap-3 mb-4">
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center ${live ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>

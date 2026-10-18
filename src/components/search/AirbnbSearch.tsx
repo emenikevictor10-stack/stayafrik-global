@@ -166,7 +166,7 @@ export const SearchModal = ({
               <span className="w-11 h-11 rounded-xl bg-secondary flex items-center justify-center shrink-0"><MapPin className="w-5 h-5" /></span>
               <span className="min-w-0">
                 <span className="block text-sm font-medium truncate">{e.label}</span>
-                <span className="block text-[11px] text-muted-foreground">{({ area: "Neighbourhood", city: "City", state: "State" } as const)[e.kind]}</span>
+                <span className="block text-[11px] text-muted-foreground">{({ area: "Neighbourhood", city: "City", state: "State" } as const)[e.kind]}{e.city ? ` · ${e.city}` : ""}</span>
               </span>
             </button>
           )) : <p className="px-2 py-3 text-xs text-muted-foreground">We'll search every stay for "{draft.where}".</p>

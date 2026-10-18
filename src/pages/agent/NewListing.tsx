@@ -1,3 +1,4 @@
+import { PlaceFields } from "@/components/agent/PlaceFields";
 import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ImagePlus, Home, Sparkles, X, Loader2, MapPin, Video } from "lucide-react";
@@ -29,6 +30,8 @@ const NewListing = () => {
   const [step, setStep] = useState(1);
   const [title, setTitle] = useState("");
   const [city, setCity] = useState("");
+  const [stateName, setStateName] = useState("");
+  const [hood, setHood] = useState("");
   const [address, setAddress] = useState("");
   const [beds, setBeds] = useState(2);
   const [baths, setBaths] = useState(2);
@@ -68,6 +71,7 @@ const NewListing = () => {
 
   const stepError = (s: number): string | null => {
     if (s === 1) {
+      if (!stateName) return "Choose the state";
       if (!city.trim()) return "Add the city";
       if (!address.trim()) return "Add the full address";
       // Map pin is optional — we'll geocode from the address if not set
@@ -189,9 +193,11 @@ const NewListing = () => {
         description: desc,
         type: "Shortlet",
         price_per_night: Number(price) || 0,
-        location: [address, city].filter(Boolean).join(", "),
+        location: [hood, city].filter(Boolean).join(", ") || city,
         address,
-        city,
+        city: city.trim(),
+        state: stateName,
+        neighborhood: hood.trim() || null,
         images: photos,
         video_url: videoUrl || null,
         bedrooms: beds,
@@ -244,11 +250,8 @@ const NewListing = () => {
       <div className="px-5 pt-6">
         {step === 1 && (
           <div className="space-y-4">
-            <label className="block">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase">City</span>
-              <input value={city} onChange={(e) => setCity(e.target.value)} placeholder="Lagos"
-                className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm" />
-            </label>
+            <PlaceFields state={stateName} city={city} neighborhood={hood}
+              onChange={(v) => { if (v.state !== undefined) setStateName(v.state); if (v.city !== undefined) setCity(v.city); if (v.neighborhood !== undefined) setHood(v.neighborhood); }} />
             <label className="block">
               <span className="text-[11px] font-semibold text-muted-foreground uppercase">Full address</span>
               <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="12 Admiralty Way, Lekki Phase 1"

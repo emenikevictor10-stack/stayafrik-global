@@ -5,7 +5,7 @@ import { applyGuests, LIMITS, minAdults, type SearchState } from "@/lib/search-s
 
 export const GuestStepperRow = ({
   label, hint, value, canDec, canInc, onDec, onInc,
-}: { label: string; hint: React.ReactNode; value: number; canDec: boolean; canInc: boolean; onDec: () => void; onInc: () => void }) => (
+}: { label: string; hint: React.ReactNode; value: React.ReactNode; canDec: boolean; canInc: boolean; onDec: () => void; onInc: () => void }) => (
   <div className="flex items-center justify-between min-h-[72px] py-3 border-b border-border last:border-0">
     <div>
       <div className="text-base font-medium">{label}</div>
@@ -40,7 +40,7 @@ export const WhoPanel = ({ value, onChange }: { value: SearchState; onChange: (p
       <GuestStepperRow label="Pets" value={value.pets}
         hint={<button type="button" onClick={() => setInfo(true)} className="underline font-medium">Bringing a service animal?</button>}
         canDec={value.pets > 0} canInc={value.pets < LIMITS.pets} onDec={() => set("pets", -1)} onInc={() => set("pets", 1)} />
-      <GuestStepperRow label="Bedrooms" hint="Minimum" value={value.bedrooms}
+      <GuestStepperRow label="Bedrooms" hint="Minimum" value={value.bedrooms || "Any"}
         canDec={value.bedrooms > 0} canInc={value.bedrooms < 10}
         onDec={() => onChange({ bedrooms: value.bedrooms - 1 })} onInc={() => onChange({ bedrooms: value.bedrooms + 1 })} />
       <Dialog open={info} onOpenChange={setInfo}>

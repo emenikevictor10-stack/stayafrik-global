@@ -1,3 +1,4 @@
+import { recallSearch } from "@/lib/search-state";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
 import { quoteRayProp, holdRayProp, type RayPropQuote } from "@/lib/rayprop";
@@ -29,11 +30,15 @@ const BookProperty = () => {
   const { data: p, loading } = useListing(id);
 
   const [step, setStep] = useState<Step>(1);
-  const [range, setRange] = useState<DateRange | undefined>({ from: addDays(new Date(), 2), to: addDays(new Date(), 5) });
+  const [range, setRange] = useState<DateRange | undefined>(() => {
+    const s = recallSearch();
+    if (s?.checkIn && s?.checkOut && s.checkIn >= format(new Date(), "yyyy-MM-dd")) return { from: new Date(s.checkIn + "T00:00:00"), to: new Date(s.checkOut + "T00:00:00") };
+    return { from: addDays(new Date(), 2), to: addDays(new Date(), 5) };
+  });
   const [calOpen, setCalOpen] = useState(false);
   const checkIn = range?.from;
   const checkOut = range?.to;
-  const [guests, setGuests] = useState(2);
+  const [guests, setGuests] = useState(() => { const s = recallSearch(); return s ? Math.max(1, (s.adults || 0) + (s.children || 0)) || 2 : 2; });
   const [paying, setPaying] = useState(false);
   const [guestName, setGuestName] = useState<string>(user?.user_metadata?.full_name || "");
   const [guestEmail, setGuestEmail] = useState<string>(user?.email || "");

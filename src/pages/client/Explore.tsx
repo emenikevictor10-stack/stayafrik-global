@@ -3,12 +3,14 @@ import { PropertyCard } from "@/components/property/PropertyCard";
 import { type Property } from "@/data/properties";
 import { Map as MapIcon, List as ListIcon, X, Sparkles, Wallet, Star, Users, Zap, Laptop, Gem, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { PropertiesMap } from "@/components/map/PropertyMap";
 import { useListings } from "@/hooks/useListings";
 import { Seo } from "@/components/seo/Seo";
-import { SmartSearchBar } from "@/components/search/SmartSearchBar";
+import { SearchPill, SearchModal } from "@/components/search/AirbnbSearch";
+import { parseSearch, serializeSearch, rememberSearch, guestCount, nightsOf, fitsGuests, summarize, type SearchState } from "@/lib/search-state";
+import { useSearchAvailability } from "@/hooks/useSearchAvailability";
 import { searchProperties, buildLocationIndex, rescueCities } from "@/lib/location-search";
 
 // Haversine in km
@@ -47,7 +49,13 @@ const matchesSmart = (p: Property, f: SmartFilter) => {
 };
 
 const Explore = () => {
-  const [q, setQ] = useState("");
+  const [params, setParams] = useSearchParams();
+  const search = useMemo(() => parseSearch(params), [params]);
+  const q = search.where;
+  const applySearch = (s: SearchState) => { setParams(serializeSearch(s)); rememberSearch(s); };
+  const setQ = (where: string) => applySearch({ ...search, where });
+  const [modal, setModal] = useState<{ open: boolean; step: "where" | "when" | "who" }>({ open: false, step: "where" });
+  useEffect(() => { rememberSearch(search); }, [search]);
   const [smart, setSmart] = useState<SmartFilter[]>([]);
   const [view, setView] = useState<"list" | "map">("list");
   const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
@@ -92,8 +100,15 @@ const Explore = () => {
         .sort((a, b) => a.d - b.d)
         .map((x) => x.p);
     }
+    const g = guestCount(search);
+    if (g) out = out.filter((p) => fitsGuests(p, g));
     return { list: out, fallbackCity };
-  }, [properties, q, smart, nearMe]);
+  }, [properties, q, smart, nearMe, search]);
+
+  const { unavailable, checking } = useSearchAvailability(list, search.checkIn, search.checkOut);
+  const visible = useMemo(() => list.filter((p) => !unavailable.has(p.id)), [list, unavailable]);
+  const nights = nightsOf(search);
+  const hasSearch = !!(q || search.checkIn || guestCount(search));
 
 
   return (
@@ -104,24 +119,27 @@ const Explore = () => {
       />
       <TopBar title="Explore" />
       <main className="px-5 pt-5 pb-8">
-        <SmartSearchBar
-          value={q}
-          onChange={setQ}
-          places={places}
-          loading={loading}
-          onLocate={(c) => {
-            setNearMe(c);
-            setView("map");
-          }}
+        <SearchPill
+          value={search}
+          onOpen={(step) => setModal({ open: true, step })}
           rightSlot={
             <button
               onClick={() => setView(view === "list" ? "map" : "list")}
-              className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-primary px-2 py-1 rounded-full hover:bg-primary/10"
+              className="shrink-0 w-12 h-12 rounded-full bg-card border border-border flex items-center justify-center text-primary"
               aria-label="Toggle map view"
             >
-              {view === "list" ? <><MapIcon className="w-3.5 h-3.5" /><span className="hidden sm:inline">Map</span></> : <><ListIcon className="w-3.5 h-3.5" /><span className="hidden sm:inline">List</span></>}
+              {view === "list" ? <MapIcon className="w-4 h-4" /> : <ListIcon className="w-4 h-4" />}
             </button>
           }
+        />
+        <SearchModal
+          open={modal.open}
+          onOpenChange={(open) => setModal((m) => ({ ...m, open }))}
+          initialStep={modal.step}
+          value={search}
+          onSearch={applySearch}
+          places={places}
+          onLocate={(c) => { setNearMe(c); setView("map"); }}
         />
 
         {nearMe && (
@@ -164,12 +182,14 @@ const Explore = () => {
             </button>
           ))}
         </div>
-        {q.trim() && !loading && (
-          <div className="mt-3 flex items-center gap-2 text-[11px] text-muted-foreground">
+        {hasSearch && !loading && (
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+            <span className="font-semibold text-foreground">{summarize(search).where} · {summarize(search).when} · {summarize(search).who}</span>
+            {checking && <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />Checking dates…</span>}
             {fallbackCity && (
               <span>No exact match for "{q}" — showing other {fallbackCity} stays</span>
             )}
-            <button type="button" onClick={() => setQ("")} className="font-semibold text-primary underline">Clear search</button>
+            <button type="button" onClick={() => applySearch({ where: "", flex: 0, adults: 0, children: 0, infants: 0 })} className="font-semibold text-primary underline">Clear search</button>
           </div>
         )}
         {smart.length > 0 && (
@@ -181,7 +201,7 @@ const Explore = () => {
 
         {view === "map" ? (
           <div className="mt-5 relative">
-            <PropertiesMap list={list} height={520} onSelect={setSelected} />
+            <PropertiesMap list={visible} height={520} onSelect={setSelected} />
             {selected && (
               <div className="absolute left-3 right-3 bottom-3 z-10">
                 <div className="rounded-2xl bg-card border border-border shadow-xl p-3 flex gap-3 items-center">
@@ -220,10 +240,10 @@ const Explore = () => {
                 Loading properties…
               </div>
             )}
-            {!loading && list.map((p) => (
-              <PropertyCard key={p.id} p={p} />
+            {!loading && visible.map((p) => (
+              <PropertyCard key={p.id} p={p} nights={nights} />
             ))}
-            {!loading && list.length === 0 && (
+            {!loading && visible.length === 0 && (
               <div className="text-center py-16 text-muted-foreground text-sm">
                 <div className="text-4xl mb-2">🔍</div>
                 No properties match your search.
@@ -259,7 +279,7 @@ const Explore = () => {
           </div>
         )}
 
-        {view === "list" && !loading && list.length > 0 && (
+        {view === "list" && !loading && visible.length > 0 && (
           <div ref={sentinelRef} className="py-6 text-center">
             {loadingMore && (
               <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">

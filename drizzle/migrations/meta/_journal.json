@@ -92,6 +92,13 @@
       "when": 1792356928143,
       "tag": "0012_search_locations_typo_threshold",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "7",
+      "when": 1792358842208,
+      "tag": "0013_viewing_reservations_rules",
+      "breakpoints": true
     }
   ]
 }

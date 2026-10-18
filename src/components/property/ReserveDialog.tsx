@@ -32,7 +32,9 @@ export const ReserveDialog = ({ open, onOpenChange, listingId, hostId, guestId, 
     });
     setSubmitting(false);
     if (error) {
-      toast.error(error.message || "Could not send request");
+      toast.error((error as any).code === "23505"
+        ? "You already have an open viewing request for this stay"
+        : error.message || "Could not send request");
       return;
     }
     toast.success("Request sent — host has 4h to approve 🕓");

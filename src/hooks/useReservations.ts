@@ -20,6 +20,10 @@ const applyExpiry = (r: Reservation): Reservation => {
   if (r.status === "approved" && r.expires_at && new Date(r.expires_at) < new Date()) {
     return { ...r, status: "expired" };
   }
+  // Hosts have 4 hours to answer; the hourly job saves this, the UI shows it immediately.
+  if (r.status === "pending" && Date.now() - new Date(r.created_at).getTime() > 4 * 3600_000) {
+    return { ...r, status: "expired" };
+  }
   return r;
 };
 

@@ -1022,6 +1022,7 @@ export type Database = {
         Args: { payload: Json; queue_name: string }
         Returns: number
       }
+      expire_reservations: { Args: never; Returns: number }
       generate_listing_code: { Args: never; Returns: string }
       get_public_profiles: {
         Args: { _user_ids: string[] }

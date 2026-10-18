@@ -43,6 +43,13 @@
       "when": 1792354769657,
       "tag": "0005_listing_state_neighborhood",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1792355914638,
+      "tag": "0006_locations_hierarchy",
+      "breakpoints": true
     }
   ]
 }

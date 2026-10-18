@@ -10,6 +10,6 @@
 - [ ] Phase 5 rest: location icon fix, published-site check, security scan
 
 - [x] Admin refund button sends real Paystack refund
-- [ ] Admin view of 4h viewing reservations
+- [x] Admin view of 4h viewing reservations + viewing expiry rules
 
 Blocked: Paystack test/live mode unconfirmed; Phase 0 test payments to be run by the user; WhatsApp skipped for launch.

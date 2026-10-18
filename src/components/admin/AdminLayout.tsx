@@ -12,6 +12,7 @@ const NAV = [
   { to: "/admin/users", label: "Users", Icon: Users },
   { to: "/admin/bookings", label: "Bookings", Icon: CalendarDays },
   { to: "/admin/partner-bookings", label: "Partner bookings", Icon: Handshake },
+  { to: "/admin/reservations", label: "Viewings", Icon: CalendarDays },
   { to: "/admin/payouts", label: "Payouts", Icon: Banknote },
   { to: "/admin/kyc", label: "KYC", Icon: ShieldCheck },
   { to: "/admin/location-audit", label: "Location audit", Icon: MapPinned },

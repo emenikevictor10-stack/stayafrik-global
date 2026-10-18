@@ -1,3 +1,4 @@
+import { useLocations } from "@/hooks/useLocations";
 import { TopBar } from "@/components/shell/TopBar";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { type Property } from "@/data/properties";
@@ -114,16 +115,21 @@ const Explore = () => {
   const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
   const [selected, setSelected] = useState<Property | null>(null);
   const { data: properties, loading, loadingMore, hasMore, loadMore, searchPartner } = useListings();
+  const { all: allPlaces, byId: placeById } = useLocations();
+  const picked = useMemo(() => (search.loc ? allPlaces.find((l) => l.slug === search.loc) : undefined), [allPlaces, search.loc]);
+  const pickedParent = picked?.parent_id ? placeById.get(picked.parent_id) : undefined;
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   // Debounced server-side partner search so any RayProp area is findable
   useEffect(() => {
+    if (search.loc && !picked) return; // wait for the place list to resolve the link
     const t = window.setTimeout(() => {
       const query = q.trim();
-      searchPartner(query.length >= 3 ? query : null);
+      if (picked) searchPartner(picked.name, picked.id);
+      else searchPartner(query.length >= 3 ? query : null);
     }, 400);
     return () => window.clearTimeout(t);
-  }, [q, searchPartner]);
+  }, [q, searchPartner, search.loc, picked]);
 
   // Auto-load more partner stays as the guest scrolls near the bottom
   useEffect(() => {
@@ -143,7 +149,10 @@ const Explore = () => {
 
   const { list, fallbackCity } = useMemo(() => {
     const shortlets = properties.filter((p) => p.type === "Shortlet");
-    const { results, fallbackCity } = searchProperties(shortlets, q);
+    // Place picked from the list → match by place (Lekki includes Chevron); partner stays already come filtered by place.
+    const { results, fallbackCity } = picked
+      ? { results: shortlets.filter((p) => (p.source === "rayprop" ? true : !!p.placeIds?.includes(picked.id))), fallbackCity: null as string | null }
+      : searchProperties(shortlets, q);
     let out = results.filter((p) => smart.every((f) => matchesSmart(p, f)));
     if (smart.includes("budget")) out = [...out].sort((a, b) => a.priceNum - b.priceNum);
     else if (smart.includes("toprated")) out = [...out].sort((a, b) => b.rating - a.rating);
@@ -156,15 +165,17 @@ const Explore = () => {
     const g = guestCount(search);
     if (g) out = out.filter((p) => fitsGuests(p, g));
     if (search.pets) out = out.filter((p) => hasAmenity(p, ["pet"]));
+    if (search.bedrooms) out = out.filter((p) => (p.beds || 0) >= search.bedrooms);
     if (search.mode === "flexible" && !smart.length && !nearMe) out = [...out].sort((a, b) => (a.priceNum || Infinity) - (b.priceNum || Infinity));
     return { list: out, fallbackCity };
-  }, [properties, q, smart, nearMe, search]);
+  }, [properties, q, smart, nearMe, search, picked]);
 
   const { unavailable, checking } = useSearchAvailability(list, search.mode === "dates" ? search.checkIn : undefined, search.mode === "dates" ? search.checkOut : undefined, search.flex);
   const hints = usePriceHints(useMemo(() => (q ? list.filter((p) => p.source === "rayprop") : []), [list, q]), q);
   const visible = useMemo(() => list.filter((p) => !unavailable.has(p.id)), [list, unavailable]);
   const nights = nightsOf(search);
-  const hasSearch = !!(q || search.checkIn || search.months.length || guestCount(search) || search.pets);
+  const hasSearch = !!(q || search.checkIn || search.months.length || guestCount(search) || search.pets || search.bedrooms);
+  const heading = picked ? `Stays in ${picked.name}${pickedParent && picked.type !== "state" ? `, ${pickedParent.name}` : ""}` : q ? `Stays matching "${q}"` : "";
 
 
   return (
@@ -231,6 +242,7 @@ const Explore = () => {
         </div>
         {hasSearch && !loading && (
           <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+            {heading && <h2 className="w-full text-lg font-bold text-foreground">{heading}</h2>}
             <span className="font-semibold text-foreground">{summarize(search).where} · {summarize(search).when} · {summarize(search).who}</span>
             {checking && <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />Checking dates…</span>}
             {fallbackCity && (

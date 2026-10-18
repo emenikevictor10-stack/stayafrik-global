@@ -27,9 +27,9 @@ const call = async <T>(body: Record<string, unknown>) => {
 export type RayPropPage = { items: RayPropRecord[]; hasMore: boolean; total: number };
 
 /** One page of the full partner catalogue (all cities), optionally filtered by free text. */
-export const searchRayProp = async (limit = 30, opts: { page?: number; q?: string } = {}): Promise<RayPropPage> => {
+export const searchRayProp = async (limit = 30, opts: { page?: number; q?: string; locationId?: string } = {}): Promise<RayPropPage> => {
   const { data, error } = await supabase.functions.invoke("rayprop-api", {
-    body: { action: "search", limit, page: opts.page || 1, ...(opts.q ? { q: opts.q } : {}) },
+    body: { action: "search", limit, page: opts.page || 1, ...(opts.q ? { q: opts.q } : {}), ...(opts.locationId ? { location_id: opts.locationId } : {}) },
   });
   if (data?.error) throw new Error(data.error);
   if (error) throw new Error(error.message || "Partner stays are unavailable right now");

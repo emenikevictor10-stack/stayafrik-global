@@ -93,6 +93,7 @@ export const rowToProperty = (r: ListingRow, host?: HostInfo): Property => {
     neighborhood: r.neighborhood || undefined,
     createdAt: r.created_at,
     listingCode: r.listing_code || undefined,
+    placeIds: [r.state_id, r.city_id, r.neighbourhood_id].filter(Boolean) as string[],
   };
 };
 
@@ -104,8 +105,8 @@ const dedupe = (rows: ReturnType<typeof raypropToProperty>[]) => {
 };
 
 /** One page of the full partner catalogue (1-based page), optionally filtered by text. */
-const fetchRayPropPage = async (page: number, q?: string): Promise<{ items: Property[]; hasMore: boolean }> => {
-  const r = await searchRayProp(RAYPROP_PAGE, { page, ...(q ? { q } : {}) });
+const fetchRayPropPage = async (page: number, q?: string, locationId?: string): Promise<{ items: Property[]; hasMore: boolean }> => {
+  const r = await searchRayProp(RAYPROP_PAGE, { page, ...(q ? { q } : {}), ...(locationId ? { locationId } : {}) });
   return { items: dedupe(r.items.map((raw) => raypropToProperty(raw, placeholderImg))), hasMore: r.hasMore };
 };
 
@@ -143,6 +144,7 @@ export const useListings = () => {
   const pageRef = useRef(1);
   const loadingMoreRef = useRef(false);
   const qRef = useRef<string | null>(null);
+  const locRef = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     let active = true;
@@ -178,7 +180,7 @@ export const useListings = () => {
     loadingMoreRef.current = true;
     setLoadingMore(true);
     try {
-      const page = await fetchRayPropPage(pageRef.current, qRef.current || undefined);
+      const page = await fetchRayPropPage(pageRef.current, qRef.current || undefined, locRef.current);
       pageRef.current += 1;
       setPartner((prev) => dedupe([...prev, ...page.items]));
       setHasMore(page.hasMore);
@@ -192,18 +194,20 @@ export const useListings = () => {
   }, [hasMore]);
 
   /** Server-side partner text search; null clears partner results (back to local-only homepage). */
-  const searchPartner = useCallback(async (q: string | null) => {
+  const searchPartner = useCallback(async (q: string | null, locationId?: string) => {
     if (!q) {
       qRef.current = null;
+      locRef.current = undefined;
       setPartner([]);
       setHasMore(false);
       return;
     }
     try {
       // Search results page through the whole catalogue too (searchQ drives loadMore).
-      const page = await fetchRayPropPage(1, q);
+      const page = await fetchRayPropPage(1, q, locationId);
       pageRef.current = 2;
       qRef.current = q;
+      locRef.current = locationId;
       setPartner(page.items);
       setHasMore(page.hasMore);
     } catch (error) {

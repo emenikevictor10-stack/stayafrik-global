@@ -114,7 +114,7 @@ const AdminListings = () => {
       const { data: profs } = await supabase
         .from("profiles")
         .select("id:user_id,email,full_name,phone,avatar_url")
-        .in("id", hostIds);
+        .in("user_id", hostIds);
       const map: Record<string, HostProfile> = {};
       (profs as HostProfile[] | null)?.forEach((p) => (map[p.id] = p));
       setHosts(map);

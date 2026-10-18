@@ -9,4 +9,7 @@
 - [x] Public listings for signed-out visitors
 - [ ] Phase 5 rest: location icon fix, published-site check, security scan
 
-Blocked: RayProp payment model + markup (user); WhatsApp skipped for launch; Phase 0 live tests need a real Paystack test payment by the user.
+- [x] Admin refund button sends real Paystack refund
+- [ ] Admin view of 4h viewing reservations
+
+Blocked: Paystack test/live mode unconfirmed; Phase 0 test payments to be run by the user; WhatsApp skipped for launch.

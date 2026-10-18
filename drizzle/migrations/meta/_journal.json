@@ -99,6 +99,20 @@
       "when": 1792358842208,
       "tag": "0013_viewing_reservations_rules",
       "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "7",
+      "when": 1792359365658,
+      "tag": "0014_admin_insert_notifications",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "7",
+      "when": 1792359519229,
+      "tag": "0015_payouts_on_release_and_kyc_admin_read",
+      "breakpoints": true
     }
   ]
 }

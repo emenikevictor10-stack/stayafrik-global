@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { CheckCircle2, ShieldX, Loader2, ChevronLeft, MapPin, BedDouble, Bath, Ruler, Tag, User2, Mail, Phone, X, ChevronRight, Search } from "lucide-react";
+import { CheckCircle2, ShieldX, Loader2, ChevronLeft, MapPin, BedDouble, Bath, Ruler, Tag, User2, Mail, Phone, X, ChevronRight, Search, List, LayoutGrid } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Seo } from "@/components/seo/Seo";
+import { logAdminAction } from "@/lib/admin-audit";
 
 /** Image that degrades gracefully when the browser can't decode the file (e.g. legacy HEIC uploads). */
 const SafeImg = ({ src, alt, className }: { src: string; alt: string; className?: string }) => {
@@ -84,6 +85,8 @@ const AdminListings = () => {
   const [submitting, setSubmitting] = useState(false);
   const [q, setQ] = useState("");
   const [stateFilter, setStateFilter] = useState("");
+  const [view, setView] = useState<"detail" | "grid">("detail");
+  const [expanded, setExpanded] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -112,7 +115,7 @@ const AdminListings = () => {
       const { data: profs } = await supabase
         .from("profiles")
         .select("id:user_id,email,full_name,phone,avatar_url")
-        .in("id", hostIds);
+        .in("user_id", hostIds);
       const map: Record<string, HostProfile> = {};
       (profs as HostProfile[] | null)?.forEach((p) => (map[p.id] = p));
       setHosts(map);
@@ -133,7 +136,15 @@ const AdminListings = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isAdmin, tab]);
 
+  const notifyHost = async (row: ListingRow, type: string, title: string, body: string) => {
+    const { error } = await supabase.from("notifications").insert({
+      user_id: row.host_id, type, title, body, link: "/listings",
+    });
+    if (error) console.error("[admin] host notification failed", error);
+  };
+
   const doApprove = async (id: string) => {
+    const row = rows.find((x) => x.id === id);
     setSubmitting(true);
     const { error } = await supabase
       .from("listings")
@@ -141,6 +152,10 @@ const AdminListings = () => {
       .eq("id", id);
     setSubmitting(false);
     if (error) return toast.error(error.message);
+    if (row) {
+      await notifyHost(row, "listing_approved", "Listing approved 🎉", `Your listing "${row.title}" is now live.`);
+      await logAdminAction({ action: "listing_approved", entityType: "listing", entityId: id, metadata: { listing_code: row.listing_code } });
+    }
     toast.success("Listing approved and live");
     setRows((r) => r.filter((x) => x.id !== id));
     setConfirmAction(null);
@@ -152,21 +167,11 @@ const AdminListings = () => {
       .from("listings")
       .update({ verified: false, is_available: false })
       .eq("id", row.id);
-    if (!error) {
-      try {
-        await supabase.from("notifications").insert({
-          user_id: row.host_id,
-          type: "listing_revoked",
-          title: "Listing moved back to pending",
-          body: reason
-            ? `Your listing "${row.title}" was moved back to pending review. Reason: ${reason}`
-            : `Your listing "${row.title}" was moved back to pending review.`,
-          metadata: { listing_id: row.id, reason: reason || null },
-        } as any);
-      } catch { /* non-blocking */ }
-    }
     setSubmitting(false);
     if (error) return toast.error(error.message);
+    await notifyHost(row, "listing_revoked", "Listing moved back to pending",
+      `Your listing "${row.title}" was moved back to pending review.${reason ? ` Reason: ${reason}` : ""}`);
+    await logAdminAction({ action: "listing_revoked", entityType: "listing", entityId: row.id, metadata: { listing_code: row.listing_code, reason: reason || null } });
     toast.success("Listing reverted to pending");
     setRows((r) => r.filter((x) => x.id !== row.id));
     setConfirmAction(null);
@@ -175,20 +180,12 @@ const AdminListings = () => {
 
   const doReject = async (row: ListingRow, reason: string) => {
     setSubmitting(true);
-    try {
-      await supabase.from("notifications").insert({
-        user_id: row.host_id,
-        type: "listing_rejected",
-        title: "Listing rejected",
-        body: reason
-          ? `Your listing "${row.title}" was not approved. Reason: ${reason}`
-          : `Your listing "${row.title}" was not approved.`,
-        metadata: { listing_id: row.id, reason: reason || null },
-      } as any);
-    } catch { /* non-blocking */ }
     const { error } = await supabase.from("listings").delete().eq("id", row.id);
     setSubmitting(false);
     if (error) return toast.error(error.message);
+    await notifyHost(row, "listing_rejected", "Listing rejected",
+      `Your listing "${row.title}" was not approved.${reason ? ` Reason: ${reason}` : ""}`);
+    await logAdminAction({ action: "listing_rejected", entityType: "listing", entityId: row.id, metadata: { listing_code: row.listing_code, title: row.title, reason: reason || null } });
     toast.success("Listing removed");
     setRows((r) => r.filter((x) => x.id !== row.id));
     setConfirmAction(null);
@@ -248,6 +245,16 @@ const AdminListings = () => {
             </button>
           ))}
         </div>
+        <div className="inline-flex p-1 rounded-xl bg-secondary border border-border ml-2 align-top" role="group" aria-label="View">
+          {([["detail", List, "Detail"], ["grid", LayoutGrid, "Grid"]] as const).map(([v, Icon, label]) => (
+            <button key={v} type="button" onClick={() => setView(v)} aria-pressed={view === v}
+              className={`px-3 py-1.5 text-xs font-bold rounded-lg transition inline-flex items-center gap-1.5 ${
+                view === v ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+              }`}>
+              <Icon className="w-3.5 h-3.5" /> {label}
+            </button>
+          ))}
+        </div>
       </div>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 pt-5 space-y-6">
@@ -261,13 +268,49 @@ const AdminListings = () => {
             {tab === "pending" ? "All caught up." : "No approved listings yet."}
           </div>
         )}
+        {view === "detail" && shown.length > 0 && (
+        <div className="rounded-2xl border border-border bg-card overflow-hidden">
+          <div className="hidden md:grid grid-cols-[56px_1.6fr_1.2fr_0.7fr_0.8fr_1fr_0.9fr_auto] gap-3 px-3 py-2 bg-secondary/50 text-[10px] font-bold uppercase text-muted-foreground">
+            <span />
+            <span>Listing</span><span>Place</span><span>Beds / baths</span><span>Price / night</span><span>Host</span><span>Submitted</span><span className="text-right">Actions</span>
+          </div>
         {shown.map((r) => {
           const host = hosts[r.host_id];
           const images = r.images || [];
           const hero = images[0];
           const rest = images.slice(1);
+          const isOpen = expanded === r.id;
           return (
-            <article key={r.id} className="rounded-3xl border border-border bg-card overflow-hidden shadow-sm">
+            <div key={r.id} id={`listing-${r.id}`} className="scroll-mt-20 border-t border-border first:border-t-0">
+            <div role="button" tabIndex={0} onClick={() => setExpanded(isOpen ? null : r.id)} onKeyDown={(e) => e.key === "Enter" && setExpanded(isOpen ? null : r.id)}
+              className={`grid grid-cols-[56px_1fr_auto] md:grid-cols-[56px_1.6fr_1.2fr_0.7fr_0.8fr_1fr_0.9fr_auto] gap-3 px-3 py-2 items-center cursor-pointer hover:bg-secondary/40 ${isOpen ? "bg-secondary/40" : ""}`}>
+              <div className="w-14 h-11 rounded-lg overflow-hidden bg-secondary/50">
+                {hero ? <SafeImg src={hero} alt={r.title} className="w-full h-full object-cover" /> : null}
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold truncate">{r.title}</p>
+                <p className="text-[11px] text-muted-foreground truncate"><span className="font-mono">{r.listing_code}</span> · {r.type} · {images.length} photo{images.length === 1 ? "" : "s"}{r.video_url ? " · video" : ""}</p>
+                <p className="md:hidden text-[11px] text-muted-foreground truncate">{[r.neighborhood, r.city, r.state].filter(Boolean).join(", ")} · ₦{Number(r.price_per_night).toLocaleString()}</p>
+              </div>
+              <p className="hidden md:block text-xs text-muted-foreground truncate">{[r.neighborhood, r.city, r.state].filter(Boolean).join(", ") || "—"}</p>
+              <p className="hidden md:block text-xs">{r.bedrooms} / {r.bathrooms}</p>
+              <p className="hidden md:block text-xs font-bold text-primary">₦{Number(r.price_per_night).toLocaleString()}</p>
+              <p className="hidden md:block text-xs truncate">{host?.full_name || "Unknown host"}</p>
+              <p className="hidden md:block text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
+              <div className="flex gap-1 justify-end" onClick={(e) => e.stopPropagation()}>
+                {tab === "pending" ? (
+                  <>
+                    <button onClick={() => setConfirmAction({ kind: "approve", row: r })} className="text-xs font-semibold px-2.5 py-1 rounded-lg bg-success text-primary-foreground">Approve</button>
+                    <button onClick={() => { setRejectReason(""); setConfirmAction({ kind: "reject", row: r }); }} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-destructive/40 text-destructive">Reject</button>
+                  </>
+                ) : (
+                  <button onClick={() => { setRejectReason(""); setConfirmAction({ kind: "revoke", row: r }); }} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-destructive/40 text-destructive">Revoke</button>
+                )}
+                <ChevronRight className={`w-4 h-4 self-center text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`} />
+              </div>
+            </div>
+            {isOpen && (
+            <article className="m-2 rounded-3xl border border-border bg-background overflow-hidden">
               {/* Photo gallery */}
               {images.length > 0 ? (
                 <div className="grid grid-cols-4 gap-1.5 p-1.5 bg-secondary/30">
@@ -409,8 +452,33 @@ const AdminListings = () => {
                 </div>
               </div>
             </article>
+            )}
+            </div>
           );
         })}
+        </div>
+        )}
+        {view === "grid" && (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {shown.map((r) => (
+              <button key={r.id} type="button"
+                onClick={() => { setView("detail"); setExpanded(r.id); setTimeout(() => document.getElementById(`listing-${r.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" }), 50); }}
+                className="text-left rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/50 transition-colors">
+                <div className="aspect-[4/3] bg-secondary/40">
+                  {r.images?.[0] ? <SafeImg src={r.images[0]} alt={r.title} className="w-full h-full object-cover" />
+                    : <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">No photo</div>}
+                </div>
+                <div className="p-2.5 space-y-0.5">
+                  {r.listing_code && <p className="font-mono text-[10px] text-muted-foreground">{r.listing_code}</p>}
+                  <p className="text-xs font-bold line-clamp-2 leading-snug">{r.title}</p>
+                  <p className="text-[11px] text-muted-foreground truncate">{[r.neighborhood, r.city, r.state].filter(Boolean).join(", ") || "No place"}</p>
+                  <p className="text-xs font-extrabold text-primary">₦{Number(r.price_per_night).toLocaleString()}<span className="text-[10px] font-normal text-muted-foreground"> /night</span></p>
+                  <p className="text-[10px] text-muted-foreground truncate">{hosts[r.host_id]?.full_name || "Unknown host"} · {r.images?.length || 0} photos</p>
+                </div>
+              </button>
+            ))}
+          </div>
+        )}
       </div>
 
       {lightbox && <Lightbox images={lightbox.images} start={lightbox.start} onClose={() => setLightbox(null)} />}

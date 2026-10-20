@@ -12,7 +12,7 @@
 - [x] Admin refund button sends real Paystack refund
 - [x] Admin view of 4h viewing reservations + viewing expiry rules
 
-Blocked: Paystack test/live mode unconfirmed; Phase 0 test payments to be run by the user; WhatsApp skipped for launch.
+Blocked: Paystack is on LIVE keys (switch to test keys before MVP test bookings); RayProp wallet funding unconfirmed; WhatsApp skipped for launch.
 - [x] Admin Listings review + detail/grid view toggle (detail default)
 - [x] Admin Users review: confirm all fields mapped
 - [x] Admin Bookings: detail view default, search by many fields, gap review vs booking flow

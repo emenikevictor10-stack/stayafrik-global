@@ -6,6 +6,8 @@ import { mcpPlugin } from "@lovable.dev/mcp-js/stacks/supabase/vite";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => ({
+  envDir: __dirname,
+  envPrefix: "VITE_",
   server: {
     host: "::",
     port: 8080,

@@ -101,14 +101,13 @@ export const Dock = () => {
       <button onClick={() => navigate("/search")} className="w-11 h-11 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-blue-hover" aria-label="Search" title="Search">
         <Search className="w-5 h-5" />
       </button>
-      {tabs.map(({ to, Icon, label, key }) => (
+      {[...tabs.filter((t) => t.to !== "/account"), "menu" as const, ...tabs.filter((t) => t.to === "/account")].map((t) => t === "menu" ? <span key="menu">{menu}</span> : (({ to, Icon, label, key }) => (
         <NavLink key={to} to={to} end={to === "/"} title={label} aria-label={label}
           className={({ isActive }) => cn("relative w-11 h-11 rounded-lg flex items-center justify-center", isActive ? "bg-surface text-primary" : "text-muted-foreground hover:bg-surface hover:text-foreground")}>
           <Icon className="w-5 h-5" />
           {badgeFor(key, items) > 0 && <Dot />}
         </NavLink>
-      ))}
-      {menu}
+      ))(t))}
     </nav>
   );
 };

@@ -1,4 +1,5 @@
-import { ErrorState } from "@/ui/kit";
+import { payoutNextStep } from "@/lib/next-step";
+import { ErrorState, NextStep, Tabs } from "@/ui/kit";
 import { toneFor, statusLabel } from "@/lib/status-tone";
 import { Tag } from "@/ui/kit";
 import { useEffect, useMemo, useState } from "react";
@@ -103,11 +104,7 @@ const AdminPayouts = () => {
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Host, listing ID, title, transfer code…" className="pl-9" />
         </div>
       </header>
-      <div className="flex gap-1 flex-wrap mb-4">
-        {["all", "pending", "processing", "paid", "failed", "cancelled"].map((s) => (
-          <button key={s} onClick={() => setFilter(s)} className={`text-xs font-semibold px-3 py-1.5 rounded-full capitalize ${filter === s ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>{s}</button>
-        ))}
-      </div>
+      <div className="w-full mb-4"><Tabs value={filter} onChange={setFilter} tabs={["all", "pending", "processing", "paid", "failed", "cancelled"].map((s) => ({ value: s, label: s === "all" ? "All" : statusLabel(s) }))} /></div>
 
       {loadError ? <ErrorState message="This list didn't load." onRetry={() => load()} /> : loading ? (
         <div className="space-y-2">{[0, 1, 2].map((i) => <div key={i} className="h-24 rounded-xl bg-secondary animate-pulse" />)}</div>
@@ -119,6 +116,7 @@ const AdminPayouts = () => {
             const h = people[r.host_id];
             return (
               <article key={r.id} className="rounded-2xl border border-border bg-card p-4 space-y-3">
+                {(() => { const ns = payoutNextStep({ status: r.status, amount: Number(r.amount), host: h?.name?.split(" ")[0] }); return <NextStep tone={ns.tone} status={ns.status} sentence={ns.sentence} />; })()}
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">

@@ -1,3 +1,4 @@
+import { ErrorState } from "@/ui/kit";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
 import { toast } from "sonner";
@@ -50,11 +51,13 @@ const AdminSupport = () => {
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setMe(data.user?.id ?? null)); }, []);
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 30000); return () => clearInterval(t); }, []);
 
+  const [loadError, setLoadError] = useState(false);
   const loadList = useCallback(async () => {
     const { data, error } = await supabase.from("support_issues")
       .select("*, bookings(listing_code,check_in_date,check_out_date,partner_title,partner_address,status,total_price,source,listings(title,address,city,host_id))")
       .order("created_at", { ascending: false }).limit(500);
-    if (error) { toast.error("Could not load problems"); setIssues([]); return; }
+    if (error) { setLoadError(true); setIssues([]); return; }
+    setLoadError(false);
     const rows = (data || []) as any as Issue[];
     setIssues(rows);
     const ids = Array.from(new Set(rows.flatMap((r) => [r.user_id, r.owner_id, r.bookings?.listings?.host_id]).filter(Boolean) as string[]));
@@ -171,7 +174,7 @@ const AdminSupport = () => {
             <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
             <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Search ref, guest, stay, note" className="pl-9" />
           </div>
-          {!issues ? (
+          {loadError ? <ErrorState message="Problems didn't load." onRetry={() => loadList()} /> : !issues ? (
             <div className="space-y-2">{[0, 1, 2].map((n) => <div key={n} className="h-20 rounded-xl bg-muted animate-pulse" />)}</div>
           ) : list.length === 0 ? (
             <div className="rounded-xl border border-dashed border-border p-6 text-center">

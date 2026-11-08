@@ -1,4 +1,5 @@
-import { ErrorState } from "@/ui/kit";
+import { partnerNextStep } from "@/lib/next-step";
+import { ErrorState, NextStep, Tabs } from "@/ui/kit";
 import { toneFor, statusLabel } from "@/lib/status-tone";
 import { Tag } from "@/ui/kit";
 import { useEffect, useMemo, useState } from "react";
@@ -122,14 +123,7 @@ const AdminPartnerBookings = () => {
             <input type="date" value={to} onChange={(e) => setTo(e.target.value)} className="h-8 rounded-lg bg-secondary border border-border px-2 text-foreground" />
           </label>
         </div>
-        <div className="flex gap-1 flex-wrap">
-          {STATUSES.map((s) => (
-            <button key={s} onClick={() => setFilter(s)}
-              className={`text-xs font-semibold px-3 py-1.5 rounded-full capitalize ${filter === s ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>
-              {s.replace("_", " ")}
-            </button>
-          ))}
-        </div>
+        <div className="w-full"><Tabs value={filter} onChange={setFilter} tabs={STATUSES.map((s) => ({ value: s, label: s === "all" ? "All" : statusLabel(s) }))} /></div>
 
         {loadError ? <ErrorState message="This list didn't load." onRetry={() => load()} /> : loading ? (
           <div className="space-y-2">{[0, 1, 2].map((i) => <div key={i} className="h-28 rounded-xl bg-secondary animate-pulse" />)}</div>
@@ -145,6 +139,7 @@ const AdminPartnerBookings = () => {
                     {r.partner_image ? <img src={r.partner_image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No photo</div>}
                   </div>
                   <div className="flex-1 p-4 space-y-3 min-w-0">
+                    {(() => { const ns = partnerNextStep({ status: r.status, guest: g?.name?.split(" ")[0] }); return <NextStep tone={ns.tone} status={ns.status} sentence={ns.sentence} />; })()}
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">

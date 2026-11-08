@@ -1,4 +1,5 @@
-import { ErrorState } from "@/ui/kit";
+import { kycNextStep } from "@/lib/next-step";
+import { ErrorState, NextStep, Tabs } from "@/ui/kit";
 import { toneFor, statusLabel } from "@/lib/status-tone";
 import { Tag } from "@/ui/kit";
 import { useEffect, useMemo, useState } from "react";
@@ -98,11 +99,7 @@ const AdminKyc = () => {
           <Input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Name, email, phone, ID type or number" className="pl-9" />
         </div>
       </header>
-      <div className="flex gap-1 flex-wrap mb-4">
-        {["pending", "approved", "rejected", "all"].map((s) => (
-          <button key={s} onClick={() => setFilter(s)} className={`text-xs font-semibold px-3 py-1.5 rounded-full capitalize ${filter === s ? "bg-primary text-primary-foreground" : "bg-secondary text-muted-foreground"}`}>{s}</button>
-        ))}
-      </div>
+      <div className="w-full mb-4"><Tabs value={filter} onChange={setFilter} tabs={["pending", "approved", "rejected", "all"].map((s) => ({ value: s, label: s === "all" ? "All" : statusLabel(s) }))} /></div>
 
       {loadError ? <ErrorState message="This list didn't load." onRetry={() => load()} /> : loading ? (
         <div className="space-y-2">{[0, 1, 2].map((i) => <div key={i} className="h-32 rounded-xl bg-secondary animate-pulse" />)}</div>
@@ -119,6 +116,7 @@ const AdminKyc = () => {
                     : <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No image</div>}
                 </a>
                 <div className="flex-1 p-4 space-y-3 min-w-0">
+                  {(() => { const ns = kycNextStep({ status: r.status, name: p?.name?.split(" ")[0] }); return <NextStep tone={ns.tone} status={ns.status} sentence={ns.sentence} />; })()}
                   <div className="flex items-start justify-between gap-2 flex-wrap">
                     <div className="min-w-0">
                       <Link to={`/admin/users/${r.user_id}`} className="font-bold hover:text-primary">{p?.name || "…"}</Link>

@@ -1,5 +1,6 @@
 import { toneFor, statusLabel } from "@/lib/status-tone";
-import { Tag } from "@/ui/kit";
+import { Tag, NextStep } from "@/ui/kit";
+import { userNextStep } from "@/lib/next-step";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -135,6 +136,10 @@ const AdminUserDetail = () => {
       <Link to="/admin/users" className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-4">
         <ChevronLeft className="w-3.5 h-3.5" /> Back to users
       </Link>
+
+      {(() => { const ns = userNextStep({ kycPending: kyc.some((k) => k.status === "pending"), profileComplete: !!(profile.full_name && profile.phone) });
+        return <div className="mb-5"><NextStep tone={ns.tone} status={ns.status} sentence={ns.sentence}
+          action={ns.action ? <Link to="/admin/kyc" className="h-11 px-4 inline-flex items-center rounded-lg bg-primary text-primary-foreground text-sm font-semibold">{ns.action}</Link> : undefined} /></div>; })()}
 
       {/* Header card */}
       <div className="rounded-2xl border border-border bg-card p-5 mb-5 flex items-start gap-4">

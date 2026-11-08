@@ -39,3 +39,35 @@ export const kycNextStep = (k: { status: string; name?: string | null }): NextSt
   if (k.status === "approved") return { tone: "done", status: "Approved", sentence: `${who}'s ID is approved.` };
   return { tone: "broken", status: "Rejected", sentence: `${who}'s ID was rejected.` };
 };
+
+export const bookingNextStep = (b: { status: string }): NextStepInfo => {
+  switch (b.status) {
+    case "needs_attention": return { tone: "broken", status: "Needs attention", sentence: "Something went wrong after payment. Check it now." };
+    case "pending": return { tone: "fact", status: "Unpaid", sentence: "The guest hasn't paid yet. Nothing to do." };
+    case "confirmed": case "paid": case "escrow": case "held":
+      return { tone: "fact", status: "Money held", sentence: "The money is held. It goes to the host after check-out." };
+    case "released": case "completed": return { tone: "done", status: "Completed", sentence: "The stay is over and the host's share has been released." };
+    case "cancelled": return { tone: "fact", status: "Cancelled", sentence: "This booking was cancelled." };
+    case "refunded": return { tone: "done", status: "Refunded", sentence: "The guest has been refunded." };
+    default: return { tone: "fact", status: b.status.replace(/_/g, " "), sentence: "Nothing to do." };
+  }
+};
+
+export const partnerNextStep = (b: { status: string; guest?: string | null }): NextStepInfo => {
+  const who = b.guest || "The guest";
+  switch (b.status) {
+    case "needs_attention": return { tone: "broken", status: "Needs attention", sentence: `${who} paid, but RayProp didn't confirm. Retry or refund.`, action: "Retry" };
+    case "processing": return { tone: "act", status: "Confirming", sentence: "Payment received. Waiting for RayProp to confirm." };
+    case "confirmed": return { tone: "done", status: "Confirmed", sentence: "RayProp confirmed this stay." };
+    case "refunded": return { tone: "done", status: "Refunded", sentence: `${who} has been refunded.` };
+    case "cancelled": return { tone: "fact", status: "Cancelled", sentence: "This booking was cancelled." };
+    default: return { tone: "fact", status: b.status.replace(/_/g, " "), sentence: "Nothing to do." };
+  }
+};
+
+export const userNextStep = (u: { kycPending: boolean; profileComplete: boolean; blocked?: boolean; blockReason?: string | null }): NextStepInfo => {
+  if (u.blocked) return { tone: "broken", status: "Blocked", sentence: u.blockReason ? `Blocked: ${u.blockReason}` : "This account is blocked." };
+  if (u.kycPending) return { tone: "act", status: "ID waiting", sentence: "This person sent an ID. Check it matches their name.", action: "Review ID" };
+  if (!u.profileComplete) return { tone: "fact", status: "Profile incomplete", sentence: "This person hasn't finished their profile." };
+  return { tone: "done", status: "All good", sentence: "Nothing to do." };
+};

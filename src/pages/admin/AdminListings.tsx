@@ -1,4 +1,4 @@
-import { Tag as StatusTag, NextStep, Button } from "@/ui/kit";
+import { Tag as StatusTag, NextStep, Button, Tabs, ErrorState } from "@/ui/kit";
 import { listingNextStep } from "@/lib/next-step";
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
@@ -90,6 +90,7 @@ const AdminListings = () => {
   const [stateFilter, setStateFilter] = useState("");
   const [view, setView] = useState<"detail" | "grid">("detail");
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [loadError, setLoadError] = useState(false);
 
   useEffect(() => {
     if (!user) return;
@@ -106,11 +107,12 @@ const AdminListings = () => {
 
   const load = async () => {
     setBusy(true);
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("listings")
       .select("*")
       .eq("verified", tab === "approved")
       .order("created_at", { ascending: false });
+    setLoadError(!!error);
     const list = (data as ListingRow[]) || [];
     setRows(list);
     const hostIds = Array.from(new Set(list.map((r) => r.host_id)));
@@ -235,19 +237,7 @@ const AdminListings = () => {
       </header>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 pt-4">
-        <div className="inline-flex p-1 rounded-xl bg-secondary border border-border">
-          {(["pending", "approved"] as Tab[]).map((t) => (
-            <button
-              key={t}
-              onClick={() => setTab(t)}
-              className={`px-4 py-1.5 text-xs font-bold rounded-lg transition ${
-                tab === t ? "bg-background text-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
-              }`}
-            >
-              {t === "pending" ? "Pending" : "Approved"}
-            </button>
-          ))}
-        </div>
+        <Tabs<Tab> value={tab} onChange={setTab} tabs={[{ value: "pending", label: "Pending" }, { value: "approved", label: "Approved" }]} />
         <div className="inline-flex p-1 rounded-xl bg-secondary border border-border ml-2 align-top" role="group" aria-label="View">
           {([["detail", List, "Detail"], ["grid", LayoutGrid, "Grid"]] as const).map(([v, Icon, label]) => (
             <button key={v} type="button" onClick={() => setView(v)} aria-pressed={view === v}
@@ -261,11 +251,12 @@ const AdminListings = () => {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 pt-5 space-y-6">
+        {loadError && !busy && <ErrorState message="Listings didn't load." onRetry={() => load()} />}
         {busy && <div className="text-center py-8 text-sm text-muted-foreground"><Loader2 className="w-5 h-5 animate-spin mx-auto" /></div>}
         {!busy && rows.length > 0 && shown.length === 0 && (
           <div className="text-center py-12 text-sm text-muted-foreground">No listings match "{q}".</div>
         )}
-        {!busy && rows.length === 0 && (
+        {!busy && !loadError && rows.length === 0 && (
           <div className="text-center py-16 text-sm text-muted-foreground">
             <CheckCircle2 className="w-8 h-8 text-success mx-auto mb-2" />
             {tab === "pending" ? "All caught up." : "No approved listings yet."}

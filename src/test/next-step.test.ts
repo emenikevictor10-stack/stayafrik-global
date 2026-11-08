@@ -13,3 +13,13 @@ describe("next step", () => {
   it("pending viewing asks to approve", () => expect(viewingNextStep({ status: "pending" }).action).toBe("Approve"));
   it("pending ID asks to approve ID", () => expect(kycNextStep({ status: "pending" }).action).toBe("Approve ID"));
 });
+
+import { bookingNextStep, partnerNextStep, userNextStep } from "@/lib/next-step";
+describe("next step: bookings and users", () => {
+  it("needs-attention booking is broken", () => expect(bookingNextStep({ status: "needs_attention" }).tone).toBe("broken"));
+  it("cancelled booking has no button", () => expect(bookingNextStep({ status: "cancelled" }).action).toBeUndefined());
+  it("partner needs-attention offers Retry", () => expect(partnerNextStep({ status: "needs_attention" }).action).toBe("Retry"));
+  it("partner confirmed has no button", () => expect(partnerNextStep({ status: "confirmed" }).action).toBeUndefined());
+  it("user with ID waiting gets Review ID", () => expect(userNextStep({ kycPending: true, profileComplete: true }).action).toBe("Review ID"));
+  it("blocked user shows reason", () => expect(userNextStep({ kycPending: true, profileComplete: true, blocked: true, blockReason: "fraud" }).sentence).toContain("fraud"));
+});

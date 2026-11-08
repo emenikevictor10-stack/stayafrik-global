@@ -1,3 +1,4 @@
+import { TopBar } from "@/components/shell/TopBar";
 import { useRole } from "@/contexts/RoleContext";
 import { useAuth } from "@/contexts/AuthContext";
 import {
@@ -149,6 +150,8 @@ const Profile = () => {
   };
 
   return (
+    <>
+    <TopBar title="Account" />
     <main className="px-5 pt-6 pb-32">
       {/* Header */}
       <header className="mb-6">
@@ -235,6 +238,7 @@ const Profile = () => {
         <Link to="/terms" className="hover:text-primary transition-colors underline">Terms</Link>
       </div>
     </main>
+    </>
   );
 };
 

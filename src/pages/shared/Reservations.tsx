@@ -62,7 +62,7 @@ const ReservationCard = ({ r, meta, isHost, onChange }: { r: Reservation; meta?:
         )}
         <div className="flex-1 min-w-0">
           <div className="flex items-start justify-between gap-2">
-            <Link to={`/property/${r.listing_id}`} className="font-bold text-sm truncate">{meta?.title || "Listing"}</Link>
+            <Link to={`/stays/${r.listing_id}`} className="font-bold text-sm truncate">{meta?.title || "Listing"}</Link>
             <StatusChip status={r.status} />
           </div>
           {r.visit_at && (

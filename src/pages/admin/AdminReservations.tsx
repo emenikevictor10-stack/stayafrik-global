@@ -1,3 +1,6 @@
+import { ErrorState } from "@/ui/kit";
+import { toneFor, statusLabel } from "@/lib/status-tone";
+import { Tag } from "@/ui/kit";
 import { useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -25,13 +28,6 @@ type Row = {
 type Person = { name: string; email: string | null; phone: string | null };
 
 const STATUSES = ["all", "pending", "approved", "expired", "rejected", "cancelled"];
-const COLORS: Record<string, string> = {
-  pending: "bg-warning/15 text-warning",
-  approved: "bg-primary/15 text-primary",
-  expired: "bg-muted text-muted-foreground",
-  rejected: "bg-destructive/15 text-destructive",
-  cancelled: "bg-muted text-muted-foreground",
-};
 const fmt = (d: string | null) => (d ? new Date(d).toLocaleString() : "—");
 
 type Action = { status: Reservation["status"]; label: string };
@@ -54,6 +50,7 @@ const AdminReservations = () => {
   const [people, setPeople] = useState<Record<string, Person>>({});
   const [filter, setFilter] = useState("all");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [open, setOpen] = useState<Row | null>(null);
   const [confirm, setConfirm] = useState<Action | null>(null);
   const [reason, setReason] = useState("");
@@ -68,6 +65,7 @@ const AdminReservations = () => {
       .limit(300);
     if (filter !== "all") q = q.eq("status", filter);
     const { data, error } = await q;
+    setLoadError(!!error);
     if (error) toast.error(error.message);
     const list = (data as any as Row[]) || [];
     setRows(list);
@@ -116,7 +114,7 @@ const AdminReservations = () => {
           </button>
         ))}
       </div>
-      {loading ? (
+      {loadError ? <ErrorState message="This list didn't load." onRetry={() => load()} /> : loading ? (
         <div className="space-y-2">{[0, 1, 2].map((i) => <div key={i} className="h-14 rounded-xl bg-secondary animate-pulse" />)}</div>
       ) : rows.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">No viewing requests.</div>
@@ -135,7 +133,7 @@ const AdminReservations = () => {
                 </p>
                 <p className="text-xs text-muted-foreground">Requested {fmt(r.created_at)} · Visit {fmt(r.visit_at)}</p>
               </div>
-              <span className={`self-start md:self-center text-xs font-bold px-2 py-0.5 rounded-full ${COLORS[r.status] || "bg-secondary"}`}>{r.status === "rejected" ? "declined" : r.status}</span>
+              <Tag className="self-start md:self-center" tone={toneFor(r.status)}>{r.status === "rejected" ? "Declined" : statusLabel(r.status)}</Tag>
             </button>
           ))}
         </div>
@@ -165,7 +163,7 @@ const AdminReservations = () => {
                   )}
                   <div className="flex items-center justify-between text-xs">
                     <span className="font-mono text-muted-foreground">{open.listing?.listing_code}</span>
-                    <Link to={`/property/${open.listing_id}`} className="text-primary font-semibold">Open stay →</Link>
+                    <Link to={`/stays/${open.listing_id}`} className="text-primary font-semibold">Open stay →</Link>
                   </div>
                   <div className="grid grid-cols-2 gap-2">
                     <PersonBlock title="Guest" p={people[open.guest_id]} />

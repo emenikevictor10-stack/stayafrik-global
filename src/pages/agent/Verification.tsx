@@ -1,3 +1,5 @@
+import { toneFor, statusLabel } from "@/lib/status-tone";
+import { Tag } from "@/ui/kit";
 import { TopBar } from "@/components/shell/TopBar";
 import { ChevronLeft, Upload, Check, Clock, AlertCircle, IdCard, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -97,9 +99,7 @@ const Verification = () => {
     } as const;
     const m = map[submission.status];
     return (
-      <span className={`text-xs font-bold px-2 py-1 rounded-full border flex items-center gap-1 ${m.c}`}>
-        <m.I className="w-3 h-3" /> {m.l}
-      </span>
+      <Tag tone={toneFor(submission.status === "pending" ? "in_review" : submission.status)}>{m.l}</Tag>
     );
   };
 

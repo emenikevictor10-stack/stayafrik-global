@@ -1,3 +1,4 @@
+import { Tag } from "@/ui/kit";
 import { TopBar } from "@/components/shell/TopBar";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -87,9 +88,7 @@ export const AgentDashboard = () => {
         <section className="relative overflow-hidden rounded-3xl border border-primary/40 bg-gradient-to-br from-primary/25 via-primary/5 to-transparent p-5">
           <div className="absolute -right-10 -top-10 w-48 h-48 bg-primary/30 blur-3xl rounded-full pointer-events-none" />
           <div className="relative">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/15 border border-success/30 text-xs font-bold text-success">
-              <BadgeCheck className="w-3 h-3" /> Verified Host
-            </span>
+            <Tag tone="done">Verified Host</Tag>
             <h1 className="mt-3 text-2xl font-extrabold tracking-tight leading-tight">
               Welcome back, <span className="text-primary">{firstName}</span>
             </h1>
@@ -188,13 +187,9 @@ export const AgentDashboard = () => {
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-semibold text-sm truncate">{p.title}</h3>
                     {p.verified ? (
-                      <span className="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/30">
-                        ✓ Live
-                      </span>
+                      <Tag tone="done" className="shrink-0">Live</Tag>
                     ) : (
-                      <span className="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
-                        Review
-                      </span>
+                      <Tag tone="act" className="shrink-0">In review</Tag>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground truncate">📍 {p.location}</p>

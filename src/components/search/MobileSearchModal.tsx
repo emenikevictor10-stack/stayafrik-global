@@ -39,7 +39,7 @@ export const MobileSearchModal = ({ open, onOpenChange }: { open: boolean; onOpe
   const navigate = useNavigate();
   const submit = () => { commit(autoPick(draft, where)); onOpenChange(false); };
   const pick = (item: WhereItem) => {
-    if (item.kind === "stay") { onOpenChange(false); navigate(`/property/${item.id}`); return; }
+    if (item.kind === "stay") { onOpenChange(false); navigate(`/stays/${item.id}`); return; }
     rememberPlace(item); patch(placePatch(item)); setStep("when");
   };
   const toWhen = () => { patch(autoPick(draft, where)); setStep("when"); };

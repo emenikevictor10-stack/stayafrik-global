@@ -99,6 +99,10 @@ const App = () => (
                 <Route element={<PinGate><MobileShell /></PinGate>}>
                   <Route path="/" element={<Index />} />
                   <Route path="/explore" element={<Explore />} />
+                  <Route path="/results" element={<Explore />} />
+                  <Route path="/search" element={<Explore />} />
+                  <Route path="/home" element={<Index />} />
+                  <Route path="/stays/:id" element={<PropertyDetail />} />
                   <Route path="/saved" element={<Saved />} />
                   <Route path="/property/:id" element={<PropertyDetail />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />

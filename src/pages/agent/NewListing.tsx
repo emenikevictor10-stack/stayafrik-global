@@ -236,7 +236,7 @@ const NewListing = () => {
     <main className="pb-32 min-h-screen">
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="px-5 py-3 flex items-center gap-3">
-          <button onClick={back} className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center">
+          <button onClick={back} className="w-11 h-11 rounded-full bg-card border border-border flex items-center justify-center">
             <ChevronLeft className="w-4 h-4" />
           </button>
           <div className="flex-1">

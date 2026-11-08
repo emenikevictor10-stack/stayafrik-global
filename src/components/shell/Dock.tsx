@@ -69,7 +69,7 @@ export const Dock = () => {
     return (
       <aside className="hidden xl:flex fixed inset-y-0 left-0 z-40 w-64 flex-col border-r border-border bg-background p-4" aria-label="Primary">
         <Logo className="h-8 self-start mb-5" />
-        <button onClick={() => navigate("/explore")} className="h-11 mb-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center justify-center gap-2 hover:bg-blue-hover">
+        <button onClick={() => navigate("/search")} className="h-11 mb-4 rounded-lg bg-primary text-primary-foreground text-sm font-semibold inline-flex items-center justify-center gap-2 hover:bg-blue-hover">
           <Search className="w-4 h-4" /> Search
         </button>
         <nav className="flex flex-col gap-1">
@@ -99,7 +99,7 @@ export const Dock = () => {
         {horizontal ? <GripVertical className="w-4 h-4" /> : <GripHorizontal className="w-4 h-4" />}
       </button>
       <Link to="/" aria-label="Stay home" className="w-11 h-11 flex items-center justify-center"><Logo className="h-5" /></Link>
-      <button onClick={() => navigate("/explore")} className="w-11 h-11 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-blue-hover" aria-label="Search" title="Search">
+      <button onClick={() => navigate("/search")} className="w-11 h-11 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-blue-hover" aria-label="Search" title="Search">
         <Search className="w-5 h-5" />
       </button>
       {tabs.map(({ to, Icon, label, key }) => (

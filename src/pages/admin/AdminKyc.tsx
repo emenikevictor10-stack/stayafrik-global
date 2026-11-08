@@ -1,3 +1,6 @@
+import { ErrorState } from "@/ui/kit";
+import { toneFor, statusLabel } from "@/lib/status-tone";
+import { Tag } from "@/ui/kit";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -13,9 +16,6 @@ type Row = {
 };
 type Person = { name: string; email: string | null; phone: string | null; is_host: boolean };
 
-const COLORS: Record<string, string> = {
-  pending: "bg-warning/15 text-warning", approved: "bg-success/15 text-success", rejected: "bg-destructive/15 text-destructive",
-};
 const mask = (s: string) => (s.length > 4 ? "•".repeat(Math.max(0, s.length - 4)) + s.slice(-4) : s);
 
 const AdminKyc = () => {
@@ -26,12 +26,14 @@ const AdminKyc = () => {
   const [filter, setFilter] = useState("pending");
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const load = async () => {
     setLoading(true);
     let query = supabase.from("kyc_submissions").select("*").order("created_at", { ascending: false }).limit(300);
     if (filter !== "all") query = query.eq("status", filter);
     const { data, error } = await query;
+    setLoadError(!!error);
     if (error) toast.error(error.message);
     const list = ((data as any) || []) as Row[];
     setRows(list);
@@ -102,7 +104,7 @@ const AdminKyc = () => {
         ))}
       </div>
 
-      {loading ? (
+      {loadError ? <ErrorState message="This list didn't load." onRetry={() => load()} /> : loading ? (
         <div className="space-y-2">{[0, 1, 2].map((i) => <div key={i} className="h-32 rounded-xl bg-secondary animate-pulse" />)}</div>
       ) : shown.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">{rows.length ? "No submissions match." : "No submissions."}</div>
@@ -122,7 +124,7 @@ const AdminKyc = () => {
                       <Link to={`/admin/users/${r.user_id}`} className="font-bold hover:text-primary">{p?.name || "…"}</Link>
                       <p className="text-xs text-muted-foreground truncate">{[p?.email, p?.phone].filter(Boolean).join(" · ")}{p?.is_host ? " · Host" : ""}</p>
                     </div>
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${COLORS[r.status] || "bg-secondary"}`}>{r.status}</span>
+                    <Tag tone={toneFor(r.status)}>{statusLabel(r.status)}</Tag>
                   </div>
                   <dl className="text-xs grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
                     <dt className="text-muted-foreground">ID type</dt><dd className="font-semibold">{r.id_type}</dd>

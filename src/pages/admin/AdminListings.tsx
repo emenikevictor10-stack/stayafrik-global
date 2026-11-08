@@ -1,3 +1,4 @@
+import { Tag as StatusTag } from "@/ui/kit";
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { CheckCircle2, ShieldX, Loader2, ChevronLeft, MapPin, BedDouble, Bath, Ruler, Tag, User2, Mail, Phone, X, ChevronRight, Search, List, LayoutGrid, MoreHorizontal } from "lucide-react";
@@ -62,10 +63,10 @@ const Lightbox = ({ images, start, onClose }: { images: string[]; start: number;
   const go = (n: number) => setI((i + n + images.length) % images.length);
   return (
     <div className="fixed inset-0 z-50 bg-black/95 flex items-center justify-center" onClick={onClose}>
-      <button className="absolute top-4 right-4 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center" onClick={onClose}><X className="w-5 h-5" /></button>
-      <button className="absolute left-4 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center" onClick={(e) => { e.stopPropagation(); go(-1); }}><ChevronLeft className="w-5 h-5" /></button>
+      <button className="absolute top-4 right-4 w-11 h-11 rounded-full bg-white/10 text-white flex items-center justify-center" onClick={onClose}><X className="w-5 h-5" /></button>
+      <button className="absolute left-4 w-11 h-11 rounded-full bg-white/10 text-white flex items-center justify-center" onClick={(e) => { e.stopPropagation(); go(-1); }}><ChevronLeft className="w-5 h-5" /></button>
       <img src={images[i]} alt="" className="max-h-[90vh] max-w-[92vw] object-contain" onClick={(e) => e.stopPropagation()} />
-      <button className="absolute right-4 w-10 h-10 rounded-full bg-white/10 text-white flex items-center justify-center" onClick={(e) => { e.stopPropagation(); go(1); }}><ChevronRight className="w-5 h-5" /></button>
+      <button className="absolute right-4 w-11 h-11 rounded-full bg-white/10 text-white flex items-center justify-center" onClick={(e) => { e.stopPropagation(); go(1); }}><ChevronRight className="w-5 h-5" /></button>
       <div className="absolute bottom-6 left-1/2 -translate-x-1/2 px-3 py-1 rounded-full bg-white/10 text-white text-xs">{i + 1} / {images.length}</div>
     </div>
   );
@@ -213,7 +214,7 @@ const AdminListings = () => {
     <main className="min-h-screen bg-background pb-12">
       <Seo title="Admin · listings" description="Approve, reject or revoke host listings." noindex />
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border px-5 py-3 flex items-center gap-3">
-        <Link to="/admin" className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center">
+        <Link to="/admin" className="w-11 h-11 rounded-full bg-card border border-border flex items-center justify-center">
           <ChevronLeft className="w-4 h-4" />
         </Link>
         <div className="flex-1">
@@ -299,7 +300,7 @@ const AdminListings = () => {
               <p className="hidden md:block text-xs truncate">{host?.full_name || "Unknown host"}</p>
               {tab === "approved" ? (
                 <div className="hidden md:flex flex-col gap-0.5">
-                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-success/15 text-success w-fit">Live</span>
+                  <StatusTag tone="done">Live</StatusTag>
                   <span className="text-xs text-muted-foreground">{new Date((r as any).approved_at || (r as any).updated_at || r.created_at).toLocaleDateString()}</span>
                 </div>
               ) : (
@@ -320,7 +321,7 @@ const AdminListings = () => {
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end">
                     <DropdownMenuItem onClick={() => setExpanded(isOpen ? null : r.id)}>{isOpen ? "Hide details" : "View details"}</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => window.open(`/property/${r.id}`, "_blank")}>Open listing page</DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => window.open(`/stays/${r.id}`, "_blank")}>Open listing page</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(r.listing_code || r.id); toast.success("Listing ID copied"); }}>Copy listing ID</DropdownMenuItem>
                     {tab === "approved" && (
                       <>
@@ -510,7 +511,7 @@ const AdminListings = () => {
         <div className="fixed inset-0 z-50 bg-scrim backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={() => !submitting && setConfirmAction(null)}>
           <div className="w-full max-w-md bg-card border border-border rounded-3xl shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="p-5 border-b border-border">
-              <h3 className="text-lg font-extrabold">
+              <h3 className="text-base font-extrabold">
                 {confirmAction.kind === "approve" ? "Approve this listing?"
                   : confirmAction.kind === "revoke" ? "Revoke approval?"
                   : "Reject this listing?"}

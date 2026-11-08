@@ -1,3 +1,4 @@
+import { ErrorState, ListSkeleton } from "@/ui/kit";
 import { TopBar } from "@/components/shell/TopBar";
 import { Link } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -32,15 +33,17 @@ const Messages = () => {
   const { user } = useAuth();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const load = async () => {
     if (!user) return;
-    const { data } = await supabase
+    const { data, error: loadErr } = await supabase
       .from("messages")
       .select("*")
       .or(`sender_id.eq.${user.id},receiver_id.eq.${user.id}`)
       .order("created_at", { ascending: false })
       .limit(200);
+    setLoadError(!!loadErr);
     const rows = (data as Row[]) || [];
 
     const byOther = new Map<string, Row[]>();
@@ -122,13 +125,9 @@ const Messages = () => {
     <>
       <TopBar title="Inbox" subtitle={`${threads.length} conversations`} />
       <main className="px-2 pt-2 pb-8">
-        {loading && (
-          <div className="text-center py-12 text-muted-foreground text-sm">
-            <div className="w-6 h-6 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin mb-2" />
-            Loading…
-          </div>
-        )}
-        {!loading && threads.length === 0 && (
+        {loadError && <ErrorState message="Your messages didn't load." onRetry={() => load()} />}
+        {loading && !loadError && <div className="px-3 pt-2"><ListSkeleton /></div>}
+        {!loading && !loadError && threads.length === 0 && (
           <div className="text-center py-16 text-muted-foreground">
             <MessageSquare className="w-10 h-10 mx-auto mb-2 opacity-50" />
             <p className="text-sm">No conversations yet</p>

@@ -1,3 +1,5 @@
+import { toneFor, statusLabel } from "@/lib/status-tone";
+import { Tag } from "@/ui/kit";
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import {
@@ -150,7 +152,7 @@ const AdminUserDetail = () => {
               <span key={role} className={`text-xs font-bold px-2 py-0.5 rounded-full ${role === "admin" ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground"}`}>{role}</span>
             ))}
             {profile.is_host && (
-              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-success/15 text-success">Host</span>
+              <Tag tone="done">Host</Tag>
             )}
           </div>
           <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -206,7 +208,7 @@ const AdminUserDetail = () => {
                     {k.reviewer_notes && <p className="text-xs text-muted-foreground mt-1">Notes: {k.reviewer_notes}</p>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${k.status === "approved" ? "bg-success/15 text-success" : k.status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-secondary text-muted-foreground"}`}>{k.status}</span>
+                    <Tag tone={toneFor(k.status)}>{statusLabel(k.status)}</Tag>
                     {k.id_image_url && <a href={k.id_image_url} target="_blank" rel="noreferrer" className="text-xs text-primary font-semibold">View ID</a>}
                   </div>
                 </li>
@@ -227,7 +229,7 @@ const AdminUserDetail = () => {
                       {p.bank_code ? `Bank ${p.bank_code}` : p.brand || "Card"}
                       {p.account_number ? ` · ****${p.account_number.slice(-4)}` : p.last4 ? ` · ****${p.last4}` : ""}
                     </p>
-                    {p.is_default && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary">Default</span>}
+                    {p.is_default && <Tag tone="done">Default</Tag>}
                   </div>
                   {p.holder_name && <p className="text-xs text-muted-foreground mt-0.5">Holder: {p.holder_name}</p>}
                   <p className="text-xs text-muted-foreground mt-0.5">Added {new Date(p.created_at).toLocaleDateString()}</p>

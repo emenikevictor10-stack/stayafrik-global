@@ -1,3 +1,4 @@
+import { Tag } from "@/ui/kit";
 import { TopBar } from "@/components/shell/TopBar";
 import { ChevronLeft, Banknote, Plus, CheckCircle2, Loader2, ShieldCheck } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -169,9 +170,7 @@ const PayoutAccount = () => {
                   <div className="text-xs text-muted-foreground">{a.num} · {a.name}</div>
                 </div>
                 {a.primary ? (
-                  <span className="text-xs font-bold px-2 py-1 rounded-full bg-primary/15 text-primary border border-primary/30 flex items-center gap-1">
-                    <CheckCircle2 className="w-3 h-3" /> Primary
-                  </span>
+                  <Tag tone="done">Primary</Tag>
                 ) : (
                   <button disabled={saving} onClick={() => setPrimary(a.id)} className="text-xs font-bold text-primary disabled:opacity-50">Set primary</button>
                 )}

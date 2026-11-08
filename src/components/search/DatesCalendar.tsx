@@ -21,13 +21,13 @@ const Month = ({
     <div className="w-full max-w-[340px]">
       <div className="flex items-center justify-between h-8 mb-3">
         {prev ? (
-          <button type="button" onClick={prev.onClick} disabled={prev.disabled} aria-label="Previous month" className="w-8 h-8 rounded-full hover:bg-search-hover flex items-center justify-center disabled:opacity-30">
+          <button type="button" onClick={prev.onClick} disabled={prev.disabled} aria-label="Previous month" className="w-11 h-11 rounded-full hover:bg-search-hover flex items-center justify-center disabled:opacity-30">
             <ChevronLeft className="w-4 h-4" />
           </button>
         ) : <span className="w-8" />}
         <div className="text-base font-semibold">{format(month, "MMMM yyyy")}</div>
         {next ? (
-          <button type="button" onClick={next.onClick} aria-label="Next month" className="w-8 h-8 rounded-full hover:bg-search-hover flex items-center justify-center">
+          <button type="button" onClick={next.onClick} aria-label="Next month" className="w-11 h-11 rounded-full hover:bg-search-hover flex items-center justify-center">
             <ChevronRight className="w-4 h-4" />
           </button>
         ) : <span className="w-8" />}

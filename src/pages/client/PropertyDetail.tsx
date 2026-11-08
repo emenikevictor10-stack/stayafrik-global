@@ -1,3 +1,5 @@
+import { Tag } from "@/ui/kit";
+import { TopBar } from "@/components/shell/TopBar";
 import { rememberViewed } from "@/hooks/useRecentlyViewed";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useListing } from "@/hooks/useListings";
@@ -82,6 +84,8 @@ const PropertyDetail = () => {
   };
 
   return (
+    <>
+    <TopBar title={p.title} />
     <main className="pb-32">
       <Seo
         title={`${p.title} — ${p.location} | Stay`}
@@ -131,9 +135,7 @@ const PropertyDetail = () => {
       <div className="px-5 pt-5 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10 lg:items-start">
         <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 border border-primary/30 text-xs font-bold text-primary">
-            {p.emoji} {p.type}
-          </span>
+          <Tag tone="fact">{p.emoji} {p.type}</Tag>
           {p.verified && (
             <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-success text-primary-foreground text-xs font-bold">
               ✓ PropertyVerify™
@@ -415,6 +417,7 @@ const PropertyDetail = () => {
         </div>
       </div>
     </main>
+    </>
   );
 };
 

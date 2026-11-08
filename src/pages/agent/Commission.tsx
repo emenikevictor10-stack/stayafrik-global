@@ -1,3 +1,5 @@
+import { toneFor, statusLabel } from "@/lib/status-tone";
+import { Tag } from "@/ui/kit";
 import { TopBar } from "@/components/shell/TopBar";
 import { ChevronLeft, ArrowDownToLine, Banknote } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -103,7 +105,7 @@ const Commission = () => {
                   </div>
                   <div className="text-right">
                     <div className="text-xs font-bold">{fmt(Number(b.total_price) * 0.97)}</div>
-                    <div className={`text-xs font-bold ${b.status === "released" ? "text-success" : "text-primary"}`}>{b.status}</div>
+                    <Tag tone={toneFor(b.status)}>{statusLabel(b.status)}</Tag>
                   </div>
                 </div>
               ))}

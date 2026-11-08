@@ -50,7 +50,7 @@ const Home = () => {
       <TopBar title="Home" />
       <main className="px-4 md:px-0 py-5">
         <h1 className="text-2xl font-semibold">Where are you staying next?</h1>
-        <Link to="/explore" className="mt-4 flex items-center gap-3 h-[52px] px-4 rounded-full border border-border bg-background shadow-search text-muted-foreground hover:text-foreground">
+        <Link to="/search" className="mt-4 flex items-center gap-3 h-[52px] px-4 rounded-full border border-border bg-background shadow-search text-muted-foreground hover:text-foreground">
           <Search className="w-5 h-5" aria-hidden /> <span className="text-base">Search places, dates, guests</span>
         </Link>
 

@@ -212,7 +212,7 @@ const BookProperty = () => {
         <div className="px-5 py-3 flex items-center gap-3">
           <button
             onClick={back}
-            className="w-9 h-9 rounded-full bg-card border border-border flex items-center justify-center"
+            className="w-11 h-11 rounded-full bg-card border border-border flex items-center justify-center"
             aria-label="Back"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -444,7 +444,7 @@ const Counter = ({
   <button
     onClick={onClick}
     disabled={disabled}
-    className="w-9 h-9 rounded-full border border-border bg-secondary flex items-center justify-center disabled:opacity-40"
+    className="w-11 h-11 rounded-full border border-border bg-secondary flex items-center justify-center disabled:opacity-40"
   >
     {children}
   </button>

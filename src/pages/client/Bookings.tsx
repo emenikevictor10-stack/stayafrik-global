@@ -1,3 +1,6 @@
+import { ErrorState, ListSkeleton } from "@/ui/kit";
+import { toneFor, statusLabel } from "@/lib/status-tone";
+import { Tag } from "@/ui/kit";
 import { useEffect, useState } from "react";
 import { TopBar } from "@/components/shell/TopBar";
 import { Link } from "react-router-dom";
@@ -41,12 +44,6 @@ type BookingRow = {
 const HOLD_MIN = 10;
 const fmt = (n: number) => "₦" + Math.round(Number(n || 0)).toLocaleString();
 
-const statusBadge = (s: string) =>
-  s === "released"
-    ? "bg-success/15 text-success border-success/30"
-    : s === "confirmed"
-    ? "bg-primary/15 text-primary border-primary/30"
-    : "bg-muted text-muted-foreground border-border";
 
 const ReviewForm = ({ booking, onDone }: { booking: BookingRow; onDone: () => void }) => {
   const { user } = useAuth();
@@ -85,6 +82,7 @@ const Bookings = () => {
   const { user } = useAuth();
   const [items, setItems] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [releasing, setReleasing] = useState<string | null>(null);
   const [reviewed, setReviewed] = useState<Record<string, boolean>>({});
@@ -92,11 +90,13 @@ const Bookings = () => {
 
   const load = async () => {
     if (!user) return;
-    const { data } = await supabase
+    setLoadError(false);
+    const { data, error: loadErr } = await supabase
       .from("bookings")
       .select("*, listings(id,title,location,city,images,address,neighborhood,state)")
       .eq("guest_id", user.id)
       .order("created_at", { ascending: false });
+    if (loadErr) { setLoadError(true); setLoading(false); return; }
     setItems((data as any) || []);
     const { data: revs } = await supabase.from("reviews").select("booking_id").eq("guest_id", user.id);
     setReviewed(Object.fromEntries((revs || []).map((r) => [r.booking_id, true])));
@@ -143,18 +143,18 @@ const Bookings = () => {
     load();
   };
 
-  if (loading) {
+  if (loading || loadError) {
     return (
       <>
-        <TopBar title="My bookings" />
-        <main className="px-5 pt-10 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></main>
+        <TopBar title="Trips" />
+        <main className="px-5 pt-5">{loadError ? <ErrorState message="Your trips didn't load." onRetry={() => { setLoading(true); load(); }} /> : <ListSkeleton rows={3} />}</main>
       </>
     );
   }
 
   return (
     <>
-      <TopBar title="My bookings" subtitle={`${items.length} ${items.length === 1 ? "trip" : "trips"}`} />
+      <TopBar title="Trips" subtitle={`${items.length} ${items.length === 1 ? "trip" : "trips"}`} />
       <main className="px-5 pt-5 pb-8 space-y-3">
         {items.length === 0 && (
           <div className="rounded-2xl border border-dashed border-border p-8 text-center">
@@ -169,7 +169,7 @@ const Bookings = () => {
           const img = (partner ? b.partner_image : b.listings?.images?.[0]) || "/placeholder.svg";
           const title = (partner ? b.partner_title : b.listings?.title) || "Listing";
           const place = partner ? b.partner_city : b.listings?.location || b.listings?.city;
-          const href = partner ? `/property/rp_${b.rayprop_listing_id}` : `/property/${b.listing_id}`;
+          const href = partner ? `/stays/rp_${b.rayprop_listing_id}` : `/stays/${b.listing_id}`;
           const createdMs = new Date(b.created_at).getTime();
           const holdEnds = createdMs + HOLD_MIN * 60_000;
           const canRelease = b.status === "confirmed" && now >= holdEnds;
@@ -186,7 +186,7 @@ const Bookings = () => {
                   <p className="text-xs text-muted-foreground truncate">📍 {place || "—"}</p>
                   <p className="text-xs mt-2">🗓️ {b.check_in_date} → {b.check_out_date}</p>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className={`text-xs font-bold px-2 py-1 rounded-full border capitalize ${statusBadge(b.status)}`}>{b.status === "needs_attention" ? "processing" : b.status}</span>
+                    <Tag tone={toneFor(b.status)}>{b.status === "needs_attention" ? "Processing" : statusLabel(b.status)}</Tag>
                     <span className="text-xs font-extrabold text-primary">{fmt(b.total_price)}</span>
                   </div>
                 </div>
@@ -273,8 +273,8 @@ const Bookings = () => {
               })()}
 
               {openIssues[b.id] ? (
-                <Link to={`/issues/${openIssues[b.id].id}`} className="mt-3 flex items-center justify-between w-full h-11 px-3 rounded-lg border border-warning/40 bg-warning/10 text-[13px]">
-                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-warning" aria-hidden />Problem {openIssues[b.id].ref} · {guestStatusText[openIssues[b.id].status as IssueStatus]}</span>
+                <Link to={`/issues/${openIssues[b.id].id}`} className="mt-3 flex items-center justify-between w-full h-11 px-3 rounded-lg border border-warning/40 bg-orange/10 text-[13px]">
+                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange" aria-hidden />Problem {openIssues[b.id].ref} · {guestStatusText[openIssues[b.id].status as IssueStatus]}</span>
                   <span className="font-semibold">Open</span>
                 </Link>
               ) : ["confirmed", "released", "completed", "needs_attention"].includes(b.status) && (

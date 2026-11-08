@@ -260,7 +260,7 @@ const TermsConditions = () => {
           <div className="space-y-8">
             {sections.map((s) => (
               <section key={s.id} id={s.id} className="scroll-mt-24">
-                <h2 className="text-lg font-extrabold mb-3">{s.title}</h2>
+                <h2 className="text-base font-extrabold mb-3">{s.title}</h2>
                 <div className="text-sm text-muted-foreground leading-relaxed space-y-3">
                   {s.content}
                 </div>

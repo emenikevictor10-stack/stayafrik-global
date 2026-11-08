@@ -1,3 +1,6 @@
+import { ErrorState } from "@/ui/kit";
+import { toneFor, statusLabel } from "@/lib/status-tone";
+import { Tag } from "@/ui/kit";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -16,10 +19,6 @@ type Person = { name: string; email: string | null; phone: string | null; bank: 
 
 const money = (n: number, cur = "NGN") =>
   new Intl.NumberFormat("en-NG", { style: "currency", currency: cur, maximumFractionDigits: 0 }).format(n);
-const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-warning/15 text-warning", processing: "bg-primary/15 text-primary",
-  paid: "bg-success/15 text-success", failed: "bg-destructive/15 text-destructive", cancelled: "bg-muted text-muted-foreground",
-};
 
 const AdminPayouts = () => {
   const [rows, setRows] = useState<Row[]>([]);
@@ -27,6 +26,7 @@ const AdminPayouts = () => {
   const [filter, setFilter] = useState("all");
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -35,6 +35,7 @@ const AdminPayouts = () => {
       .order("created_at", { ascending: false }).limit(500);
     if (filter !== "all") query = query.eq("status", filter);
     const { data, error } = await query;
+    setLoadError(!!error);
     if (error) toast.error(error.message);
     const list = ((data as any) || []) as Row[];
     setRows(list);
@@ -108,7 +109,7 @@ const AdminPayouts = () => {
         ))}
       </div>
 
-      {loading ? (
+      {loadError ? <ErrorState message="This list didn't load." onRetry={() => load()} /> : loading ? (
         <div className="space-y-2">{[0, 1, 2].map((i) => <div key={i} className="h-24 rounded-xl bg-secondary animate-pulse" />)}</div>
       ) : shown.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">{rows.length ? "No payouts match." : "No payouts yet."}</div>
@@ -122,7 +123,7 @@ const AdminPayouts = () => {
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
                       {r.booking?.listing_code && <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.booking.listing_code}</span>}
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${STATUS_COLORS[r.status] || "bg-secondary"}`}>{r.status}</span>
+                      <Tag tone={toneFor(r.status)}>{statusLabel(r.status)}</Tag>
                     </div>
                     <p className="font-bold">{r.booking?.listing?.title || (r.booking_id ? "Booking" : "Manual payout")}</p>
                     {r.booking && <p className="text-xs text-muted-foreground">Stay {r.booking.check_in_date} → {r.booking.check_out_date} · guest paid {money(Number(r.booking.total_price))}</p>}

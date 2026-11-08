@@ -1,3 +1,5 @@
+import { Tag } from "@/ui/kit";
+import { ErrorState } from "@/ui/kit";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Loader2, Search, Star, EyeOff, Eye } from "lucide-react";
@@ -15,15 +17,17 @@ const AdminReviews = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [names, setNames] = useState<Record<string, string>>({});
   const [busy, setBusy] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [q, setQ] = useState("");
   const [stars, setStars] = useState<number | "all">("all");
   const [show, setShow] = useState<"all" | "visible" | "hidden">("all");
 
   const load = async () => {
     setBusy(true);
-    const { data } = await supabase.from("reviews")
+    const { data, error } = await supabase.from("reviews")
       .select("id,rating,comment,created_at,hidden,guest_id,listing_id,booking_id,listings(title,listing_code)")
       .order("created_at", { ascending: false }).limit(500);
+    setLoadError(!!error);
     const list = (data as any as Row[]) || [];
     setRows(list);
     const ids = [...new Set(list.map((r) => r.guest_id))];
@@ -74,7 +78,7 @@ const AdminReviews = () => {
         </select>
       </div>
 
-      {busy ? <div className="py-10 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
+      {loadError ? <ErrorState message="This list didn't load." onRetry={() => load()} /> : busy ? <div className="py-10 flex justify-center"><Loader2 className="w-5 h-5 animate-spin" /></div>
         : shown.length === 0 ? <div className="text-center py-16 text-sm text-muted-foreground">No reviews yet.</div>
         : (
           <div className="rounded-2xl border border-border bg-card divide-y divide-border">
@@ -84,9 +88,9 @@ const AdminReviews = () => {
                   <div className="flex items-center gap-2 flex-wrap">
                     <span className="inline-flex">{Array.from({ length: 5 }).map((_, i) =>
                       <Star key={i} className={`w-3.5 h-3.5 ${i < r.rating ? "fill-primary text-primary" : "text-muted-foreground/40"}`} />)}</span>
-                    <Link to={`/property/${r.listing_id}`} target="_blank" className="text-sm font-bold truncate hover:underline">{r.listings?.title || "Stay"}</Link>
+                    <Link to={`/stays/${r.listing_id}`} target="_blank" className="text-sm font-bold truncate hover:underline">{r.listings?.title || "Stay"}</Link>
                     <span className="text-xs font-mono text-muted-foreground">{r.listings?.listing_code}</span>
-                    {r.hidden && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-destructive/15 text-destructive">Hidden</span>}
+                    {r.hidden && <Tag tone="broken">Hidden</Tag>}
                   </div>
                   {r.comment && <p className="text-xs text-muted-foreground mt-1">{r.comment}</p>}
                   <p className="text-xs text-muted-foreground mt-1">{names[r.guest_id] || "Guest"} · {new Date(r.created_at).toLocaleDateString()}</p>

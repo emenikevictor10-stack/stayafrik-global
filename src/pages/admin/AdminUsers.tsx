@@ -1,3 +1,5 @@
+import { Tag } from "@/ui/kit";
+import { ErrorState } from "@/ui/kit";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { Search, ShieldCheck, ShieldOff, ChevronRight, Mail, Phone, MessageCircle, BadgeCheck } from "lucide-react";
@@ -29,6 +31,7 @@ const AdminUsers = () => {
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [pendingId, setPendingId] = useState<string | null>(null);
 
   const load = async () => {
@@ -38,6 +41,7 @@ const AdminUsers = () => {
       .select("user_id, full_name, email, phone, whatsapp, avatar_url, is_host, email_verified, phone_verified, created_at")
       .order("created_at", { ascending: false })
       .limit(1000);
+    setLoadError(!!error);
     if (error) toast.error(error.message);
     const ids = (profs || []).map((p) => p.user_id);
     const [{ data: roles }, { data: lst }, { data: bks }] = ids.length
@@ -120,7 +124,7 @@ const AdminUsers = () => {
         ))}
       </div>
 
-      {loading ? (
+      {loadError ? <ErrorState message="This list didn't load." onRetry={() => load()} /> : loading ? (
         <div className="space-y-2">{[0, 1, 2, 3].map((i) => <div key={i} className="h-16 rounded-xl bg-secondary animate-pulse" />)}</div>
       ) : shown.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">No users match.</div>
@@ -140,8 +144,8 @@ const AdminUsers = () => {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="font-semibold truncate">{r.full_name || "—"}</span>
                       <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${host ? "bg-accent/20 text-foreground" : "bg-secondary text-muted-foreground"}`}>{host ? "Host" : "Guest"}</span>
-                      {admin && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary">Admin</span>}
-                      {hostIncomplete && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-warning/15 text-warning">Profile incomplete</span>}
+                      {admin && <Tag tone="done">Admin</Tag>}
+                      {hostIncomplete && <Tag tone="act">Profile incomplete</Tag>}
                     </div>
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
                       {r.email && <span className="flex items-center gap-1 truncate"><Mail className="w-3 h-3" />{r.email}{r.email_verified && <BadgeCheck className="w-3 h-3 text-primary" />}</span>}

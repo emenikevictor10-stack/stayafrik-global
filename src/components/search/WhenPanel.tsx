@@ -30,7 +30,7 @@ export const WhenPanel = ({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <button type="button" aria-label="About price colours" className="absolute right-0 top-0 w-8 h-8 rounded-full border border-border flex items-center justify-center text-muted-foreground">
+            <button type="button" aria-label="About price colours" className="absolute right-0 top-0 w-11 h-11 rounded-full border border-border flex items-center justify-center text-muted-foreground">
               <Info className="w-4 h-4" />
             </button>
           </TooltipTrigger>

@@ -1,3 +1,6 @@
+import { ErrorState } from "@/ui/kit";
+import { toneFor, statusLabel } from "@/lib/status-tone";
+import { Tag } from "@/ui/kit";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -37,15 +40,6 @@ const naira = (n: number) =>
 const day = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 const nights = (a: string, b: string) => Math.max(0, Math.round((+new Date(b) - +new Date(a)) / 86400000));
 
-const STATUS_COLORS: Record<string, string> = {
-  pending: "bg-warning/15 text-warning",
-  confirmed: "bg-primary/15 text-primary",
-  completed: "bg-success/15 text-success",
-  released: "bg-success/15 text-success",
-  cancelled: "bg-muted text-muted-foreground",
-  refunded: "bg-destructive/15 text-destructive",
-  needs_attention: "bg-warning/15 text-warning",
-};
 const STATUSES = ["all", "confirmed", "released", "completed", "cancelled", "refunded", "needs_attention"];
 const SOURCES = ["all", "local", "rayprop"] as const;
 
@@ -62,6 +56,7 @@ const AdminBookings = () => {
   const [from, setFrom] = useState("");
   const [to, setTo] = useState("");
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -72,6 +67,7 @@ const AdminBookings = () => {
       .limit(500);
     if (filter !== "all") query = query.eq("status", filter);
     const { data, error } = await query;
+    setLoadError(!!error);
     if (error) toast.error(error.message);
     const list = ((data as any) || []) as Row[];
     setRows(list);
@@ -143,7 +139,7 @@ const AdminBookings = () => {
   );
 
   const Pill = ({ s }: { s: string }) => (
-    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${STATUS_COLORS[s] || "bg-secondary"}`}>{s.replace("_", " ")}</span>
+    <Tag tone={toneFor(s)}>{statusLabel(s)}</Tag>
   );
 
   return (
@@ -195,7 +191,7 @@ const AdminBookings = () => {
       </div>
       {!loading && <p className="text-xs text-muted-foreground mb-2">{shown.length} booking{shown.length === 1 ? "" : "s"} · {naira(shown.reduce((s, r) => s + Number(r.total_price), 0))} total</p>}
 
-      {loading ? (
+      {loadError ? <ErrorState message="This list didn't load." onRetry={() => load()} /> : loading ? (
         <div className="space-y-2">{[0, 1, 2, 3].map((i) => <div key={i} className="h-24 rounded-xl bg-secondary animate-pulse" />)}</div>
       ) : shown.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">No bookings match.</div>
@@ -242,7 +238,7 @@ const AdminBookings = () => {
                           <Pill s={r.status} />
                         </div>
                         {r.listing_id ? (
-                          <Link to={`/property/${r.listing_id}`} className="font-bold text-base hover:text-primary line-clamp-1">{title(r)}</Link>
+                          <Link to={`/stays/${r.listing_id}`} className="font-bold text-base hover:text-primary line-clamp-1">{title(r)}</Link>
                         ) : <p className="font-bold text-base line-clamp-1">{title(r)}</p>}
                         <p className="text-xs text-muted-foreground">{r.listing?.city || r.partner_city || ""}</p>
                       </div>

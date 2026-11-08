@@ -18,7 +18,7 @@ export const PropertyCard = ({ p, nights = 0 }: { p: Property; nights?: number }
 
   return (
     <Link
-      to={`/property/${p.id}`}
+      to={`/stays/${p.id}`}
       onClick={() => p.source === "rayprop" && rememberRayPropListing(p)}
       className="block group rounded-2xl overflow-hidden bg-card border border-border transition-all hover:border-primary/50 active:scale-[0.99]"
     >
@@ -40,7 +40,7 @@ export const PropertyCard = ({ p, nights = 0 }: { p: Property; nights?: number }
             type="button"
             onClick={onHeart}
             aria-label={saved ? "Remove from saved" : "Save property"}
-            className="w-9 h-9 rounded-full bg-background/80 backdrop-blur-md border border-border flex items-center justify-center hover:scale-110 transition-transform"
+            className="w-11 h-11 rounded-full bg-background/80 backdrop-blur-md border border-border flex items-center justify-center hover:scale-110 transition-transform"
           >
             <Heart className={cn("w-4 h-4", saved ? "fill-primary text-primary" : "text-foreground")} />
           </button>

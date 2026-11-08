@@ -1,3 +1,6 @@
+import { ErrorState } from "@/ui/kit";
+import { toneFor, statusLabel } from "@/lib/status-tone";
+import { Tag } from "@/ui/kit";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { toast } from "sonner";
@@ -20,17 +23,13 @@ const naira = (n: number) => "₦" + Math.round(Number(n || 0)).toLocaleString()
 const day = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 const LOW_BALANCE_NAIRA = 200_000;
 const STATUSES = ["all", "needs_attention", "confirmed", "completed", "cancelled", "refunded"];
-const COLORS: Record<string, string> = {
-  confirmed: "bg-primary/15 text-primary", completed: "bg-success/15 text-success",
-  cancelled: "bg-muted text-muted-foreground", refunded: "bg-destructive/15 text-destructive",
-  needs_attention: "bg-warning/15 text-warning",
-};
 const copy = (v: string) => { navigator.clipboard?.writeText(v); toast.success("Copied"); };
 
 const AdminPartnerBookings = () => {
   const [rows, setRows] = useState<Row[]>([]);
   const [people, setPeople] = useState<Record<string, Person>>({});
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState(false);
   const [wallet, setWallet] = useState<{ balance: number; disabled?: boolean } | null>(null);
   const [busy, setBusy] = useState<string | null>(null);
   const [filter, setFilter] = useState("all");
@@ -43,6 +42,7 @@ const AdminPartnerBookings = () => {
     const { data, error } = await supabase.from("bookings")
       .select("id,guest_id,check_in_date,check_out_date,total_price,status,created_at,partner_title,partner_city,partner_image,listing_code,rayprop_listing_id,rayprop_quote_id,rayprop_hold_id,rayprop_reservation_id,rayprop_quote_total_kobo,guest_count,payment_reference,attention_reason")
       .eq("source", "rayprop").order("created_at", { ascending: false }).limit(500);
+    setLoadError(!!error);
     if (error) toast.error(error.message);
     const list = (data as Row[]) || [];
     setRows(list);
@@ -131,7 +131,7 @@ const AdminPartnerBookings = () => {
           ))}
         </div>
 
-        {loading ? (
+        {loadError ? <ErrorState message="This list didn't load." onRetry={() => load()} /> : loading ? (
           <div className="space-y-2">{[0, 1, 2].map((i) => <div key={i} className="h-28 rounded-xl bg-secondary animate-pulse" />)}</div>
         ) : shown.length === 0 ? (
           <div className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">{rows.length ? "No partner bookings match." : "No partner bookings yet."}</div>
@@ -149,10 +149,10 @@ const AdminPartnerBookings = () => {
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
                           {r.listing_code && <button onClick={() => copy(r.listing_code!)} className="font-mono text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.listing_code.replace(/^RP-/, "RP·")}</button>}
-                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${COLORS[r.status] || "bg-secondary"}`}>{r.status.replace("_", " ")}</span>
+                          <Tag tone={toneFor(r.status)}>{statusLabel(r.status)}</Tag>
                         </div>
                         {r.rayprop_listing_id
-                          ? <Link to={`/property/rp_${r.rayprop_listing_id}`} className="font-bold text-base hover:text-primary line-clamp-1">{r.partner_title || "Partner stay"}</Link>
+                          ? <Link to={`/stays/rp_${r.rayprop_listing_id}`} className="font-bold text-base hover:text-primary line-clamp-1">{r.partner_title || "Partner stay"}</Link>
                           : <p className="font-bold text-base line-clamp-1">{r.partner_title || "Partner stay"}</p>}
                         <p className="text-xs text-muted-foreground">{r.partner_city}</p>
                       </div>

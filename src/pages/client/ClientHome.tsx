@@ -1,3 +1,4 @@
+import { Tag } from "@/ui/kit";
 import { TopBar } from "@/components/shell/TopBar";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { PROPERTIES, CITIES, CATEGORIES } from "@/data/properties";
@@ -33,10 +34,7 @@ export const ClientHome = () => {
         <section className="mt-6 rounded-2xl bg-card border border-border p-5 relative overflow-hidden">
           <div className="absolute inset-0 bg-grid opacity-30" />
           <div className="relative">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 border border-success/30 text-xs font-semibold text-success">
-              <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
-              0 fraud cases on platform
-            </span>
+            <Tag tone="done">0 fraud cases on platform</Tag>
             <h2 className="mt-3 text-2xl font-extrabold leading-tight tracking-tight">
               Africa's <span className="text-primary">verified</span> property platform.
             </h2>

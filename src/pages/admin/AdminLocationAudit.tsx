@@ -133,7 +133,7 @@ const AdminLocationAudit = () => {
       <p className="text-xs text-muted-foreground -mt-4 mb-6">* A stay in a city with no neighbourhoods listed counts as complete with state + city.</p>
 
       <section className="mb-8">
-        <h2 className="text-lg font-bold mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-destructive" /> Review list ({rows.length})</h2>
+        <h2 className="text-base font-bold mb-2 flex items-center gap-2"><AlertTriangle className="w-4 h-4 text-destructive" /> Review list ({rows.length})</h2>
         {loading ? <div className="h-24 rounded-xl bg-muted animate-pulse" /> : !rows.length ? (
           <div className="rounded-xl border border-border bg-card p-6 text-sm text-muted-foreground flex items-center gap-2">
             <CheckCircle2 className="w-4 h-4 text-primary" /> Nothing to review — every stay is tagged.
@@ -167,7 +167,7 @@ const AdminLocationAudit = () => {
       </section>
 
       <section className="mb-8">
-        <h2 className="text-lg font-bold mb-2">Add a missing place</h2>
+        <h2 className="text-base font-bold mb-2">Add a missing place</h2>
         <div className="rounded-xl border border-border bg-card p-3 grid gap-3 md:grid-cols-4 md:items-end">
           <label className="text-xs">Name
             <input value={newPlace.name} onChange={(e) => setNewPlace((p) => ({ ...p, name: e.target.value }))}
@@ -195,7 +195,7 @@ const AdminLocationAudit = () => {
       </section>
 
       <section>
-        <h2 className="text-lg font-bold mb-2">Spellings merged into one place ({merges.length})</h2>
+        <h2 className="text-base font-bold mb-2">Spellings merged into one place ({merges.length})</h2>
         <div className="rounded-xl border border-border bg-card overflow-x-auto">
           <table className="w-full text-sm min-w-[560px]">
             <thead className="text-left text-xs text-muted-foreground"><tr>

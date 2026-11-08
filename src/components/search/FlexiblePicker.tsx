@@ -18,7 +18,7 @@ export const FlexiblePicker = ({
 
   return (
     <div className="text-center">
-      <h3 className="text-lg font-medium mb-4">How long would you like to stay?</h3>
+      <h3 className="text-base font-medium mb-4">How long would you like to stay?</h3>
       <div className="flex justify-center gap-2 mb-8">
         {(["weekend", "week", "month"] as const).map((l) => (
           <button key={l} type="button" onClick={() => onChange({ stayLength: l })}
@@ -27,7 +27,7 @@ export const FlexiblePicker = ({
           </button>
         ))}
       </div>
-      <h3 className="text-lg font-medium mb-4">{goIn}</h3>
+      <h3 className="text-base font-medium mb-4">{goIn}</h3>
       <div className="relative">
         <button type="button" onClick={() => scroll(-1)} aria-label="Scroll months left" className="hidden md:flex absolute -left-3 top-1/2 -translate-y-1/2 z-10 w-8 h-8 rounded-full bg-search-surface border border-border items-center justify-center shadow-search">
           <ChevronLeft className="w-4 h-4" />

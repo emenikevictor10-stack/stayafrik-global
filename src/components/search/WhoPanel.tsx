@@ -13,12 +13,12 @@ export const GuestStepperRow = ({
     </div>
     <div className="flex items-center gap-3">
       <button type="button" aria-label={`Decrease ${label}`} disabled={!canDec} onClick={onDec}
-        className="w-8 h-8 rounded-full border border-muted-foreground text-muted-foreground flex items-center justify-center hover:border-foreground hover:text-foreground disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:border-muted-foreground">
+        className="w-11 h-11 rounded-full border border-muted-foreground text-muted-foreground flex items-center justify-center hover:border-foreground hover:text-foreground disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:border-muted-foreground">
         <Minus className="w-3.5 h-3.5" />
       </button>
       <span className="min-w-6 text-center text-base" aria-live="polite">{value}</span>
       <button type="button" aria-label={`Increase ${label}`} disabled={!canInc} onClick={onInc}
-        className="w-8 h-8 rounded-full border border-muted-foreground text-muted-foreground flex items-center justify-center hover:border-foreground hover:text-foreground disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:border-muted-foreground">
+        className="w-11 h-11 rounded-full border border-muted-foreground text-muted-foreground flex items-center justify-center hover:border-foreground hover:text-foreground disabled:opacity-25 disabled:cursor-not-allowed disabled:hover:border-muted-foreground">
         <Plus className="w-3.5 h-3.5" />
       </button>
     </div>

@@ -1,3 +1,4 @@
+import { Tag } from "@/ui/kit";
 import { TopBar } from "@/components/shell/TopBar";
 import { useRole } from "@/contexts/RoleContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -46,9 +47,7 @@ const AgentProfile = () => {
                 {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-2xl font-extrabold text-primary">{user.initials}</span>}
               </div>
               <div className="flex-1 pb-1">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/15 border border-success/30 text-xs font-bold text-success">
-                  <BadgeCheck className="w-3 h-3" /> Verified · Tier 2
-                </span>
+                <Tag tone="done">Verified · Tier 2</Tag>
               </div>
               <Link
                 to="/profile/edit"
@@ -57,7 +56,7 @@ const AgentProfile = () => {
                 <Pencil className="w-3 h-3" /> Edit
               </Link>
             </div>
-            <h2 className="mt-3 text-lg font-extrabold">{user.name}</h2>
+            <h2 className="mt-3 text-base font-extrabold">{user.name}</h2>
             <p className="text-xs text-muted-foreground">Senior Agent · Stay Pro</p>
             <div className="flex items-center gap-1 mt-1.5">
               <Star className="w-3.5 h-3.5 fill-primary text-primary" />

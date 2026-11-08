@@ -4,7 +4,7 @@ import { PropertyCard } from "@/components/property/PropertyCard";
 import { type Property } from "@/data/properties";
 import { Map as MapIcon, List as ListIcon, X, Sparkles, Wallet, Star, Users, Zap, Laptop, Gem, type LucideIcon } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Link, useSearchParams } from "react-router-dom";
+import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { PropertiesMap } from "@/components/map/PropertyMap";
 import { useListings } from "@/hooks/useListings";
@@ -70,6 +70,12 @@ const ExploreSearch = ({ mapToggle }: { mapToggle: React.ReactNode }) => {
     return () => obs.disconnect();
   }, [isMobile]);
   useEffect(() => { if (!active) setFloating(false); }, [active]);
+  // /search (or ?open=1) opens the search box straight away.
+  const { pathname } = useLocation();
+  useEffect(() => {
+    if (pathname !== "/search" && !new URLSearchParams(window.location.search).has("open")) return;
+    if (isMobile) setMobileOpen(true); else setActive("where");
+  }, [pathname, isMobile]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (isMobile) {
     return (
@@ -244,7 +250,7 @@ const Explore = () => {
         </div>
         {hasSearch && !loading && (
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-            {heading && <h2 className="w-full text-lg font-bold text-foreground">{heading}</h2>}
+            {heading && <h2 className="w-full text-base font-bold text-foreground">{heading}</h2>}
             <span className="font-semibold text-foreground">{summarize(search).where} · {summarize(search).when} · {summarize(search).who}</span>
             {checking && <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />Checking dates…</span>}
             {fallbackCity && (
@@ -284,7 +290,7 @@ const Explore = () => {
                     <X className="w-3.5 h-3.5" />
                   </button>
                   <Link
-                    to={`/property/${selected.id}`}
+                    to={`/stays/${selected.id}`}
                     className="text-xs font-bold bg-primary text-primary-foreground px-3 py-2 rounded-full"
                   >
                     View

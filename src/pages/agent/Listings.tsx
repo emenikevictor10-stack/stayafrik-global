@@ -1,3 +1,4 @@
+import { Tag } from "@/ui/kit";
 import { TopBar } from "@/components/shell/TopBar";
 import { Link } from "react-router-dom";
 import { Plus, Eye, MessageSquare } from "lucide-react";
@@ -83,13 +84,9 @@ const Listings = () => {
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold text-sm truncate">{p.title}</h3>
                   {p.verified ? (
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/30 shrink-0">
-                      ✓ Live
-                    </span>
+                    <Tag tone="done" className="shrink-0">Live</Tag>
                   ) : (
-                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 shrink-0">
-                      Pending review
-                    </span>
+                    <Tag tone="act" className="shrink-0">Pending review</Tag>
                   )}
                 </div>
                 <p className="text-xs text-muted-foreground truncate">📍 {p.location}</p>

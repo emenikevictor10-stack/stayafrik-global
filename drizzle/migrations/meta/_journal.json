@@ -190,6 +190,13 @@
       "when": 1794176760592,
       "tag": "0026_booked_ranges_ignore_stale_holds",
       "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1794177130869,
+      "tag": "0027_host_rate_calendar",
+      "breakpoints": true
     }
   ]
 }

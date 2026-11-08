@@ -13,6 +13,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { DateRange } from "react-day-picker";
 import { useBlockedDates } from "@/hooks/useBlockedDates";
+import { useRatePlan } from "@/hooks/useRatePlan";
+import { quoteLocalStay } from "../../../supabase/functions/_shared/booking-core";
 import { isBlocked, rangeHitsBlocked, nextBlockedAfter } from "@/lib/blocked-dates";
 import { cn } from "@/lib/utils";
 import {
@@ -71,6 +73,8 @@ const BookProperty = () => {
     isPartnerListing,
   );
 
+  const ratePlan = useRatePlan(p?.id, isPartnerListing);
+
   // Range select that never spans a blocked night.
   const onRangeSelect = (r: DateRange | undefined) => {
     if (!r?.from) return setRange(undefined);
@@ -96,8 +100,12 @@ const BookProperty = () => {
   if (!p) return <main className="p-8 text-center text-sm text-muted-foreground">Property not found</main>;
 
   const isPartner = p.source === "rayprop";
-  const subtotal = p.priceNum * nights;
-  const fees = isPartner ? 0 : serviceFee(subtotal, serviceFeeBps);
+  const localQuote = !isPartner && checkIn && checkOut
+    ? quoteLocalStay(format(checkIn, "yyyy-MM-dd"), format(checkOut, "yyyy-MM-dd"), ratePlan ?? { price_per_night: p.priceNum }, serviceFeeBps)
+    : null;
+  const lq = localQuote?.ok ? localQuote : null;
+  const subtotal = lq ? koboToNaira(lq.subtotal_kobo) : p.priceNum * nights;
+  const fees = isPartner ? 0 : lq ? koboToNaira(lq.fee_kobo) : serviceFee(subtotal, serviceFeeBps);
   const total = isPartner && quote ? koboToNaira(quote.totalKobo) : subtotal + fees;
   const holdSecsLeft = hold ? Math.max(0, Math.floor((new Date(hold.expiresAt).getTime() - nowMs) / 1000)) : 0;
   const holdExpired = isPartner && !!hold && holdSecsLeft === 0;
@@ -126,6 +134,7 @@ const BookProperty = () => {
   const goNext = () => {
     if (step === 1) {
       if (!datesValid) return toast.error("Pick check-in and check-out dates");
+      if (localQuote && !localQuote.ok) return toast.error(localQuote.error);
       setStep(2);
     } else if (step === 2) {
       if (isPartner) return void preparePartner();
@@ -394,7 +403,16 @@ const BookProperty = () => {
               </div>
               ) : (
               <div className="space-y-2 text-sm">
-                <div className="flex justify-between"><span className="text-muted-foreground">{p.price} × {nights} night{nights > 1 ? "s" : ""}</span><span>{fmt(subtotal)}</span></div>
+                {lq ? (
+                  <>
+                    <div className="flex justify-between"><span className="text-muted-foreground">{nights} night{nights > 1 ? "s" : ""}{new Set(lq.nights.map((n) => n.kobo)).size > 1 ? " (prices vary by night)" : ` × ${fmt(koboToNaira(lq.nights[0].kobo))}`}</span><span>{fmt(koboToNaira(lq.nights_kobo))}</span></div>
+                    {lq.discount_kobo > 0 && <div className="flex justify-between"><span className="text-muted-foreground">{lq.discount_pct}% {nights >= 28 ? "monthly" : "weekly"} discount</span><span>−{fmt(koboToNaira(lq.discount_kobo))}</span></div>}
+                    {lq.cleaning_kobo > 0 && <div className="flex justify-between"><span className="text-muted-foreground">Cleaning fee</span><span>{fmt(koboToNaira(lq.cleaning_kobo))}</span></div>}
+                  </>
+                ) : (
+                  <div className="flex justify-between"><span className="text-muted-foreground">{p.price} × {nights} night{nights > 1 ? "s" : ""}</span><span>{fmt(subtotal)}</span></div>
+                )}
+                {ratePlan?.booking_mode === "request" && <p className="text-xs text-muted-foreground">The host accepts requests within 24 hours. If they don't, you get a full refund.</p>}
                 <div className="flex justify-between"><span className="text-muted-foreground">Service & escrow fee</span><span>{fmt(fees)}</span></div>
                 <div className="border-t border-border pt-2 mt-2 flex justify-between font-extrabold">
                   <span>Total (NGN)</span><span className="text-primary">{fmt(total)}</span>

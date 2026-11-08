@@ -113,15 +113,18 @@ export type Database = {
           check_in_date: string
           check_in_time: string | null
           check_out_date: string
+          cleaning_fee_kobo: number | null
           completed_at: string | null
           confirmed_at: string | null
           created_at: string
+          discount_kobo: number | null
           fee_kobo: number | null
           guest_count: number | null
           guest_id: string
           hold_expires_at: string | null
           host_id: string | null
           host_payout_kobo: number | null
+          host_respond_by: string | null
           id: string
           listing_code: string | null
           listing_id: string | null
@@ -154,15 +157,18 @@ export type Database = {
           check_in_date: string
           check_in_time?: string | null
           check_out_date: string
+          cleaning_fee_kobo?: number | null
           completed_at?: string | null
           confirmed_at?: string | null
           created_at?: string
+          discount_kobo?: number | null
           fee_kobo?: number | null
           guest_count?: number | null
           guest_id: string
           hold_expires_at?: string | null
           host_id?: string | null
           host_payout_kobo?: number | null
+          host_respond_by?: string | null
           id?: string
           listing_code?: string | null
           listing_id?: string | null
@@ -195,15 +201,18 @@ export type Database = {
           check_in_date?: string
           check_in_time?: string | null
           check_out_date?: string
+          cleaning_fee_kobo?: number | null
           completed_at?: string | null
           confirmed_at?: string | null
           created_at?: string
+          discount_kobo?: number | null
           fee_kobo?: number | null
           guest_count?: number | null
           guest_id?: string
           hold_expires_at?: string | null
           host_id?: string | null
           host_payout_kobo?: number | null
+          host_respond_by?: string | null
           id?: string
           listing_code?: string | null
           listing_id?: string | null
@@ -366,6 +375,70 @@ export type Database = {
         }
         Relationships: []
       }
+      listing_blocks: {
+        Row: {
+          created_at: string
+          end_date: string
+          id: string
+          listing_id: string
+          note: string | null
+          source: string
+          start_date: string
+        }
+        Insert: {
+          created_at?: string
+          end_date: string
+          id?: string
+          listing_id: string
+          note?: string | null
+          source?: string
+          start_date: string
+        }
+        Update: {
+          created_at?: string
+          end_date?: string
+          id?: string
+          listing_id?: string
+          note?: string | null
+          source?: string
+          start_date?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_blocks_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_date_prices: {
+        Row: {
+          date: string
+          listing_id: string
+          price: number
+        }
+        Insert: {
+          date: string
+          listing_id: string
+          price: number
+        }
+        Update: {
+          date?: string
+          listing_id?: string
+          price?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_date_prices_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       listings: {
         Row: {
           address: string | null
@@ -373,11 +446,16 @@ export type Database = {
           area: string | null
           bathrooms: number
           bedrooms: number
+          booking_mode: string
           city: string | null
           city_id: string | null
+          cleaning_fee: number
           created_at: string
           description: string | null
           host_id: string
+          ical_error: string | null
+          ical_synced_at: string | null
+          ical_url: string | null
           id: string
           images: string[]
           is_available: boolean
@@ -389,6 +467,9 @@ export type Database = {
           location_raw: string | null
           location_status: string
           location_suggestion_id: string | null
+          max_nights: number | null
+          min_nights: number
+          monthly_discount_pct: number
           neighborhood: string | null
           neighbourhood_id: string | null
           price_per_night: number
@@ -401,6 +482,8 @@ export type Database = {
           updated_at: string
           verified: boolean
           video_url: string | null
+          weekend_price: number | null
+          weekly_discount_pct: number
         }
         Insert: {
           address?: string | null
@@ -408,11 +491,16 @@ export type Database = {
           area?: string | null
           bathrooms?: number
           bedrooms?: number
+          booking_mode?: string
           city?: string | null
           city_id?: string | null
+          cleaning_fee?: number
           created_at?: string
           description?: string | null
           host_id: string
+          ical_error?: string | null
+          ical_synced_at?: string | null
+          ical_url?: string | null
           id?: string
           images?: string[]
           is_available?: boolean
@@ -424,6 +512,9 @@ export type Database = {
           location_raw?: string | null
           location_status?: string
           location_suggestion_id?: string | null
+          max_nights?: number | null
+          min_nights?: number
+          monthly_discount_pct?: number
           neighborhood?: string | null
           neighbourhood_id?: string | null
           price_per_night?: number
@@ -436,6 +527,8 @@ export type Database = {
           updated_at?: string
           verified?: boolean
           video_url?: string | null
+          weekend_price?: number | null
+          weekly_discount_pct?: number
         }
         Update: {
           address?: string | null
@@ -443,11 +536,16 @@ export type Database = {
           area?: string | null
           bathrooms?: number
           bedrooms?: number
+          booking_mode?: string
           city?: string | null
           city_id?: string | null
+          cleaning_fee?: number
           created_at?: string
           description?: string | null
           host_id?: string
+          ical_error?: string | null
+          ical_synced_at?: string | null
+          ical_url?: string | null
           id?: string
           images?: string[]
           is_available?: boolean
@@ -459,6 +557,9 @@ export type Database = {
           location_raw?: string | null
           location_status?: string
           location_suggestion_id?: string | null
+          max_nights?: number | null
+          min_nights?: number
+          monthly_discount_pct?: number
           neighborhood?: string | null
           neighbourhood_id?: string | null
           price_per_night?: number
@@ -471,6 +572,8 @@ export type Database = {
           updated_at?: string
           verified?: boolean
           video_url?: string | null
+          weekend_price?: number | null
+          weekly_discount_pct?: number
         }
         Relationships: [
           {
@@ -1302,15 +1405,18 @@ export type Database = {
           check_in_date: string
           check_in_time: string | null
           check_out_date: string
+          cleaning_fee_kobo: number | null
           completed_at: string | null
           confirmed_at: string | null
           created_at: string
+          discount_kobo: number | null
           fee_kobo: number | null
           guest_count: number | null
           guest_id: string
           hold_expires_at: string | null
           host_id: string | null
           host_payout_kobo: number | null
+          host_respond_by: string | null
           id: string
           listing_code: string | null
           listing_id: string | null
@@ -1396,6 +1502,10 @@ export type Database = {
           _user_id: string
         }
         Returns: boolean
+      }
+      host_booking_action: {
+        Args: { _action: string; _booking_id: string; _reason?: string }
+        Returns: undefined
       }
       listing_booked_ranges: {
         Args: { _listing_id: string }

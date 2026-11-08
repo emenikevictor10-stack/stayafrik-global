@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toWebp, inferUpload } from "@/lib/media";
+import { RateCalendar } from "@/components/host/RateCalendar";
 
 const EditListing = () => {
   const { id } = useParams();
@@ -187,6 +188,8 @@ const EditListing = () => {
             <textarea rows={5} value={desc} onChange={(e) => setDesc(e.target.value)} className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm resize-none" />
           </label>
         </section>
+
+        {id && <RateCalendar listingId={id} />}
 
         <button onClick={save} disabled={saving} className="mt-6 w-full rounded-2xl bg-primary text-primary-foreground py-3.5 font-bold text-sm shadow-glow disabled:opacity-50">
           {saving ? "Saving…" : "Save changes"}

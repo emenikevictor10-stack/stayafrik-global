@@ -1,5 +1,5 @@
 import { getSetting } from "../_shared/settings.ts";
-import { expiresAt, localSplit, nightlyBreakdown } from "../_shared/booking-core.ts";
+import { expiresAt, nightlyBreakdown, quoteLocalStay } from "../_shared/booking-core.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { raypropGetHold, raypropGetQuote, unwrapRayProp } from "../_shared/rayprop.ts";
@@ -82,7 +82,7 @@ Deno.serve(async (req) => {
     // Re-compute price server-side from the listing (never trust client totals)
     const { data: listing, error: lerr } = await supabase
       .from("listings")
-      .select("id, price_per_night, title, is_available, host_id")
+      .select("id, price_per_night, title, is_available, host_id, weekend_price, cleaning_fee, weekly_discount_pct, monthly_discount_pct, min_nights, max_nights")
       .eq("id", listing_id)
       .maybeSingle();
     if (lerr || !listing) return json(404, { error: "Listing not found" });
@@ -92,11 +92,23 @@ Deno.serve(async (req) => {
     const co = new Date(check_out).getTime();
     if (!ci || !co || co <= ci) return json(400, { error: "Invalid dates" });
 
-    const breakdown = nightlyBreakdown(check_in, check_out, Math.round(Number(listing.price_per_night) * 100));
-    const nights = breakdown.length;
-    if (nights < 1) return json(400, { error: "Invalid dates" });
+    const { data: dp } = await supabase.from("listing_date_prices").select("date, price")
+      .eq("listing_id", listing_id).gte("date", check_in).lt("date", check_out);
     const feeBps = await getSetting<number>("service_fee_bps", 800);
-    const split = localSplit(breakdown, feeBps);
+    const q = quoteLocalStay(check_in, check_out, {
+      ...listing, price_per_night: Number(listing.price_per_night),
+      date_prices: Object.fromEntries((dp ?? []).map((r: any) => [r.date, Number(r.price)])),
+    }, feeBps);
+    if (!q.ok) return json(400, { error: q.error });
+    // Host-blocked or calendar-imported nights are refused here too, not just in the picker.
+    // (Overlapping bookings are refused by the database constraint when the hold is inserted.)
+    const { data: blk } = await createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!)
+      .from("listing_blocks").select("id").eq("listing_id", listing_id).lt("start_date", check_out).gt("end_date", check_in).limit(1);
+    const clash = (blk ?? []).length > 0;
+    if (clash) return json(409, { error: "Some of those nights are not available — please pick different dates." });
+    const breakdown = q.nights;
+    const nights = breakdown.length;
+    const split = q;
     const subtotal = split.subtotal_kobo / 100;
     const fees = split.fee_kobo / 100;
     const total = split.total_kobo / 100;
@@ -135,7 +147,7 @@ Deno.serve(async (req) => {
       hold_expires_at: expiresAt(now, holdMin).toISOString(),
       payment_expires_at: expiresAt(now, Math.max(payMin, holdMin)).toISOString(),
       nightly_breakdown: breakdown, subtotal_kobo: split.subtotal_kobo, fee_kobo: split.fee_kobo,
-      host_payout_kobo: split.host_payout_kobo,
+      host_payout_kobo: split.host_payout_kobo, cleaning_fee_kobo: split.cleaning_kobo, discount_kobo: split.discount_kobo,
     }).select("id, hold_expires_at").single();
     if (herr) {
       if (herr.code === "23P01") return json(409, { error: "Those dates were just booked — please pick different dates." });

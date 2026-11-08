@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { TopBar } from "@/components/shell/TopBar";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "sonner";
 import { Loader2, ShieldCheck, Lock, CheckCircle2, Clock } from "lucide-react";
 
 type Row = {
@@ -13,6 +14,7 @@ type Row = {
   status: string;
   created_at: string;
   released_at: string | null;
+  host_respond_by: string | null;
   listings: { id: string; title: string; images: string[] } | null;
 };
 
@@ -22,6 +24,18 @@ const Escrow = () => {
   const { user } = useAuth();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const [busy, setBusy] = useState<string | null>(null);
+  const [tick, setTick] = useState(0);
+  const answer = async (id: string, action: "accept" | "decline") => {
+    if (action === "decline" && !confirm("Decline this request? The guest gets a full refund.")) return;
+    setBusy(id);
+    const { data, error } = await supabase.functions.invoke("booking-requests", { body: { booking_id: id, action } });
+    setBusy(null);
+    if (error || (data as any)?.error) return toast.error((data as any)?.error || "Couldn't save. Try again.");
+    toast.success(action === "accept" ? "Booking confirmed" : "Request declined — guest refunded");
+    setTick((t) => t + 1);
+  };
 
   useEffect(() => {
     if (!user) return;
@@ -35,8 +49,9 @@ const Escrow = () => {
       setRows((data as any) || []);
       setLoading(false);
     })();
-  }, [user?.id]);
+  }, [user?.id, tick]);
 
+  const requests = rows.filter((r) => r.status === "awaiting_host");
   const held = rows.filter((r) => r.status === "confirmed");
   const released = rows.filter((r) => r.status === "released");
   const totalHeld = held.reduce((s, r) => s + Number(r.total_price || 0), 0);
@@ -59,6 +74,25 @@ const Escrow = () => {
           </div>
         </div>
 
+        {requests.length > 0 && (
+          <section className="space-y-2">
+            <h2 className="text-sm font-bold">Booking requests ({requests.length})</h2>
+            {requests.map((r) => (
+              <article key={r.id} className="rounded-2xl bg-card border border-primary/40 p-4 space-y-3">
+                <div className="flex justify-between gap-3 text-sm">
+                  <div className="min-w-0"><p className="font-semibold truncate">{r.listings?.title}</p>
+                    <p className="text-xs text-muted-foreground">{r.check_in_date} → {r.check_out_date} · paid {fmt(r.total_price)}</p>
+                    {r.host_respond_by && <p className="text-xs text-muted-foreground">Reply by {new Date(r.host_respond_by).toLocaleString()}</p>}</div>
+                </div>
+                <div className="flex gap-2">
+                  <button disabled={busy === r.id} onClick={() => answer(r.id, "accept")} className="flex-1 min-h-11 rounded-xl bg-primary text-primary-foreground text-sm font-bold">Accept</button>
+                  <button disabled={busy === r.id} onClick={() => answer(r.id, "decline")} className="flex-1 min-h-11 rounded-xl border border-border text-sm font-bold">Decline</button>
+                </div>
+              </article>
+            ))}
+          </section>
+        )}
+
         {loading && <div className="flex justify-center py-6"><Loader2 className="w-5 h-5 animate-spin text-primary" /></div>}
 
         {!loading && rows.length === 0 && (
@@ -68,7 +102,7 @@ const Escrow = () => {
           </div>
         )}
 
-        {rows.map((r) => {
+        {rows.filter((r) => r.status !== "awaiting_host").map((r) => {
           const img = r.listings?.images?.[0] || "/placeholder.svg";
           const isHeld = r.status === "confirmed";
           return (

@@ -68,22 +68,71 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_events: {
+        Row: {
+          actor: string
+          actor_id: string | null
+          booking_id: string
+          created_at: string
+          data: Json
+          id: string
+          type: string
+        }
+        Insert: {
+          actor?: string
+          actor_id?: string | null
+          booking_id: string
+          created_at?: string
+          data?: Json
+          id?: string
+          type: string
+        }
+        Update: {
+          actor?: string
+          actor_id?: string | null
+          booking_id?: string
+          created_at?: string
+          data?: Json
+          id?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_events_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       bookings: {
         Row: {
           attention_reason: string | null
+          cancelled_at: string | null
           check_in_date: string
           check_in_time: string | null
           check_out_date: string
+          completed_at: string | null
+          confirmed_at: string | null
           created_at: string
+          fee_kobo: number | null
           guest_count: number | null
           guest_id: string
+          hold_expires_at: string | null
+          host_id: string | null
+          host_payout_kobo: number | null
           id: string
           listing_code: string | null
           listing_id: string | null
+          markup_kobo: number | null
+          nightly_breakdown: Json | null
+          paid_at: string | null
           partner_address: string | null
           partner_city: string | null
           partner_image: string | null
           partner_title: string | null
+          payment_expires_at: string | null
           payment_reference: string | null
           rayprop_hold_expires_at: string | null
           rayprop_hold_id: string | null
@@ -95,24 +144,36 @@ export type Database = {
           review_prompted_at: string | null
           source: string
           status: string
+          subtotal_kobo: number | null
           total_price: number
           updated_at: string
         }
         Insert: {
           attention_reason?: string | null
+          cancelled_at?: string | null
           check_in_date: string
           check_in_time?: string | null
           check_out_date: string
+          completed_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
+          fee_kobo?: number | null
           guest_count?: number | null
           guest_id: string
+          hold_expires_at?: string | null
+          host_id?: string | null
+          host_payout_kobo?: number | null
           id?: string
           listing_code?: string | null
           listing_id?: string | null
+          markup_kobo?: number | null
+          nightly_breakdown?: Json | null
+          paid_at?: string | null
           partner_address?: string | null
           partner_city?: string | null
           partner_image?: string | null
           partner_title?: string | null
+          payment_expires_at?: string | null
           payment_reference?: string | null
           rayprop_hold_expires_at?: string | null
           rayprop_hold_id?: string | null
@@ -124,24 +185,36 @@ export type Database = {
           review_prompted_at?: string | null
           source?: string
           status?: string
+          subtotal_kobo?: number | null
           total_price?: number
           updated_at?: string
         }
         Update: {
           attention_reason?: string | null
+          cancelled_at?: string | null
           check_in_date?: string
           check_in_time?: string | null
           check_out_date?: string
+          completed_at?: string | null
+          confirmed_at?: string | null
           created_at?: string
+          fee_kobo?: number | null
           guest_count?: number | null
           guest_id?: string
+          hold_expires_at?: string | null
+          host_id?: string | null
+          host_payout_kobo?: number | null
           id?: string
           listing_code?: string | null
           listing_id?: string | null
+          markup_kobo?: number | null
+          nightly_breakdown?: Json | null
+          paid_at?: string | null
           partner_address?: string | null
           partner_city?: string | null
           partner_image?: string | null
           partner_title?: string | null
+          payment_expires_at?: string | null
           payment_reference?: string | null
           rayprop_hold_expires_at?: string | null
           rayprop_hold_id?: string | null
@@ -153,6 +226,7 @@ export type Database = {
           review_prompted_at?: string | null
           source?: string
           status?: string
+          subtotal_kobo?: number | null
           total_price?: number
           updated_at?: string
         }
@@ -1218,6 +1292,58 @@ export type Database = {
     }
     Functions: {
       auto_release_due_bookings: { Args: never; Returns: number }
+      booking_actor: { Args: never; Returns: string }
+      booking_lifecycle_tick: { Args: never; Returns: Json }
+      confirm_local_payment: {
+        Args: { _amount_kobo: number; _reference: string }
+        Returns: {
+          attention_reason: string | null
+          cancelled_at: string | null
+          check_in_date: string
+          check_in_time: string | null
+          check_out_date: string
+          completed_at: string | null
+          confirmed_at: string | null
+          created_at: string
+          fee_kobo: number | null
+          guest_count: number | null
+          guest_id: string
+          hold_expires_at: string | null
+          host_id: string | null
+          host_payout_kobo: number | null
+          id: string
+          listing_code: string | null
+          listing_id: string | null
+          markup_kobo: number | null
+          nightly_breakdown: Json | null
+          paid_at: string | null
+          partner_address: string | null
+          partner_city: string | null
+          partner_image: string | null
+          partner_title: string | null
+          payment_expires_at: string | null
+          payment_reference: string | null
+          rayprop_hold_expires_at: string | null
+          rayprop_hold_id: string | null
+          rayprop_listing_id: string | null
+          rayprop_quote_id: string | null
+          rayprop_quote_total_kobo: number | null
+          rayprop_reservation_id: string | null
+          released_at: string | null
+          review_prompted_at: string | null
+          source: string
+          status: string
+          subtotal_kobo: number | null
+          total_price: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       create_support_issue: {
         Args: {
           _booking_id: string
@@ -1238,6 +1364,7 @@ export type Database = {
         Returns: number
       }
       expire_reservations: { Args: never; Returns: number }
+      expire_stale_holds: { Args: { _listing_id: string }; Returns: number }
       generate_listing_code: { Args: never; Returns: string }
       get_public_profiles: {
         Args: { _user_ids: string[] }
@@ -1248,6 +1375,10 @@ export type Database = {
           user_id: string
           whatsapp: string
         }[]
+      }
+      guest_confirm_checkin: {
+        Args: { _booking_id: string }
+        Returns: undefined
       }
       guest_issue_action: {
         Args: {
@@ -1292,6 +1423,15 @@ export type Database = {
           location_name: string
           variants: string[]
         }[]
+      }
+      log_booking_event: {
+        Args: {
+          _actor: string
+          _booking_id: string
+          _data?: Json
+          _type: string
+        }
+        Returns: undefined
       }
       match_location: {
         Args: {
@@ -1382,6 +1522,10 @@ export type Database = {
         Returns: undefined
       }
       setting_int: { Args: { _default: number; _key: string }; Returns: number }
+      staff_booking_action: {
+        Args: { _action: string; _booking_id: string; _note?: string }
+        Returns: undefined
+      }
       staff_issue_action: {
         Args: {
           _action: string

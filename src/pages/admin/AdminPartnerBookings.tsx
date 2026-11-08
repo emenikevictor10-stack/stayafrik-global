@@ -1,4 +1,5 @@
 import { partnerNextStep } from "@/lib/next-step";
+import { BookingTimeline } from "@/components/admin/BookingTimeline";
 import { ErrorState, NextStep, Tabs } from "@/ui/kit";
 import { toneFor, statusLabel } from "@/lib/status-tone";
 import { Tag } from "@/ui/kit";
@@ -189,6 +190,7 @@ const AdminPartnerBookings = () => {
                       {r.rayprop_hold_id && <span>Hold {r.rayprop_hold_id}</span>}
                       {r.payment_reference && <button onClick={() => copy(r.payment_reference!)} className="inline-flex items-center gap-1 hover:text-foreground">Paystack {r.payment_reference}<Copy className="w-3 h-3" /></button>}
                     </div>
+                    <BookingTimeline bookingId={r.id} />
                     {r.attention_reason && (
                       <p className="text-xs rounded-lg bg-warning/10 text-warning p-2 flex gap-1.5"><AlertTriangle className="w-3.5 h-3.5 shrink-0 mt-0.5" />{r.attention_reason}</p>
                     )}

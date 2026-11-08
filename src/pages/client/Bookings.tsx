@@ -97,6 +97,7 @@ const Bookings = () => {
       .from("bookings")
       .select("*, listings(id,title,location,city,images,address,neighborhood,state)")
       .eq("guest_id", user.id)
+      .not("status", "in", "(held,expired)") // unpaid holds aren't trips
       .order("created_at", { ascending: false });
     if (loadErr) { setLoadError(true); setLoading(false); return; }
     setItems((data as any) || []);
@@ -115,10 +116,7 @@ const Bookings = () => {
 
   const release = async (b: BookingRow) => {
     setReleasing(b.id);
-    const { error } = await supabase
-      .from("bookings")
-      .update({ status: "released", released_at: new Date().toISOString() })
-      .eq("id", b.id);
+    const { error } = await supabase.rpc("guest_confirm_checkin", { _booking_id: b.id });
     setReleasing(null);
     if (error) return toast.error(error.message);
     toast.success("Funds released to host 🎉");

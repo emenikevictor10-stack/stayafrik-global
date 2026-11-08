@@ -32,8 +32,8 @@ Keep (clashes): Paystack (not Payaza), Google sign-in + PIN (not email codes), 3
 - [x] P4 Admin shell (§5): sidebar/rail, groups, counts, phone ☰, next-step boxes on all detail views, underlined tabs, Try again on all admin lists
 - [x] Notifications as bell drop-down (no own page)
 - [x] P5 Settings + feature switches (§8): app_settings + Admin Settings; live: service fee, RayProp markup, support reply targets, report_problem/search_fields/map switches, support email. Stored for later phases: holds, payment window, commission, payout delay, host accept, iCal, wallet alert, invoices, guarantee, id_required. Reconfirmed: switches flipped off/on in browser; Explore map now also gated; reply targets 15/60 read from settings. Moderator view-only waits for Team (P19).
-- [ ] Payout calc (queue_payout_on_release) still assumes 8% fee — should store fee on each booking (Phase 6)
-- [ ] P6 Booking lifecycle (§4): unified statuses, booking events timeline, saved markup/commission/host payout per booking, hold 15 min + payment window, release job, overlap constraint
+- [x] Payout calc uses the host payout saved on each booking (Phase 6)
+- [x] P6 Booking lifecycle (§4): unified statuses, booking events timeline, saved markup/commission/host payout per booking, hold 15 min + payment window, release job, overlap constraint
 - [ ] P7 Own-inventory rate calendar (§5): base/weekend rates, date prices, blocks, min/max nights, cleaning fee, weekly/monthly discounts, instant book vs request-to-book (24h host accept, auto refund), iCal import
 - [ ] P8 Host portal (§3): /host home, listings, calendar, requests, bookings (first name only pre-confirm), payouts; /list-your-place
 - [ ] P9 Admin Hosts + Payouts (§5): host table, approve/suspend, bank verify (audited), payouts due day after check-in, hold with reason, mark paid with ref, CSV

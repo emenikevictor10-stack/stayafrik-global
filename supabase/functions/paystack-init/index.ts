@@ -1,4 +1,5 @@
 import { getSetting } from "../_shared/settings.ts";
+import { expiresAt, localSplit, nightlyBreakdown } from "../_shared/booking-core.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { raypropGetHold, raypropGetQuote, unwrapRayProp } from "../_shared/rayprop.ts";
@@ -54,6 +55,9 @@ Deno.serve(async (req) => {
       if (!pkey) return json(500, { error: "Paystack is not configured" });
       const reference = `STAYRP_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
       const title = String(body.title || quote?.listing?.title || "Partner stay").slice(0, 200);
+      const pNights = nightlyBreakdown(check_in, check_out, 0).length || 1;
+      const markupNight = Math.max(0, await getSetting<number>("markup_per_night_kobo", 0));
+      const markupKobo = Math.round(Number(quote?.pricing?.developer_markup_total ?? markupNight * pNights)) || 0;
       const r = await fetch("https://api.paystack.co/transaction/initialize", {
         method: "POST",
         headers: { Authorization: `Bearer ${pkey}`, "Content-Type": "application/json" },
@@ -62,7 +66,7 @@ Deno.serve(async (req) => {
           channels: ["card", "bank", "ussd", "bank_transfer", "qr", "mobile_money"],
           metadata: {
             source: "rayprop", user_id: userId, rayprop_listing_id: String(listing_id).replace(/^rp_/, ""),
-            quote_id, hold_id, amount_kobo: amountKobo, check_in, check_out, guests,
+            quote_id, hold_id, amount_kobo: amountKobo, markup_kobo: markupKobo, check_in, check_out, guests,
             title, image: String(body.image || "").slice(0, 500), city: String(body.city || quote?.listing?.city || "").slice(0, 80),
             hold_expires_at: hold?.expires_at || null,
             guest_name: String(g.name).slice(0, 120), guest_email: String(g.email).slice(0, 254), guest_phone: String(g.phone).slice(0, 20),
@@ -78,7 +82,7 @@ Deno.serve(async (req) => {
     // Re-compute price server-side from the listing (never trust client totals)
     const { data: listing, error: lerr } = await supabase
       .from("listings")
-      .select("id, price_per_night, title, is_available")
+      .select("id, price_per_night, title, is_available, host_id")
       .eq("id", listing_id)
       .maybeSingle();
     if (lerr || !listing) return json(404, { error: "Listing not found" });
@@ -88,29 +92,15 @@ Deno.serve(async (req) => {
     const co = new Date(check_out).getTime();
     if (!ci || !co || co <= ci) return json(400, { error: "Invalid dates" });
 
-    // Double-booking guard: refuse payment if any active booking overlaps these nights.
-    // Overlap rule: existing.check_in_date < requested check_out AND existing.check_out_date > requested check_in.
-    const { data: clashes, error: cerr } = await supabase
-      .from("bookings")
-      .select("id")
-      .eq("listing_id", listing_id)
-      .not("status", "in", '("cancelled","refunded","failed")')
-      .lt("check_in_date", check_out)
-      .gt("check_out_date", check_in)
-      .limit(1);
-    if (cerr) {
-      console.error("[paystack-init] overlap check failed", cerr);
-      return json(500, { error: "Could not check availability. Please try again." });
-    }
-    if (clashes && clashes.length > 0) {
-      return json(409, { error: "Those dates were just booked — please pick different dates." });
-    }
-    const nights = Math.max(1, Math.round((co - ci) / 86400000));
-    const subtotal = Number(listing.price_per_night) * nights;
+    const breakdown = nightlyBreakdown(check_in, check_out, Math.round(Number(listing.price_per_night) * 100));
+    const nights = breakdown.length;
+    if (nights < 1) return json(400, { error: "Invalid dates" });
     const feeBps = await getSetting<number>("service_fee_bps", 800);
-    const fees = Math.round((subtotal * feeBps) / 10000);
-    const total = subtotal + fees;
-    const amountKobo = Math.round(total * 100);
+    const split = localSplit(breakdown, feeBps);
+    const subtotal = split.subtotal_kobo / 100;
+    const fees = split.fee_kobo / 100;
+    const total = split.total_kobo / 100;
+    const amountKobo = split.total_kobo;
 
     const key = Deno.env.get("PAYSTACK_SECRET_KEY")?.trim();
     if (!key) return json(500, { error: "Paystack is not configured" });
@@ -127,6 +117,32 @@ Deno.serve(async (req) => {
     console.log(`[paystack-init] mode=${mode} key_prefix=${key.slice(0, 10)} user=${userId} amount_ngn=${total}`);
 
     const reference = `STAY_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
+
+    // Hold the nights first. The database refuses overlapping active bookings (bookings_no_overlap).
+    const svc = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    // Free nights whose hold ran out (the hourly job also does this), so they never block a new guest.
+    await svc.rpc("expire_stale_holds", { _listing_id: listing_id });
+    // A retry by the same guest replaces their own earlier hold on this stay.
+    await svc.from("bookings").update({ status: "cancelled" })
+      .eq("guest_id", userId).eq("listing_id", listing_id).eq("status", "held");
+    const now = new Date();
+    const holdMin = await getSetting<number>("hold_minutes", 15);
+    const payMin = await getSetting<number>("payment_window_minutes", 60);
+    const { data: held, error: herr } = await svc.from("bookings").insert({
+      guest_id: userId, listing_id, host_id: listing.host_id, source: "stayglobal", status: "held",
+      check_in_date: check_in, check_out_date: check_out, guest_count: guests,
+      total_price: total, payment_reference: reference,
+      hold_expires_at: expiresAt(now, holdMin).toISOString(),
+      payment_expires_at: expiresAt(now, Math.max(payMin, holdMin)).toISOString(),
+      nightly_breakdown: breakdown, subtotal_kobo: split.subtotal_kobo, fee_kobo: split.fee_kobo,
+      host_payout_kobo: split.host_payout_kobo,
+    }).select("id, hold_expires_at").single();
+    if (herr) {
+      if (herr.code === "23P01") return json(409, { error: "Those dates were just booked — please pick different dates." });
+      console.error("[paystack-init] hold failed", herr);
+      return json(500, { error: "Could not hold your dates. Please try again." });
+    }
+    const dropHold = () => svc.from("bookings").update({ status: "cancelled" }).eq("id", held.id).eq("status", "held");
 
     let r: Response;
     try {
@@ -162,12 +178,14 @@ Deno.serve(async (req) => {
       });
     } catch (e) {
       console.error("[paystack-init] network error", e);
+      await dropHold();
       return json(502, { error: "Could not reach Paystack. Please try again." });
     }
 
     const j = await r.json().catch(() => ({} as any));
     console.log(`[paystack-init] paystack_status=${r.status} ok=${j?.status} msg=${j?.message}`);
 
+    if (r.status === 401 || !r.ok || !j?.status) await dropHold();
     if (r.status === 401) {
       return json(401, {
         error:
@@ -192,6 +210,8 @@ Deno.serve(async (req) => {
       total,
       nights,
       mode,
+      booking_id: held.id,
+      hold_expires_at: held.hold_expires_at,
     });
   } catch (e) {
     console.error("[paystack-init] fatal", e);

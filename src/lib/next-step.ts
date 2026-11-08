@@ -44,9 +44,12 @@ export const bookingNextStep = (b: { status: string }): NextStepInfo => {
   switch (b.status) {
     case "needs_attention": return { tone: "broken", status: "Needs attention", sentence: "Something went wrong after payment. Check it now." };
     case "pending": return { tone: "fact", status: "Unpaid", sentence: "The guest hasn't paid yet. Nothing to do." };
-    case "confirmed": case "paid": case "escrow": case "held":
-      return { tone: "fact", status: "Money held", sentence: "The money is held. It goes to the host after check-out." };
-    case "released": case "completed": return { tone: "done", status: "Completed", sentence: "The stay is over and the host's share has been released." };
+    case "held": return { tone: "fact", status: "Dates held", sentence: "The guest is paying. The nights free up if the hold runs out." };
+    case "expired": return { tone: "fact", status: "Hold expired", sentence: "The guest didn't pay in time. The nights are free again." };
+    case "confirmed": case "paid": case "escrow":
+      return { tone: "fact", status: "Money held", sentence: "The money is held. The host's share is released the day after check-in." };
+    case "released": return { tone: "done", status: "Payout released", sentence: "The guest has checked in and the host's share has been released." };
+    case "completed": return { tone: "done", status: "Stay done", sentence: "The stay is over." };
     case "cancelled": return { tone: "fact", status: "Cancelled", sentence: "This booking was cancelled." };
     case "refunded": return { tone: "done", status: "Refunded", sentence: "The guest has been refunded." };
     default: return { tone: "fact", status: b.status.replace(/_/g, " "), sentence: "Nothing to do." };

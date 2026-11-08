@@ -10,6 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/seo/Seo";
 import { logAdminAction } from "@/lib/admin-audit";
 import { Input } from "@/components/ui/input";
+import { BookingTimeline } from "@/components/admin/BookingTimeline";
 
 type Row = {
   id: string;
@@ -31,6 +32,7 @@ type Row = {
   rayprop_hold_id: string | null;
   released_at: string | null;
   created_at: string;
+  subtotal_kobo: number | null; fee_kobo: number | null; markup_kobo: number | null; host_payout_kobo: number | null;
   listing?: { title: string; host_id: string; city: string | null; images: string[] | null } | null;
 };
 type Person = { name: string; email: string | null; phone: string | null };
@@ -41,7 +43,7 @@ const naira = (n: number) =>
 const day = (d: string) => new Date(d).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 const nights = (a: string, b: string) => Math.max(0, Math.round((+new Date(b) - +new Date(a)) / 86400000));
 
-const STATUSES = ["all", "confirmed", "released", "completed", "cancelled", "refunded", "needs_attention"];
+const STATUSES = ["all", "needs_attention", "held", "confirmed", "released", "completed", "expired", "cancelled", "refunded"];
 const SOURCES = ["all", "local", "rayprop"] as const;
 
 const copy = (v: string) => { navigator.clipboard?.writeText(v); toast.success("Copied"); };
@@ -63,7 +65,7 @@ const AdminBookings = () => {
     setLoading(true);
     let query = supabase
       .from("bookings")
-      .select("id, listing_id, guest_id, check_in_date, check_out_date, total_price, status, source, listing_code, partner_title, partner_city, partner_image, payment_reference, guest_count, attention_reason, rayprop_reservation_id, rayprop_hold_id, released_at, created_at, listing:listings(title, host_id, city, images)")
+      .select("id, listing_id, guest_id, check_in_date, check_out_date, total_price, status, source, listing_code, partner_title, partner_city, partner_image, payment_reference, guest_count, attention_reason, rayprop_reservation_id, rayprop_hold_id, released_at, created_at, subtotal_kobo, fee_kobo, markup_kobo, host_payout_kobo, listing:listings(title, host_id, city, images)")
       .order("created_at", { ascending: false })
       .limit(500);
     if (filter !== "all") query = query.eq("status", filter);
@@ -106,9 +108,8 @@ const AdminBookings = () => {
 
   const release = async (r: Row) => {
     if (!confirm(`Release ${naira(Number(r.total_price))} escrow for "${title(r)}" to the host?`)) return;
-    const { error } = await supabase.from("bookings").update({ status: "released", released_at: new Date().toISOString() }).eq("id", r.id);
+    const { error } = await supabase.rpc("staff_booking_action", { _booking_id: r.id, _action: "release" });
     if (error) return toast.error(error.message);
-    await logAdminAction({ action: "booking_released", entityType: "booking", entityId: r.id, metadata: { listing_code: r.listing_code } });
     toast.success("Marked as released");
     load();
   };
@@ -278,6 +279,7 @@ const AdminBookings = () => {
                     )}
 
                     <div className="flex justify-end"><Actions r={r} /></div>
+                    <BookingTimeline bookingId={r.id} money={r} />
                   </div>
                 </div>
               </article>

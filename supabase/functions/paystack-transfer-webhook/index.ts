@@ -28,7 +28,14 @@ Deno.serve(async (req) => {
   // Guest payments: save the booking even if the guest closed the page before confirmation.
   if (event.event === "charge.success") {
     const tx = event.data || {};
-    if (tx.metadata?.source !== "rayprop") return json({ ok: true, ignored: "local" });
+    if (tx.metadata?.source !== "rayprop") {
+      const { error } = await svc.rpc("confirm_local_payment", { _reference: String(tx.reference), _amount_kobo: Number(tx.amount) });
+      if (error) {
+        console.error("[paystack-webhook] local confirm failed", tx.reference, error.message);
+        return json({ error: "confirm_failed" }, error.code === "P0002" ? 200 : 500);
+      }
+      return json({ ok: true });
+    }
     try {
       await fulfilPartnerBooking(svc, tx);
       return json({ ok: true });

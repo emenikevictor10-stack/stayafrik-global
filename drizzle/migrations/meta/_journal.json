@@ -176,6 +176,20 @@
       "when": 1794175509703,
       "tag": "0024_partner_catalogue",
       "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1794176690426,
+      "tag": "0025_booking_lifecycle",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1794176760592,
+      "tag": "0026_booked_ranges_ignore_stale_holds",
+      "breakpoints": true
     }
   ]
 }

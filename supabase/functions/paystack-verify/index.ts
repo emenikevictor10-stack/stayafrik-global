@@ -55,29 +55,11 @@ Deno.serve(async (req) => {
       }
     }
 
-    // Idempotency: if a booking already exists with this reference, just return it
-    const { data: existing } = await admin
-      .from("bookings")
-      .select("*")
-      .eq("payment_reference", reference)
-      .maybeSingle();
-    if (existing) return json(200, { booking: existing, already: true });
-
-    const { data: booking, error: berr } = await admin
-      .from("bookings")
-      .insert({
-        guest_id: userId,
-        listing_id: meta.listing_id,
-        check_in_date: meta.check_in,
-        check_out_date: meta.check_out,
-        total_price: meta.total,
-        status: "confirmed",
-        payment_reference: reference,
-      })
-      .select("*")
-      .single();
+    // The held booking was created at payment start; confirm it (idempotent, amount-checked, overlap-safe).
+    const { data: booking, error: berr } = await admin.rpc("confirm_local_payment", {
+      _reference: reference, _amount_kobo: Number(tx.amount),
+    });
     if (berr) return json(500, { error: berr.message });
-
     return json(200, { booking, already: false });
   } catch (e) {
     return json(500, { error: (e as Error).message });

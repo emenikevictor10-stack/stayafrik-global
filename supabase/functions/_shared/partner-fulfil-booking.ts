@@ -36,6 +36,7 @@ export const fulfilPartnerBooking = async (admin: any, tx: any) => {
       total_price: Number(meta.amount_kobo) / 100, payment_reference: reference,
       rayprop_listing_id: meta.rayprop_listing_id, rayprop_quote_id: meta.quote_id, rayprop_hold_id: meta.hold_id,
       rayprop_quote_total_kobo: Number(meta.amount_kobo), rayprop_hold_expires_at: meta.hold_expires_at,
+      paid_at: new Date().toISOString(), markup_kobo: Number(meta.markup_kobo) || null,
       guest_count: Number(meta.guests || 1), partner_title: meta.title, partner_image: meta.image || null, partner_city: meta.city || null,
     }).select("*").single();
     if (error) {
@@ -48,6 +49,7 @@ export const fulfilPartnerBooking = async (admin: any, tx: any) => {
       throw new Error(error.message);
     }
     booking = data;
+    await admin.rpc("log_booking_event", { _booking_id: booking.id, _type: "payment_received", _actor: "system", _data: { amount_kobo: Number(tx.amount), reference } });
   }
 
   const result = await fulfilRayProp({
@@ -56,6 +58,7 @@ export const fulfilPartnerBooking = async (admin: any, tx: any) => {
     guest: { name: meta.guest_name, email: meta.guest_email, phone: meta.guest_phone },
     existingReservationId: booking.rayprop_reservation_id,
   });
+  await admin.rpc("log_booking_event", { _booking_id: booking.id, _type: "rayprop_reply", _actor: "rayprop", _data: { status: result.status, reservation_id: (result as any).rayprop_reservation_id ?? null, reason: (result as any).attention_reason ?? null } });
   const extra = result.status === "confirmed" ? await partnerDetails(String(meta.rayprop_listing_id)) : {};
   const { data: updated, error: uerr } = await admin.from("bookings").update({ ...result, ...extra }).eq("id", booking.id).select("*").single();
   if (uerr) console.error("[partner-fulfil] update failed", reference, uerr.message);

@@ -55,7 +55,6 @@ import LanguageCurrency from "./pages/shared/LanguageCurrency";
 import Help from "./pages/shared/Help";
 import PrivacyPolicy from "./pages/shared/PrivacyPolicy";
 import TermsConditions from "./pages/shared/TermsConditions";
-import Notifications from "./pages/shared/Notifications";
 import Reservations from "./pages/shared/Reservations";
 import PaymentMethods from "./pages/client/PaymentMethods";
 import PinSettings from "./pages/shared/PinSettings";
@@ -134,7 +133,7 @@ const App = () => (
                     <Route path="/profile/help" element={<Help />} />
                     <Route path="/profile/payments" element={<PaymentMethods />} />
                     <Route path="/profile/pin" element={<PinSettings />} />
-                    <Route path="/notifications" element={<Notifications />} />
+                    <Route path="/notifications" element={<Navigate to="/home?notifications=1" replace />} />
                     <Route path="/property/:id/book" element={<BookProperty />} />
                     <Route path="/booking/confirm" element={<BookingConfirm />} />
                     <Route path="/reservations" element={<Reservations />} />

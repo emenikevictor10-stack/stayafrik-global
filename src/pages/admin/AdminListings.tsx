@@ -1,4 +1,5 @@
-import { Tag as StatusTag } from "@/ui/kit";
+import { Tag as StatusTag, NextStep, Button } from "@/ui/kit";
+import { listingNextStep } from "@/lib/next-step";
 import { useEffect, useState } from "react";
 import { Link, Navigate } from "react-router-dom";
 import { CheckCircle2, ShieldX, Loader2, ChevronLeft, MapPin, BedDouble, Bath, Ruler, Tag, User2, Mail, Phone, X, ChevronRight, Search, List, LayoutGrid, MoreHorizontal } from "lucide-react";
@@ -335,6 +336,10 @@ const AdminListings = () => {
             </div>
             {isOpen && (
             <article className="m-2 rounded-3xl border border-border bg-background overflow-hidden">
+              {(() => { const ns = listingNextStep(r); return (
+                <div className="p-3"><NextStep tone={ns.tone} status={ns.status} sentence={ns.sentence}
+                  action={ns.action ? <Button onClick={() => setConfirmAction({ kind: "approve", row: r })}>{ns.action}</Button> : undefined} /></div>
+              ); })()}
               {/* Photo gallery */}
               {images.length > 0 ? (
                 <div className="grid grid-cols-4 gap-1.5 p-1.5 bg-secondary/30">

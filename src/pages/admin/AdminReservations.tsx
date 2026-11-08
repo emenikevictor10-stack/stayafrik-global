@@ -1,4 +1,5 @@
-import { ErrorState } from "@/ui/kit";
+import { ErrorState, NextStep } from "@/ui/kit";
+import { viewingNextStep } from "@/lib/next-step";
 import { toneFor, statusLabel } from "@/lib/status-tone";
 import { Tag } from "@/ui/kit";
 import { useCallback, useEffect, useState } from "react";
@@ -158,6 +159,7 @@ const AdminReservations = () => {
 
               {!confirm ? (
                 <div className="space-y-3">
+                  {(() => { const ns = viewingNextStep({ status: open.status, guest: people[open.guest_id]?.name?.split(" ")[0] }); return <NextStep tone={ns.tone} status={ns.status} sentence={ns.sentence} />; })()}
                   {open.listing?.images?.[0] && (
                     <img src={open.listing.images[0]} alt="" className="w-full h-36 object-cover rounded-lg" />
                   )}

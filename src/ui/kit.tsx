@@ -7,6 +7,8 @@ import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
 import logoLight from "@/assets/stay-logo-light.png";
 import logoDark from "@/assets/stay-logo-2.png";
+import { StatusDot } from "@/components/support/SupportBits";
+import type { DotTone } from "@/lib/support";
 export { StatusDot as Tag, UnderlineTabs as Tabs } from "@/components/support/SupportBits";
 
 /** StayGlobal wordmark image — never typed text. */
@@ -86,3 +88,16 @@ export const Skeleton = ({ className }: { className?: string }) => (
 export const ListSkeleton = ({ rows = 4 }: { rows?: number }) => (
   <div className="space-y-3">{Array.from({ length: rows }).map((_, i) => <Skeleton key={i} className="h-16 w-full rounded-xl" />)}</div>
 );
+
+/** Admin next-step box: status dot + words, one sentence, one button. Tinted only when staff must act. */
+export const NextStep = ({ tone, status, sentence, action }: { tone: DotTone; status: string; sentence: string; action?: React.ReactNode }) => {
+  return (
+    <div className={cn("rounded-xl border p-4 flex flex-col sm:flex-row sm:items-center gap-3", tone === "act" ? "bg-warn-bg border-orange/30" : tone === "broken" ? "bg-destructive/5 border-destructive/30" : "bg-card border-border")}>
+      <div className="flex-1 min-w-0">
+        <StatusDot tone={tone}>{status}</StatusDot>
+        <p className="text-sm mt-1">{sentence}</p>
+      </div>
+      {action && <div className="shrink-0">{action}</div>}
+    </div>
+  );
+};

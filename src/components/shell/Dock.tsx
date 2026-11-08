@@ -10,6 +10,7 @@ import { clientTabs, agentTabs, badgeFor } from "./navTabs";
 import { MenuList } from "./TopBar";
 import { useNavPrefs, setDockEdge, setPinned, nearestEdge } from "./navPrefs";
 import { useNavActions } from "./useNavActions";
+import { NotificationsBell } from "./NotificationsBell";
 
 const Dot = () => <span className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full bg-orange" aria-hidden />;
 
@@ -46,9 +47,7 @@ export const Dock = () => {
       <PopoverContent side={horizontal && !pinned ? "top" : edge === "left" || pinned ? "right" : "left"} className="w-64 p-2 rounded-xl">
         <div className="-mt-6"><MenuList role={role} items={items} /></div>
         <div className="border-t border-border mt-2 pt-2 flex flex-col gap-1">
-          <Link to="/notifications" className="h-11 flex items-center gap-3 rounded-lg px-3 text-sm font-semibold text-muted-foreground hover:bg-surface hover:text-foreground">
-            <Bell className="w-5 h-5" /> <span className="flex-1">Notifications</span>{unread > 0 && <span className="text-xs text-orange">{unread}</span>}
-          </Link>
+          <NotificationsBell withLabel side={horizontal && !pinned ? "top" : edge === "left" || pinned ? "right" : "left"} />
           <button onClick={() => setPinned(!pinned)} className="h-11 flex items-center gap-3 rounded-lg px-3 text-sm font-semibold text-muted-foreground hover:bg-surface hover:text-foreground">
             {pinned ? <PanelLeftClose className="w-5 h-5" /> : <PanelLeft className="w-5 h-5" />} {pinned ? "Unpin sidebar" : "Pin sidebar"}
           </button>

@@ -12,6 +12,8 @@ import {
   Clock,
   HelpCircle,
   FileText,
+  Inbox,
+  Wallet,
   Lock,
   type LucideIcon,
 } from "lucide-react";
@@ -28,16 +30,20 @@ export const clientTabs: NavTab[] = [
 ];
 
 export const agentTabs: NavTab[] = [
-  { to: "/", Icon: LayoutDashboard, label: "Dashboard", key: "dashboard" },
-  { to: "/listings", Icon: Building2, label: "Listings", key: "listings" },
-  { to: "/escrow", Icon: ShieldCheck, label: "Escrow", key: "escrow" },
+  { to: "/host", Icon: LayoutDashboard, label: "Hosting", key: "dashboard" },
+  { to: "/host/listings", Icon: Building2, label: "Listings", key: "listings" },
+  { to: "/host/bookings", Icon: ShieldCheck, label: "Bookings", key: "escrow" },
   { to: "/messages", Icon: MessageSquare, label: "Inbox", key: "messages" },
   { to: "/account", Icon: User, label: "Account", key: "profile" },
 ];
 
 /** Items that live in the Menu drawer rather than the bar. */
 export const menuItems = (role: "client" | "agent"): NavTab[] => [
-  ...(role === "client" ? [{ to: "/messages", Icon: MessageSquare, label: "Inbox", key: "messages" }] : []),
+  ...(role === "client" ? [{ to: "/messages", Icon: MessageSquare, label: "Inbox", key: "messages" }] : [
+    { to: "/host/requests", Icon: Inbox, label: "Requests", key: "requests" },
+    { to: "/host/calendar", Icon: CalendarDays, label: "Calendar", key: "calendar" },
+    { to: "/host/payouts", Icon: Wallet, label: "Payouts", key: "payouts" },
+  ]),
   { to: "/issues", Icon: LifeBuoy, label: "Your problems", key: "issues" },
   { to: "/reservations", Icon: Clock, label: "Reservations", key: "reservations" },
   { to: "/profile/help", Icon: HelpCircle, label: "Help", key: "help" },
@@ -53,6 +59,8 @@ export const badgeFor = (key: string, items: NotificationLike[]): number => {
     case "messages": return unread.filter((n) => n.type === "message").length;
     case "bookings": return unread.filter((n) => n.type === "booking" || n.type === "reservation").length;
     case "escrow":   return unread.filter((n) => n.type === "booking" || n.type === "payout").length;
+    case "requests": return unread.filter((n) => n.type === "booking_request").length;
+    case "requests": return unread.filter((n) => n.type === "booking_request").length;
     case "listings": return unread.filter((n) => n.type === "listing").length;
     case "profile":  return unread.filter((n) => n.type === "system" || n.type === "kyc").length;
     default: return 0;

@@ -22,7 +22,12 @@ import Listings from "./pages/agent/Listings";
 import BecomeHost from "./pages/agent/BecomeHost";
 import NewListing from "./pages/agent/NewListing";
 import EditListing from "./pages/agent/EditListing";
-import Escrow from "./pages/agent/Escrow";
+import HostHome from "./pages/host/HostHome";
+import HostRequests from "./pages/host/HostRequests";
+import HostBookings from "./pages/host/HostBookings";
+import HostPayouts from "./pages/host/HostPayouts";
+import HostCalendar from "./pages/host/HostCalendar";
+import ListYourPlace from "./pages/host/ListYourPlace";
 import EscrowDetail from "./pages/agent/EscrowDetail";
 import AgentProfile from "./pages/agent/AgentProfile";
 import Verification from "./pages/agent/Verification";
@@ -69,7 +74,7 @@ const queryClient = new QueryClient();
 
 const ThirdTab = () => {
   const { role } = useRole();
-  return role === "client" ? <Bookings /> : <Escrow />;
+  return role === "client" ? <Bookings /> : <Navigate to="/host/payouts" replace />;
 };
 
 const PushBridge = () => { usePushNotifications(); return null; };
@@ -107,12 +112,19 @@ const App = () => (
                   <Route path="/property/:id" element={<PropertyDetail />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsConditions />} />
+                  <Route path="/list-your-place" element={<ListYourPlace />} />
                 </Route>
 
                 {/* Authenticated routes */}
                 <Route element={<ProtectedRoute />}>
                   <Route element={<PinGate><MobileShell /></PinGate>}>
-                    <Route path="/listings" element={<Listings />} />
+                    <Route path="/listings" element={<Navigate to="/host/listings" replace />} />
+                    <Route path="/host" element={<HostHome />} />
+                    <Route path="/host/listings" element={<Listings />} />
+                    <Route path="/host/calendar" element={<HostCalendar />} />
+                    <Route path="/host/requests" element={<HostRequests />} />
+                    <Route path="/host/bookings" element={<HostBookings />} />
+                    <Route path="/host/payouts" element={<HostPayouts />} />
                     <Route path="/become-host" element={<BecomeHost />} />
                     <Route path="/listings/new" element={<NewListing />} />
                     <Route path="/listings/:id/edit" element={<EditListing />} />

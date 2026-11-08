@@ -1507,6 +1507,14 @@ export type Database = {
         Args: { _action: string; _booking_id: string; _reason?: string }
         Returns: undefined
       }
+      host_booking_guests: {
+        Args: { _booking_ids: string[] }
+        Returns: {
+          booking_id: string
+          guest_name: string
+          guest_phone: string
+        }[]
+      }
       listing_booked_ranges: {
         Args: { _listing_id: string }
         Returns: {

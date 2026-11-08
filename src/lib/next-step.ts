@@ -45,6 +45,8 @@ export const bookingNextStep = (b: { status: string }): NextStepInfo => {
     case "needs_attention": return { tone: "broken", status: "Needs attention", sentence: "Something went wrong after payment. Check it now." };
     case "pending": return { tone: "fact", status: "Unpaid", sentence: "The guest hasn't paid yet. Nothing to do." };
     case "held": return { tone: "fact", status: "Dates held", sentence: "The guest is paying. The nights free up if the hold runs out." };
+    case "awaiting_host": return { tone: "act", status: "Waiting for host", sentence: "The guest has paid. The host must accept in time, or the guest is refunded in full." };
+    case "declined": return { tone: "fact", status: "Declined", sentence: "The host declined or didn't reply. The guest's full refund is sent automatically." };
     case "expired": return { tone: "fact", status: "Hold expired", sentence: "The guest didn't pay in time. The nights are free again." };
     case "confirmed": case "paid": case "escrow":
       return { tone: "fact", status: "Money held", sentence: "The money is held. The host's share is released the day after check-in." };

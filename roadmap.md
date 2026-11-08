@@ -35,7 +35,7 @@ Keep (clashes): Paystack (not Payaza), Google sign-in + PIN (not email codes), 3
 - [x] Payout calc uses the host payout saved on each booking (Phase 6)
 - [x] P6 Booking lifecycle (§4): unified statuses, booking events timeline, saved markup/commission/host payout per booking, hold 15 min + payment window, release job, overlap constraint
 - [x] P7 Own-inventory rate calendar (§5): base/weekend rates, date prices, blocks, min/max nights, cleaning fee, weekly/monthly discounts, instant book vs request-to-book (24h host accept, auto refund), iCal import (host bookings read access added; host calendar lives on Edit listing until P8)
-- [ ] P8 Host portal (§3): /host home, listings, calendar, requests, bookings (first name only pre-confirm), payouts; /list-your-place
+- [x] P8 Host portal (§3): /host home, listings, calendar, requests, bookings (first name only pre-confirm), payouts; /list-your-place
 - [ ] P9 Admin Hosts + Payouts (§5): host table, approve/suspend, bank verify (audited), payouts due day after check-in, hold with reason, mark paid with ref, CSV
 - [ ] P10 Search & results (§3): /results sort + filters (power, water, verified, rating 4+), 12/page auto-load, no-result suggestions; card spec (no title, heart, compare)
 - [ ] P11 Map & Explore (§3): map with all price pins, approximate circles only

@@ -197,6 +197,13 @@
       "when": 1794177130869,
       "tag": "0027_host_rate_calendar",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1794177522176,
+      "tag": "0028_host_portal",
+      "breakpoints": true
     }
   ]
 }

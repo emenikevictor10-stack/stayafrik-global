@@ -186,7 +186,7 @@ const Bookings = () => {
                   <p className="text-xs text-muted-foreground truncate">📍 {place || "—"}</p>
                   <p className="text-xs mt-2">🗓️ {b.check_in_date} → {b.check_out_date}</p>
                   <div className="mt-2 flex items-center justify-between">
-                    <Tag tone={toneFor(b.status)}>{b.status === "needs_attention" ? "Processing" : statusLabel(b.status)}</Tag>
+                    <Tag tone={toneFor(b.status)}>{b.status === "needs_attention" ? "Processing" : b.status === "awaiting_host" ? "Paid · waiting for host to accept" : statusLabel(b.status)}</Tag>
                     <span className="text-xs font-extrabold text-primary">{fmt(b.total_price)}</span>
                   </div>
                 </div>

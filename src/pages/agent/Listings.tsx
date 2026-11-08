@@ -30,7 +30,7 @@ const Listings = () => {
 
   return (
     <>
-      <TopBar title="My listings" />
+      <TopBar title="Listings" />
       <main className="px-5 pt-5 pb-8">
         <Link
           to="/listings/new"

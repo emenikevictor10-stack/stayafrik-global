@@ -134,7 +134,7 @@ const BookProperty = () => {
   const goNext = () => {
     if (step === 1) {
       if (!datesValid) return toast.error("Pick check-in and check-out dates");
-      if (localQuote && !localQuote.ok) return toast.error(localQuote.error);
+      if (localQuote && localQuote.ok === false) return toast.error(localQuote.error);
       setStep(2);
     } else if (step === 2) {
       if (isPartner) return void preparePartner();

@@ -28,6 +28,12 @@ const copy = (v: string) => { navigator.clipboard?.writeText(v); toast.success("
 
 const AdminPartnerBookings = () => {
   const [rows, setRows] = useState<Row[]>([]);
+  const [sync, setSync] = useState<{ blocked_until: string | null; blocked_reason: string | null; last_full_refresh_at: string | null } | null>(null);
+  useEffect(() => {
+    supabase.from("partner_sync_state").select("blocked_until, blocked_reason, last_full_refresh_at").eq("id", 1).maybeSingle()
+      .then(({ data }) => setSync(data ?? null));
+  }, []);
+  const pausedUntil = sync?.blocked_until && new Date(sync.blocked_until).getTime() > Date.now() ? new Date(sync.blocked_until) : null;
   const [people, setPeople] = useState<Record<string, Person>>({});
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
@@ -95,6 +101,16 @@ const AdminPartnerBookings = () => {
             {busy === "webhook" ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Webhook className="w-3.5 h-3.5" />} Register webhook
           </button>
         </div>
+
+        {pausedUntil && (
+          <div role="alert" className="rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm">
+            <p className="font-semibold text-destructive">RayProp paused: {sync?.blocked_reason === "API_KEY_BLOCKED" ? "access blocked" : "too many requests"}</p>
+            <p className="text-muted-foreground mt-1">Partner calls are paused until {pausedUntil.toLocaleTimeString()} and retried once after that. Guests see local stays only. {sync?.blocked_reason === "API_KEY_BLOCKED" && "Ask RayProp to lift the block on our key."}</p>
+          </div>
+        )}
+        {sync && (
+          <p className="text-xs text-muted-foreground">Partner catalogue last refreshed: {sync.last_full_refresh_at ? new Date(sync.last_full_refresh_at).toLocaleString() : "never"} (refreshes at most every 6 hours)</p>
+        )}
 
         <div className="grid sm:grid-cols-2 gap-3">
           <div className="rounded-2xl bg-card border border-border p-4">

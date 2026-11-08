@@ -59,9 +59,16 @@ const PropertyDetail = () => {
     return (
       <main className="p-8 text-center">
         <div className="text-5xl mb-3">🤔</div>
-        <h1 className="font-bold">Property not found</h1>
+        {id?.startsWith("rp_") ? (
+          <>
+            <h1 className="font-bold">This stay is temporarily unavailable</h1>
+            <p className="text-sm text-muted-foreground mt-1">Please check back soon, or browse other stays.</p>
+          </>
+        ) : (
+          <h1 className="font-bold">Property not found</h1>
+        )}
         <Link to="/explore" className="text-primary text-sm mt-3 inline-block">
-          Back to explore
+          Browse other stays
         </Link>
       </main>
     );

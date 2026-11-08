@@ -169,6 +169,13 @@
       "when": 1794174749471,
       "tag": "0023_migration",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1794175509703,
+      "tag": "0024_partner_catalogue",
+      "breakpoints": true
     }
   ]
 }

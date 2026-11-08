@@ -1,3 +1,5 @@
+import { createClient } from "npm:@supabase/supabase-js@2";
+import { isPauseError, isPaused, PAUSE_MINUTES } from "./rayprop-core.ts";
 const RAYPROP_BASE_URL = "https://api.rayprop.io/functions/v1/complete-api";
 
 export class RayPropError extends Error {
@@ -13,9 +15,31 @@ const friendly = (status: number, code: string, message: string) => {
   return message || "RayProp could not complete that request";
 };
 
+const syncDb = () => createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+let pauseCache: { at: number; until: string | null } | null = null;
+
+/** When RayProp has blocked/rate-limited us, the time calls resume (null when not paused). Cached 30s. */
+export const raypropPausedUntil = async (): Promise<string | null> => {
+  if (pauseCache && Date.now() - pauseCache.at < 30_000) return isPaused(pauseCache.until) ? pauseCache.until : null;
+  try {
+    const { data } = await syncDb().from("partner_sync_state").select("blocked_until").eq("id", 1).maybeSingle();
+    pauseCache = { at: Date.now(), until: data?.blocked_until ?? null };
+  } catch { pauseCache = { at: Date.now(), until: null }; }
+  return isPaused(pauseCache.until) ? pauseCache.until : null;
+};
+
+const setPause = async (code: string) => {
+  const until = new Date(Date.now() + PAUSE_MINUTES * 60_000).toISOString();
+  pauseCache = { at: Date.now(), until };
+  try {
+    await syncDb().from("partner_sync_state").upsert({ id: 1, blocked_until: until, blocked_reason: code || "rate_limited", updated_at: new Date().toISOString() });
+  } catch (e) { console.error("[rayprop] could not save pause", e); }
+};
+
 export const raypropFetch = async ({ path, method = "GET", body }: RayPropRequest) => {
   const apiKey = Deno.env.get("RAYPROP_API_KEY")?.trim();
   if (!apiKey) throw new RayPropError("RayProp is not configured yet", 503);
+  if (await raypropPausedUntil()) throw new RayPropError("Partner stays are temporarily unavailable", 503, "PAUSED");
 
   let response: Response;
   try {
@@ -33,6 +57,7 @@ export const raypropFetch = async ({ path, method = "GET", body }: RayPropReques
   if (!response.ok || payload?.success === false) {
     const code = String(payload?.error?.code || "");
     const message = String(payload?.error?.message || payload?.message || "");
+    if (isPauseError(response.status, code)) await setPause(code);
     console.error(`[rayprop] ${method} ${path.split("?")[0]} failed status=${response.status} code=${code} msg=${message}`);
     throw new RayPropError(friendly(response.status, code, message), response.status === 409 ? 409 : 502, code);
   }

@@ -590,6 +590,24 @@ export type Database = {
         }
         Relationships: []
       }
+      partner_catalogue: {
+        Row: {
+          rayprop_listing_id: string
+          record: Json
+          refreshed_at: string
+        }
+        Insert: {
+          rayprop_listing_id: string
+          record: Json
+          refreshed_at?: string
+        }
+        Update: {
+          rayprop_listing_id?: string
+          record?: Json
+          refreshed_at?: string
+        }
+        Relationships: []
+      }
       partner_location_map: {
         Row: {
           city_id: string | null
@@ -672,6 +690,30 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      partner_sync_state: {
+        Row: {
+          blocked_reason: string | null
+          blocked_until: string | null
+          id: number
+          last_full_refresh_at: string | null
+          updated_at: string
+        }
+        Insert: {
+          blocked_reason?: string | null
+          blocked_until?: string | null
+          id?: number
+          last_full_refresh_at?: string | null
+          updated_at?: string
+        }
+        Update: {
+          blocked_reason?: string | null
+          blocked_until?: string | null
+          id?: number
+          last_full_refresh_at?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       payment_methods: {
         Row: {

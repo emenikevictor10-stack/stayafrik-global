@@ -66,3 +66,18 @@ export const raypropMatches = (r: Record<string, unknown>, q: string) => {
   const hay = raypropHaystack(r);
   return words.every((w) => hay.includes(w));
 };
+
+/** RayProp error codes that mean "stop calling for a while". */
+export const isPauseError = (status: number, code: string) =>
+  code === "API_KEY_BLOCKED" || code === "RATE_LIMITED" || status === 429 || (status === 403 && /BLOCK/i.test(code));
+
+export const PAUSE_MINUTES = 30;
+export const CATALOGUE_REFRESH_HOURS = 6;
+
+/** True while a pause is in force. */
+export const isPaused = (blockedUntil: string | null | undefined, now = Date.now()) =>
+  !!blockedUntil && new Date(blockedUntil).getTime() > now;
+
+/** A full catalogue refresh is due when never done or older than the refresh window, and not paused. */
+export const catalogueRefreshDue = (lastRefresh: string | null | undefined, blockedUntil: string | null | undefined, now = Date.now()) =>
+  !isPaused(blockedUntil, now) && (!lastRefresh || now - new Date(lastRefresh).getTime() >= CATALOGUE_REFRESH_HOURS * 3600_000);

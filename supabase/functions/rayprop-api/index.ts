@@ -5,7 +5,7 @@ import {
   RayPropError, markupPerNightKobo, raypropAvailability, raypropCancel, raypropHold, raypropQuote,
   raypropRegisterWebhook, raypropReservationStatus, raypropList, raypropWalletBalance, unwrapRayProp,
 } from "../_shared/rayprop.ts";
-import { mapRayPropStatus, raypropMatches } from "../_shared/rayprop-core.ts";
+import { mapRayPropStatus, raypropMatches, catalogueRefreshDue } from "../_shared/rayprop-core.ts";
 import { fulfilRayProp } from "../_shared/rayprop-fulfil.ts";
 import { notifyPartnerBooking } from "../_shared/partner-fulfil-booking.ts";
 import { raypropFetch as rpFetch } from "../_shared/rayprop.ts";
@@ -16,28 +16,65 @@ const json = (status: number, body: unknown) =>
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 const TTL = 10 * 60_000;
 
-/** Whole RayProp catalogue (all pages, all cities), cached 10 minutes. */
+/** Whole RayProp catalogue: memory (10 min) → saved DB copy → paced RayProp refresh at most every 6 hours. */
 let catalogue: { at: number; rows: any[] } | null = null;
 let inflight: Promise<any[]> | null = null;
+const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
+
+const readSavedCatalogue = async (): Promise<any[]> => {
+  const rows: any[] = [];
+  for (let from = 0; ; from += 1000) {
+    const { data, error } = await admin().from("partner_catalogue").select("record").range(from, from + 999);
+    if (error) { console.error("[rayprop-api] saved catalogue read failed", error); break; }
+    rows.push(...(data || []).map((d: any) => d.record));
+    if (!data || data.length < 1000) break;
+  }
+  return rows;
+};
+
+const refreshFromRayProp = async (): Promise<any[]> => {
+  const first = await raypropList({ limit: "50" });
+  const pages = Math.min(Number(first?.meta?.total_pages || 1), 100);
+  const rows: any[] = [...((unwrapRayProp(first) as any[]) || [])];
+  for (let p = 2; p <= pages; p++) {
+    await sleep(300);
+    try { rows.push(...((unwrapRayProp(await raypropList({ limit: "50", page: String(p) })) as any[]) || [])); }
+    catch (e) { console.error(`[rayprop-api] page ${p} failed; stopping refresh`, e); break; }
+  }
+  const seen = new Set<string>();
+  const unique = rows.filter((r) => r?.id && !seen.has(String(r.id)) && !!seen.add(String(r.id)));
+  if (unique.length) {
+    const db = admin();
+    const now = new Date().toISOString();
+    for (let i = 0; i < unique.length; i += 500) {
+      await db.from("partner_catalogue").upsert(unique.slice(i, i + 500).map((r) => ({ rayprop_listing_id: String(r.id), record: r, refreshed_at: now })));
+    }
+    if (rows.length >= 50 * pages) await db.from("partner_catalogue").delete().lt("refreshed_at", now);
+    await db.from("partner_sync_state").upsert({ id: 1, last_full_refresh_at: now, updated_at: now });
+  }
+  return unique;
+};
+
 const loadCatalogue = async (): Promise<any[]> => {
   if (catalogue && Date.now() - catalogue.at < TTL) return catalogue.rows;
   if (inflight) return inflight;
   inflight = (async () => {
-    const first = await raypropList({ limit: "50" });
-    const pages = Math.min(Number(first?.meta?.total_pages || 1), 100);
-    const rows: any[] = [...((unwrapRayProp(first) as any[]) || [])];
-    for (let p = 2; p <= pages; p += 6) {
-      const batch = await Promise.allSettled(
-        Array.from({ length: Math.min(6, pages - p + 1) }, (_, i) => raypropList({ limit: "50", page: String(p + i) })),
-      );
-      for (const r of batch) if (r.status === "fulfilled") rows.push(...((unwrapRayProp(r.value) as any[]) || []));
+    const { data: state } = await admin().from("partner_sync_state").select("last_full_refresh_at, blocked_until").eq("id", 1).maybeSingle();
+    let rows = await readSavedCatalogue();
+    if (catalogueRefreshDue(state?.last_full_refresh_at, state?.blocked_until)) {
+      try {
+        const fresh = await refreshFromRayProp();
+        if (fresh.length) {
+          rows = fresh;
+          const sync = syncPartnerLocations(fresh).catch((e) => console.error("[rayprop-api] location sync failed", e));
+          (globalThis as any).EdgeRuntime?.waitUntil?.(sync);
+        }
+      } catch (e) {
+        console.error("[rayprop-api] catalogue refresh failed; using saved copy", e);
+      }
     }
-    const seen = new Set<string>();
-    const unique = rows.filter((r) => r?.id && !seen.has(String(r.id)) && !!seen.add(String(r.id)));
-    catalogue = { at: Date.now(), rows: unique };
-    const sync = syncPartnerLocations(unique).catch((e) => console.error("[rayprop-api] location sync failed", e));
-    (globalThis as any).EdgeRuntime?.waitUntil?.(sync);
-    return unique;
+    catalogue = { at: Date.now(), rows };
+    return rows;
   })().finally(() => { inflight = null; });
   return inflight;
 };
@@ -137,7 +174,10 @@ Deno.serve(async (req) => {
       const listingId = body?.listing_id ? text(stripRp(String(body.listing_id)), 120) : null;
       if (listingId) {
         let hit = all.filter((r) => String(r.id) === listingId);
-        if (!hit.length) hit = (unwrapRayProp(await raypropList({ listing_id: listingId, limit: "1" })) as any[]) || [];
+        if (!hit.length) {
+          try { hit = (unwrapRayProp(await raypropList({ listing_id: listingId, limit: "1" })) as any[]) || []; }
+          catch (e) { return json(200, { data: [], meta: { total: 0, hasMore: false }, unavailable: true }); }
+        }
         return json(200, { data: hit, meta: { total: hit.length, hasMore: false } });
       }
       const locationId = body?.location_id ? text(body.location_id, 64) : null;
@@ -274,6 +314,13 @@ Deno.serve(async (req) => {
       const { data: nb } = await db.from("bookings").update(result).eq("id", b.id).select("*").single();
       if (nb && result.status === "confirmed" && b.status !== "confirmed") await notifyPartnerBooking(db, nb, b.guest_id).catch(() => {});
       return json(200, { data: result });
+    }
+
+    if (action === "sync_state") {
+      await requireAdmin(userId);
+      const { data } = await admin().from("partner_sync_state").select("*").eq("id", 1).maybeSingle();
+      const { count } = await admin().from("partner_catalogue").select("rayprop_listing_id", { count: "exact", head: true });
+      return json(200, { data: { ...(data || {}), saved: count || 0 } });
     }
 
     if (action === "wallet") {

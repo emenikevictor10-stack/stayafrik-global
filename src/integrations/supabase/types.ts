@@ -50,21 +50,21 @@ export type Database = {
           key: string
           updated_at: string
           updated_by: string | null
-          value: Json
+          value: Json | null
         }
         Insert: {
           is_public?: boolean
           key: string
           updated_at?: string
           updated_by?: string | null
-          value: Json
+          value?: Json | null
         }
         Update: {
           is_public?: boolean
           key?: string
           updated_at?: string
           updated_by?: string | null
-          value?: Json
+          value?: Json | null
         }
         Relationships: []
       }

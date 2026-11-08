@@ -31,7 +31,8 @@ Keep (clashes): Paystack (not Payaza), Google sign-in + PIN (not email codes), 3
 - [x] P3 App shell + navigation (§3): phone bottom nav Home/Explore/Trips/Saved/Account + drawer; PC floating dock / pinned sidebar; routes /home /search /results /stays/:id /trips /account (all live) — reconfirmed: dock order Menu then Account, bell in dock menu works
 - [x] P4 Admin shell (§5): sidebar/rail, groups, counts, phone ☰, next-step boxes on all detail views, underlined tabs, Try again on all admin lists
 - [x] Notifications as bell drop-down (no own page)
-- [ ] P5 Settings + feature switches (§8): settings table + Admin Settings (markup, hold/payment windows, fee, commission, payout delay, support email, staff alerts, company, guarantee); switches (id_required, report_problem, map, holds…)
+- [x] P5 Settings + feature switches (§8): app_settings + Admin Settings; live: service fee, RayProp markup, support reply targets, report_problem/search_fields/map switches, support email. Stored for later phases: holds, payment window, commission, payout delay, host accept, iCal, wallet alert, invoices, guarantee, id_required
+- [ ] Payout calc (queue_payout_on_release) still assumes 8% fee — should store fee on each booking (Phase 6)
 - [ ] P6 Booking lifecycle (§4): unified statuses, booking events timeline, saved markup/commission/host payout per booking, hold 15 min + payment window, release job, overlap constraint
 - [ ] P7 Own-inventory rate calendar (§5): base/weekend rates, date prices, blocks, min/max nights, cleaning fee, weekly/monthly discounts, instant book vs request-to-book (24h host accept, auto refund), iCal import
 - [ ] P8 Host portal (§3): /host home, listings, calendar, requests, bookings (first name only pre-confirm), payouts; /list-your-place

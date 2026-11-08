@@ -105,19 +105,19 @@ const PaymentMethods = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-bold">{m.brand} •••• {m.last4}</div>
-                    <div className="text-[11px] text-muted-foreground">
+                    <div className="text-xs text-muted-foreground">
                       Exp {String(m.exp_month).padStart(2, "0")}/{String(m.exp_year).slice(-2)}{m.holder_name ? ` · ${m.holder_name}` : ""}
                     </div>
                   </div>
                   {m.is_default ? (
-                    <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-primary/15 text-primary border border-primary/30 flex items-center gap-1">
+                    <span className="text-xs font-bold px-2 py-1 rounded-full bg-primary/15 text-primary border border-primary/30 flex items-center gap-1">
                       <CheckCircle2 className="w-3 h-3" /> Default
                     </span>
                   ) : (
-                    <button onClick={() => setDefault(m.id)} className="text-[10px] font-bold text-primary">Set default</button>
+                    <button onClick={() => setDefault(m.id)} className="text-xs font-bold text-primary">Set default</button>
                   )}
                 </div>
-                <button onClick={() => remove(m.id)} className="mt-3 text-[11px] text-destructive inline-flex items-center gap-1">
+                <button onClick={() => remove(m.id)} className="mt-3 text-xs text-destructive inline-flex items-center gap-1">
                   <Trash2 className="w-3 h-3" /> Remove
                 </button>
               </div>
@@ -134,23 +134,23 @@ const PaymentMethods = () => {
           <section className="mt-4 rounded-2xl bg-card border border-border p-4 space-y-3">
             <h3 className="text-sm font-bold">New card</h3>
             <label className="block">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase">Card number</span>
+              <span className="text-xs font-semibold text-muted-foreground">Card number</span>
               <input value={num} onChange={(e) => setNum(e.target.value.replace(/[^\d ]/g, ""))} inputMode="numeric" placeholder="4111 1111 1111 1111"
                 className="mt-1.5 w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm" />
             </label>
             <label className="block">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase">Cardholder name</span>
+              <span className="text-xs font-semibold text-muted-foreground">Cardholder name</span>
               <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Name on card"
                 className="mt-1.5 w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm" />
             </label>
             <div className="grid grid-cols-2 gap-2">
               <label className="block">
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase">Expiry MM/YY</span>
+                <span className="text-xs font-semibold text-muted-foreground">Expiry MM/YY</span>
                 <input value={exp} onChange={(e) => setExp(e.target.value)} placeholder="12/27"
                   className="mt-1.5 w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm" />
               </label>
               <label className="block">
-                <span className="text-[11px] font-semibold text-muted-foreground uppercase">CVC</span>
+                <span className="text-xs font-semibold text-muted-foreground">CVC</span>
                 <input value={cvc} onChange={(e) => setCvc(e.target.value)} inputMode="numeric" maxLength={4} placeholder="123"
                   className="mt-1.5 w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm" />
               </label>
@@ -159,7 +159,7 @@ const PaymentMethods = () => {
               <button onClick={() => setAdding(false)} className="flex-1 rounded-xl border border-border py-3 text-sm font-bold">Cancel</button>
               <button onClick={add} className="flex-1 rounded-xl bg-primary text-primary-foreground py-3 text-sm font-bold">Save card</button>
             </div>
-            <p className="text-[10px] text-muted-foreground text-center">
+            <p className="text-xs text-muted-foreground text-center">
               Cards are saved locally for v1. Real charges will be enabled in v2.
             </p>
           </section>

@@ -139,16 +139,16 @@ const AdminUsers = () => {
                   <div className="min-w-0">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="font-semibold truncate">{r.full_name || "—"}</span>
-                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${host ? "bg-accent/20 text-foreground" : "bg-secondary text-muted-foreground"}`}>{host ? "Host" : "Guest"}</span>
-                      {admin && <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-primary/15 text-primary">Admin</span>}
-                      {hostIncomplete && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-warning/15 text-warning">Profile incomplete</span>}
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${host ? "bg-accent/20 text-foreground" : "bg-secondary text-muted-foreground"}`}>{host ? "Host" : "Guest"}</span>
+                      {admin && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary">Admin</span>}
+                      {hostIncomplete && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-warning/15 text-warning">Profile incomplete</span>}
                     </div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground mt-0.5">
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
                       {r.email && <span className="flex items-center gap-1 truncate"><Mail className="w-3 h-3" />{r.email}{r.email_verified && <BadgeCheck className="w-3 h-3 text-primary" />}</span>}
                       {r.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{r.phone}{r.phone_verified && <BadgeCheck className="w-3 h-3 text-primary" />}</span>}
                       {r.whatsapp && <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" />{r.whatsapp}</span>}
                     </div>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       Joined {new Date(r.created_at).toLocaleDateString()} · {r.bookings} booking{r.bookings === 1 ? "" : "s"}{host ? ` · ${r.listings} listing${r.listings === 1 ? "" : "s"}` : ""}
                     </p>
                   </div>

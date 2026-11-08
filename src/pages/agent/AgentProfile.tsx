@@ -46,13 +46,13 @@ const AgentProfile = () => {
                 {user.avatarUrl ? <img src={user.avatarUrl} alt="" className="w-full h-full object-cover" /> : <span className="text-2xl font-extrabold text-primary">{user.initials}</span>}
               </div>
               <div className="flex-1 pb-1">
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/15 border border-success/30 text-[10px] font-bold text-success">
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-success/15 border border-success/30 text-xs font-bold text-success">
                   <BadgeCheck className="w-3 h-3" /> Verified · Tier 2
                 </span>
               </div>
               <Link
                 to="/profile/edit"
-                className="mb-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-[11px] font-bold flex items-center gap-1"
+                className="mb-1 px-3 py-1.5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center gap-1"
               >
                 <Pencil className="w-3 h-3" /> Edit
               </Link>
@@ -62,7 +62,7 @@ const AgentProfile = () => {
             <div className="flex items-center gap-1 mt-1.5">
               <Star className="w-3.5 h-3.5 fill-primary text-primary" />
               <span className="text-xs font-bold">4.9</span>
-              <span className="text-[11px] text-muted-foreground">· 132 reviews · 47 closed deals</span>
+              <span className="text-xs text-muted-foreground">· 132 reviews · 47 closed deals</span>
             </div>
           </div>
         </section>
@@ -72,7 +72,7 @@ const AgentProfile = () => {
           {stats.map((s) => (
             <div key={s.l} className="rounded-xl bg-card border border-border py-3 text-center">
               <div className="text-primary font-extrabold text-base">{s.v}</div>
-              <div className="text-[10px] text-muted-foreground mt-0.5">{s.l}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">{s.l}</div>
             </div>
           ))}
         </section>
@@ -81,7 +81,7 @@ const AgentProfile = () => {
         <section className="mt-5 rounded-2xl bg-card border border-border p-4">
           <div className="flex items-center justify-between mb-2">
             <h3 className="text-sm font-bold">About</h3>
-            <Link to="/profile/edit" className="text-[11px] text-primary font-semibold">Edit</Link>
+            <Link to="/profile/edit" className="text-xs text-primary font-semibold">Edit</Link>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
             Lagos-based real-estate specialist focused on Lekki, Ikoyi & VI. I help diaspora buyers secure
@@ -96,14 +96,14 @@ const AgentProfile = () => {
             {specialties.map((s) => (
               <span
                 key={s}
-                className="px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-[11px] font-semibold text-primary"
+                className="px-3 py-1 rounded-full bg-primary/10 border border-primary/30 text-xs font-semibold text-primary"
               >
                 {s}
               </span>
             ))}
             <button
               onClick={() => toast.success("Add specialty coming soon")}
-              className="px-3 py-1 rounded-full border border-dashed border-border text-[11px] text-muted-foreground"
+              className="px-3 py-1 rounded-full border border-dashed border-border text-xs text-muted-foreground"
             >
               + Add
             </button>
@@ -123,7 +123,7 @@ const AgentProfile = () => {
                 <c.i className="w-4 h-4 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
-                <div className="text-[11px] text-muted-foreground">{c.s}</div>
+                <div className="text-xs text-muted-foreground">{c.s}</div>
                 <div className="text-sm font-semibold truncate">{c.l}</div>
               </div>
             </div>

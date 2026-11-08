@@ -10,7 +10,7 @@ const PinInput = ({
   value, onChange, label, autoFocus,
 }: { value: string; onChange: (v: string) => void; label: string; autoFocus?: boolean }) => (
   <label className="block">
-    <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">{label}</span>
+    <span className="text-xs font-semibold text-muted-foreground tracking-wide">{label}</span>
     <input
       autoFocus={autoFocus}
       value={value}
@@ -20,7 +20,7 @@ const PinInput = ({
       maxLength={PIN_LENGTH}
       type="password"
       placeholder={"•".repeat(PIN_LENGTH)}
-      className="mt-1.5 w-full rounded-2xl bg-secondary border border-border px-4 py-4 text-center text-2xl tracking-[0.5em] font-bold"
+      className="mt-1.5 w-full rounded-2xl bg-secondary border border-border px-4 py-4 text-center text-2xl font-bold"
     />
   </label>
 );
@@ -89,7 +89,7 @@ const PinSettings = () => {
             Remove PIN
           </button>
         )}
-        <p className="text-[11px] text-muted-foreground text-center mt-6 leading-relaxed">
+        <p className="text-xs text-muted-foreground text-center mt-6 leading-relaxed">
           Your PIN is stored hashed on this device only. It's a quick unlock — not a replacement for your password.
         </p>
       </main>

@@ -27,6 +27,7 @@ import { toast } from "sonner";
 import { useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useTheme } from "@/lib/theme";
 
 type Item = { Icon: LucideIcon; title: string; subtitle: string; to: string };
 
@@ -211,6 +212,7 @@ const Profile = () => {
           <Row key={title} Icon={Icon} title={title} subtitle={subtitle} to={to} />
         ))}
 
+        <ThemeChoice />
         <Row
           Icon={LogOut}
           title="Log out"
@@ -227,12 +229,32 @@ const Profile = () => {
         />
       </section>
 
-      <div className="mt-6 flex items-center justify-center gap-3 text-[10px] text-muted-foreground flex-wrap">
+      <div className="mt-6 flex items-center justify-center gap-3 text-xs text-muted-foreground flex-wrap">
         <span>Stay · v0.1 · Africa 🌍</span>
         <Link to="/privacy-policy" className="hover:text-primary transition-colors underline">Privacy</Link>
         <Link to="/terms" className="hover:text-primary transition-colors underline">Terms</Link>
       </div>
     </main>
+  );
+};
+
+const ThemeChoice = () => {
+  const [theme, setTheme] = useTheme();
+  return (
+    <div className="rounded-xl border border-border p-4 flex items-center gap-3">
+      <div className="flex-1">
+        <p className="text-base font-semibold">Appearance</p>
+        <p className="text-sm text-muted-foreground">Light is the default</p>
+      </div>
+      <div className="flex rounded-lg border border-border p-0.5" role="radiogroup" aria-label="Appearance">
+        {(["light", "dark"] as const).map((t) => (
+          <button key={t} role="radio" aria-checked={theme === t} onClick={() => setTheme(t)}
+            className={cn("h-11 px-4 rounded-md text-sm font-semibold capitalize", theme === t ? "bg-primary text-primary-foreground" : "text-muted-foreground")}>
+            {t}
+          </button>
+        ))}
+      </div>
+    </div>
   );
 };
 

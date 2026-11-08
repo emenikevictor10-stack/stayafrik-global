@@ -45,7 +45,7 @@ const Section = ({ title, icon: Icon, count, children, defaultOpen = false }: an
           <Icon className="w-4 h-4 text-primary" />
           <span className="font-semibold text-sm">{title}</span>
           {typeof count === "number" && (
-            <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">{count}</span>
+            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-secondary text-muted-foreground">{count}</span>
           )}
         </div>
         {open ? <ChevronUp className="w-4 h-4 text-muted-foreground" /> : <ChevronDown className="w-4 h-4 text-muted-foreground" />}
@@ -147,10 +147,10 @@ const AdminUserDetail = () => {
           <div className="flex items-center gap-2 flex-wrap">
             <h1 className="text-xl font-extrabold truncate">{profile.full_name || "—"}</h1>
             {(roles.length ? roles : ["client"]).map((role) => (
-              <span key={role} className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${role === "admin" ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground"}`}>{role}</span>
+              <span key={role} className={`text-xs font-bold px-2 py-0.5 rounded-full ${role === "admin" ? "bg-primary/15 text-primary" : "bg-secondary text-muted-foreground"}`}>{role}</span>
             ))}
             {profile.is_host && (
-              <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-success/15 text-success">Host</span>
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-success/15 text-success">Host</span>
             )}
           </div>
           <div className="mt-1.5 flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
@@ -206,7 +206,7 @@ const AdminUserDetail = () => {
                     {k.reviewer_notes && <p className="text-xs text-muted-foreground mt-1">Notes: {k.reviewer_notes}</p>}
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${k.status === "approved" ? "bg-success/15 text-success" : k.status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-secondary text-muted-foreground"}`}>{k.status}</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${k.status === "approved" ? "bg-success/15 text-success" : k.status === "rejected" ? "bg-destructive/15 text-destructive" : "bg-secondary text-muted-foreground"}`}>{k.status}</span>
                     {k.id_image_url && <a href={k.id_image_url} target="_blank" rel="noreferrer" className="text-xs text-primary font-semibold">View ID</a>}
                   </div>
                 </li>
@@ -227,10 +227,10 @@ const AdminUserDetail = () => {
                       {p.bank_code ? `Bank ${p.bank_code}` : p.brand || "Card"}
                       {p.account_number ? ` · ****${p.account_number.slice(-4)}` : p.last4 ? ` · ****${p.last4}` : ""}
                     </p>
-                    {p.is_default && <span className="text-[10px] font-bold uppercase px-2 py-0.5 rounded-full bg-primary/15 text-primary">Default</span>}
+                    {p.is_default && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary">Default</span>}
                   </div>
                   {p.holder_name && <p className="text-xs text-muted-foreground mt-0.5">Holder: {p.holder_name}</p>}
-                  <p className="text-[10px] text-muted-foreground mt-0.5">Added {new Date(p.created_at).toLocaleDateString()}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">Added {new Date(p.created_at).toLocaleDateString()}</p>
                 </li>
               ))}
             </ul>

@@ -3,7 +3,7 @@ import { useRole } from "@/contexts/RoleContext";
 import { useNotifications } from "@/hooks/useNotifications";
 import { cn } from "@/lib/utils";
 import { clientTabs, agentTabs, badgeFor } from "./navTabs";
-import icon from "@/assets/stay-icon-white.png";
+import { Logo } from "@/ui/kit";
 
 export const SideNav = () => {
   const { role } = useRole();
@@ -18,7 +18,7 @@ export const SideNav = () => {
       aria-label="Primary"
     >
       <div className="flex items-center gap-2 px-2 mb-8">
-        <img src={icon} alt="Stay" className="h-8 w-auto object-contain" />
+        <Logo className="h-8" />
         <span className="text-lg font-extrabold tracking-tight">Stay</span>
       </div>
       <ul className="flex flex-col gap-1">
@@ -41,7 +41,7 @@ export const SideNav = () => {
                 <span className="relative">
                   <Icon className="w-5 h-5" aria-hidden />
                   {count > 0 && (
-                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center border border-background">
+                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center border border-background">
                       {count > 9 ? "9+" : count}
                     </span>
                   )}

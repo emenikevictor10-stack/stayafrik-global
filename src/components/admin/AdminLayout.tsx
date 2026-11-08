@@ -34,7 +34,7 @@ export const AdminLayout = () => {
     <div className="min-h-screen bg-background text-foreground flex">
       <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-border bg-card">
         <div className="px-5 py-5 border-b border-border">
-          <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Stay</p>
+          <p className="text-xs font-bold text-muted-foreground">Stay</p>
           <p className="text-base font-extrabold">Admin Console</p>
         </div>
         <nav className="flex-1 p-2 space-y-1">
@@ -63,7 +63,7 @@ export const AdminLayout = () => {
           <button onClick={signOut} className="w-full flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium text-muted-foreground hover:bg-secondary">
             <LogOut className="w-4 h-4" /> Sign out
           </button>
-          <p className="px-3 pt-1 text-[10px] text-muted-foreground truncate">{profile?.email}</p>
+          <p className="px-3 pt-1 text-xs text-muted-foreground truncate">{profile?.email}</p>
         </div>
       </aside>
 

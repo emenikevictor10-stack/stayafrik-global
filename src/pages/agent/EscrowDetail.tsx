@@ -49,9 +49,9 @@ const EscrowDetail = () => {
         <section className="rounded-3xl bg-gradient-to-br from-primary/30 via-primary/10 to-card border border-primary/30 p-5">
           <div className="flex items-center gap-2">
             <ShieldCheck className="w-4 h-4 text-primary" />
-            <span className="text-[10px] font-bold text-primary uppercase tracking-wider">PropertyEscrow™</span>
+            <span className="text-xs font-bold text-primary">PropertyEscrow™</span>
           </div>
-          <div className="text-[11px] text-muted-foreground mt-3">Total in escrow</div>
+          <div className="text-xs text-muted-foreground mt-3">Total in escrow</div>
           <div className="text-3xl font-extrabold text-primary mt-1">{fmt(e.amount)}</div>
           <div className="text-xs text-muted-foreground mt-1">{e.prop}</div>
         </section>
@@ -60,7 +60,7 @@ const EscrowDetail = () => {
         <section className="mt-4 rounded-2xl bg-card border border-border p-4 flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-primary/15 border border-primary/30 flex items-center justify-center"><User className="w-6 h-6 text-primary" /></div>
           <div className="flex-1">
-            <div className="text-[11px] text-muted-foreground">Buyer</div>
+            <div className="text-xs text-muted-foreground">Buyer</div>
             <div className="text-sm font-bold">{e.buyer}</div>
           </div>
           <button onClick={() => nav(`/messages/${e.buyer.toLowerCase().replace(/\s+/g, "-")}`)}
@@ -89,8 +89,8 @@ const EscrowDetail = () => {
                   </div>
                   <div className="pb-3 flex-1">
                     <div className={`text-sm font-bold ${done || active ? "text-foreground" : "text-muted-foreground"}`}>{s.l}</div>
-                    <div className="text-[11px] text-muted-foreground">{s.d}</div>
-                    {(done || active) && <div className="text-[10px] text-primary font-semibold mt-0.5">{i === 0 ? e.funded : i === 1 ? "Apr 12" : "—"}</div>}
+                    <div className="text-xs text-muted-foreground">{s.d}</div>
+                    {(done || active) && <div className="text-xs text-primary font-semibold mt-0.5">{i === 0 ? e.funded : i === 1 ? "Apr 12" : "—"}</div>}
                   </div>
                 </div>
               );
@@ -121,7 +121,7 @@ const EscrowDetail = () => {
               <FileText className="w-5 h-5 text-primary" />
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-semibold truncate">{d.l}</div>
-                <div className="text-[10px] text-muted-foreground">{d.s}</div>
+                <div className="text-xs text-muted-foreground">{d.s}</div>
               </div>
               <button onClick={() => toast.success("Downloaded")}><Download className="w-4 h-4 text-muted-foreground" /></button>
             </div>

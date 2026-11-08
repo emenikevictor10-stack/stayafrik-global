@@ -100,13 +100,13 @@ const AdminPartnerBookings = () => {
             <div className="flex items-center gap-2 text-xs text-muted-foreground"><Wallet className="w-4 h-4" /> RayProp wallet</div>
             <div className="mt-1 text-2xl font-extrabold">{wallet ? (wallet.disabled ? "Not connected" : naira(wallet.balance)) : "—"}</div>
             {wallet && !wallet.disabled && wallet.balance < LOW_BALANCE_NAIRA && (
-              <p className="mt-1 text-[11px] text-destructive font-semibold">Low balance — top up so partner bookings can be confirmed.</p>
+              <p className="mt-1 text-xs text-destructive font-semibold">Low balance — top up so partner bookings can be confirmed.</p>
             )}
           </div>
           <button onClick={() => setFilter("needs_attention")} className="text-left rounded-2xl bg-card border border-border p-4">
             <div className="text-xs text-muted-foreground">Needs attention</div>
             <div className={`mt-1 text-2xl font-extrabold ${attention.length ? "text-destructive" : ""}`}>{attention.length}</div>
-            <p className="text-[11px] text-muted-foreground">Paid by the guest, not yet confirmed by RayProp. Retry or refund.</p>
+            <p className="text-xs text-muted-foreground">Paid by the guest, not yet confirmed by RayProp. Retry or refund.</p>
           </button>
         </div>
 
@@ -142,14 +142,14 @@ const AdminPartnerBookings = () => {
               return (
                 <article key={r.id} className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col sm:flex-row">
                   <div className="sm:w-40 aspect-[4/3] sm:aspect-auto bg-secondary/40 shrink-0">
-                    {r.partner_image ? <img src={r.partner_image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">No photo</div>}
+                    {r.partner_image ? <img src={r.partner_image} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No photo</div>}
                   </div>
                   <div className="flex-1 p-4 space-y-3 min-w-0">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {r.listing_code && <button onClick={() => copy(r.listing_code!)} className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.listing_code.replace(/^RP-/, "RP·")}</button>}
-                          <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${COLORS[r.status] || "bg-secondary"}`}>{r.status.replace("_", " ")}</span>
+                          {r.listing_code && <button onClick={() => copy(r.listing_code!)} className="font-mono text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.listing_code.replace(/^RP-/, "RP·")}</button>}
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${COLORS[r.status] || "bg-secondary"}`}>{r.status.replace("_", " ")}</span>
                         </div>
                         {r.rayprop_listing_id
                           ? <Link to={`/property/rp_${r.rayprop_listing_id}`} className="font-bold text-base hover:text-primary line-clamp-1">{r.partner_title || "Partner stay"}</Link>
@@ -158,21 +158,21 @@ const AdminPartnerBookings = () => {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-extrabold">{naira(r.total_price)}</p>
-                        {r.rayprop_quote_total_kobo != null && <p className="text-[10px] text-muted-foreground">RayProp quote {naira(koboToNaira(r.rayprop_quote_total_kobo))}</p>}
+                        {r.rayprop_quote_total_kobo != null && <p className="text-xs text-muted-foreground">RayProp quote {naira(koboToNaira(r.rayprop_quote_total_kobo))}</p>}
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                       <div className="rounded-lg bg-secondary/50 p-2">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Dates</p>
+                        <p className="text-xs font-bold text-muted-foreground">Dates</p>
                         <p className="font-semibold">{day(r.check_in_date)} → {day(r.check_out_date)}{r.guest_count ? ` · ${r.guest_count} guest${r.guest_count === 1 ? "" : "s"}` : ""}</p>
                       </div>
                       <div className="rounded-lg bg-secondary/50 p-2 min-w-0">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Guest</p>
+                        <p className="text-xs font-bold text-muted-foreground">Guest</p>
                         <Link to={`/admin/users/${r.guest_id}`} className="font-semibold hover:text-primary truncate block">{g?.name || "…"}</Link>
                         <p className="text-muted-foreground truncate">{[g?.email, g?.phone].filter(Boolean).join(" · ")}</p>
                       </div>
                     </div>
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground font-mono">
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground font-mono">
                       <span className="font-sans">Booked {new Date(r.created_at).toLocaleString()}</span>
                       <span>Reservation {r.rayprop_reservation_id || "—"}</span>
                       {r.rayprop_hold_id && <span>Hold {r.rayprop_hold_id}</span>}

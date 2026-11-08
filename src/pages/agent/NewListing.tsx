@@ -240,7 +240,7 @@ const NewListing = () => {
             <ChevronLeft className="w-4 h-4" />
           </button>
           <div className="flex-1">
-            <div className="text-[11px] text-muted-foreground">Step {step} of {TOTAL}</div>
+            <div className="text-xs text-muted-foreground">Step {step} of {TOTAL}</div>
             <div className="text-sm font-bold">{stepTitle}</div>
           </div>
         </div>
@@ -255,7 +255,7 @@ const NewListing = () => {
             <PlaceFields state={stateName} city={city} neighborhood={hood}
               onChange={(v) => { if (v.state !== undefined) setStateName(v.state); if (v.city !== undefined) setCity(v.city); if (v.neighborhood !== undefined) setHood(v.neighborhood); }} />
             <label className="block">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase">Full address</span>
+              <span className="text-xs font-semibold text-muted-foreground">Full address</span>
               <input value={address} onChange={(e) => setAddress(e.target.value)} placeholder="12 Admiralty Way, Lekki Phase 1"
                 className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm" />
             </label>
@@ -270,14 +270,14 @@ const NewListing = () => {
               onChange={(lat, lng) => { setCoords({ lat, lng }); setPinned(true); }}
               height={220}
             />
-            <p className="text-[11px] text-muted-foreground">Optional: tap "Find on map" or drag the pin for an exact location. Full address only shown to guests after booking.</p>
+            <p className="text-xs text-muted-foreground">Optional: tap "Find on map" or drag the pin for an exact location. Full address only shown to guests after booking.</p>
           </div>
         )}
 
         {step === 2 && (
           <div className="space-y-4">
             <label className="block">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase">Listing title</span>
+              <span className="text-xs font-semibold text-muted-foreground">Listing title</span>
               <input value={title} onChange={(e) => setTitle(e.target.value)} placeholder="Cozy 2-bed in Lekki"
                 className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm" />
             </label>
@@ -287,7 +287,7 @@ const NewListing = () => {
                 { l: "Baths", v: baths, set: setBaths },
               ].map((f) => (
                 <div key={f.l} className="rounded-xl bg-card border border-border p-3 text-center col-span-1">
-                  <div className="text-[10px] text-muted-foreground uppercase">{f.l}</div>
+                  <div className="text-xs text-muted-foreground">{f.l}</div>
                   <div className="flex items-center justify-between mt-2">
                     <button onClick={() => f.set(Math.max(0, f.v - 1))} className="w-7 h-7 rounded-full bg-secondary border border-border">−</button>
                     <span className="font-extrabold">{f.v}</span>
@@ -296,13 +296,13 @@ const NewListing = () => {
                 </div>
               ))}
               <label className="block col-span-1">
-                <span className="text-[10px] text-muted-foreground uppercase">Area</span>
+                <span className="text-xs text-muted-foreground">Area</span>
                 <input value={area} onChange={(e) => setArea(e.target.value)} placeholder="180sqm"
                   className="mt-1 w-full rounded-xl bg-card border border-border px-2 py-2 text-sm text-center" />
               </label>
             </div>
             <label className="block">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase">Description</span>
+              <span className="text-xs font-semibold text-muted-foreground">Description</span>
               <textarea value={desc} onChange={(e) => setDesc(e.target.value)} rows={5} placeholder="Tell guests what makes your place special…"
                 className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm resize-none" />
             </label>
@@ -327,7 +327,7 @@ const NewListing = () => {
               <button type="button" disabled={uploading} onClick={() => fileInput.current?.click()}
                 className="aspect-square rounded-xl border-2 border-dashed border-border bg-card flex flex-col items-center justify-center gap-1 text-muted-foreground disabled:opacity-50">
                 {uploading ? <Loader2 className="w-6 h-6 animate-spin" /> : <ImagePlus className="w-6 h-6" />}
-                <span className="text-[10px] font-semibold">{uploading ? "Uploading…" : "Add photo"}</span>
+                <span className="text-xs font-semibold">{uploading ? "Uploading…" : "Add photo"}</span>
               </button>
             </div>
           </div>
@@ -352,7 +352,7 @@ const NewListing = () => {
                 className="w-full rounded-2xl border-2 border-dashed border-border bg-card aspect-video flex flex-col items-center justify-center gap-2 text-muted-foreground disabled:opacity-50">
                 {uploadingVideo ? <Loader2 className="w-7 h-7 animate-spin" /> : <Video className="w-8 h-8" />}
                 <span className="text-xs font-bold">{uploadingVideo ? "Uploading…" : "Tap to upload video"}</span>
-                <span className="text-[10px]">Max 5MB · ~1 minute</span>
+                <span className="text-xs">Max 5MB · ~1 minute</span>
               </button>
             )}
           </div>
@@ -372,7 +372,7 @@ const NewListing = () => {
         {step === 6 && (
           <div className="space-y-4">
             <label className="block">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase">Price per night (₦)</span>
+              <span className="text-xs font-semibold text-muted-foreground">Price per night (₦)</span>
               <input value={price} onChange={(e) => setPrice(e.target.value)} type="number" placeholder="150000"
                 className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-lg font-extrabold" />
             </label>
@@ -388,7 +388,7 @@ const NewListing = () => {
           <div className="space-y-3">
             <div className="rounded-2xl bg-card border border-border p-4">
               <div className="flex items-center gap-2 mb-2"><Home className="w-4 h-4 text-primary" /><h3 className="text-sm font-bold">{title || "Untitled"}</h3></div>
-              <div className="text-[11px] text-muted-foreground space-y-1">
+              <div className="text-xs text-muted-foreground space-y-1">
                 <div>Shortlet · {beds} bed · {baths} bath · {area || "—"}</div>
                 <div>{address || "—"}, {city || "—"}</div>
                 <div className="text-primary font-extrabold text-sm">₦{Number(price || 0).toLocaleString()} / night</div>
@@ -397,7 +397,7 @@ const NewListing = () => {
             </div>
             <div className="rounded-2xl bg-primary/5 border border-primary/20 p-4 flex gap-3">
               <Sparkles className="w-5 h-5 text-primary shrink-0" />
-              <p className="text-[11px] text-muted-foreground leading-relaxed">
+              <p className="text-xs text-muted-foreground leading-relaxed">
                 Your listing will be reviewed by our admin team and goes live once approved (usually within 24h). You'll get a notification the moment it's approved.
               </p>
             </div>

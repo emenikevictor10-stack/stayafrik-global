@@ -99,7 +99,7 @@ export const PinGate = ({ children }: { children: React.ReactNode }) => {
             ? <Lock className="w-6 h-6 text-primary" />
             : <ShieldCheck className="w-6 h-6 text-primary" />}
         </div>
-        <h1 className="text-[26px] font-semibold tracking-tight text-center leading-tight">{heading}</h1>
+        <h1 className="text-4xl font-semibold tracking-tight text-center leading-tight">{heading}</h1>
         <p className="text-[15px] text-muted-foreground mt-2 text-center max-w-xs">{sub}</p>
 
         <div className={`mt-10 flex items-center gap-4 ${shake ? "animate-[shake_0.4s]" : ""}`}>
@@ -191,7 +191,7 @@ export const PinGate = ({ children }: { children: React.ReactNode }) => {
 const Key = ({ children, onClick }: { children: React.ReactNode; onClick: () => void }) => (
   <button
     onClick={onClick}
-    className="h-16 rounded-2xl text-[26px] font-medium tracking-tight hover:bg-muted active:bg-muted/70 transition select-none"
+    className="h-16 rounded-2xl text-4xl font-medium tracking-tight hover:bg-muted active:bg-muted/70 transition select-none"
   >
     {children}
   </button>

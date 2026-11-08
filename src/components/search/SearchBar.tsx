@@ -136,7 +136,7 @@ export const SearchBar = ({ className, onClosed, panels = true }: { className?: 
         <div
           id="search-panel"
           className={cn(
-            "absolute top-full mt-3 z-50 rounded-[32px] bg-search-surface border border-border shadow-search-open animate-panel-in",
+            "absolute top-full mt-3 z-50 rounded-full bg-search-surface border border-border shadow-search-open animate-panel-in",
             active === "where" && "left-0 w-[425px] max-h-[420px] overflow-y-auto p-6",
             active === "when" && "left-0 right-0 p-8",
             active === "who" && "right-0 w-[400px] px-8 py-4",

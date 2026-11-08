@@ -59,9 +59,9 @@ const Commission = () => {
         <section className="relative rounded-3xl bg-gradient-to-br from-primary/30 via-primary/10 to-card border border-primary/30 p-5 overflow-hidden">
           <div className="absolute inset-0 bg-grid opacity-30" />
           <div className="relative">
-            <div className="text-[11px] text-muted-foreground uppercase tracking-wider">Available balance</div>
+            <div className="text-xs text-muted-foreground">Available balance</div>
             <div className="mt-1 text-4xl font-extrabold tracking-tight">{fmt(availableBalance)}</div>
-            <div className="text-[11px] text-muted-foreground mt-1">{fmt(pendingTotal)} pending release</div>
+            <div className="text-xs text-muted-foreground mt-1">{fmt(pendingTotal)} pending release</div>
             <button
               onClick={() => toast.success(availableBalance > 0 ? "Withdrawal queued — funds arrive within 24h" : "No funds to withdraw yet")}
               disabled={availableBalance <= 0}
@@ -78,7 +78,7 @@ const Commission = () => {
             {months.map((m) => (
               <div key={m.key} className="flex-1 flex flex-col items-center gap-1.5">
                 <div className="w-full rounded-t-md bg-primary/70" style={{ height: `${(m.total / max) * 100}%` }} />
-                <div className="text-[10px] text-muted-foreground">{m.label}</div>
+                <div className="text-xs text-muted-foreground">{m.label}</div>
               </div>
             ))}
           </div>
@@ -87,7 +87,7 @@ const Commission = () => {
         <section className="mt-4 rounded-2xl bg-card border border-border p-4">
           <div className="flex items-center justify-between mb-3">
             <h3 className="text-sm font-bold">Recent payouts</h3>
-            <Link to="/profile/payouts" className="text-[11px] text-primary font-bold inline-flex items-center gap-1">
+            <Link to="/profile/payouts" className="text-xs text-primary font-bold inline-flex items-center gap-1">
               <Banknote className="w-3 h-3" /> Bank
             </Link>
           </div>
@@ -99,11 +99,11 @@ const Commission = () => {
                 <div key={b.id} className="flex items-center gap-3">
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold truncate">{titleOf(b.listing_id)}</div>
-                    <div className="text-[10px] text-muted-foreground">{new Date(b.created_at).toLocaleDateString()}</div>
+                    <div className="text-xs text-muted-foreground">{new Date(b.created_at).toLocaleDateString()}</div>
                   </div>
                   <div className="text-right">
                     <div className="text-xs font-bold">{fmt(Number(b.total_price) * 0.97)}</div>
-                    <div className={`text-[10px] font-bold ${b.status === "released" ? "text-success" : "text-primary"}`}>{b.status}</div>
+                    <div className={`text-xs font-bold ${b.status === "released" ? "text-success" : "text-primary"}`}>{b.status}</div>
                   </div>
                 </div>
               ))}

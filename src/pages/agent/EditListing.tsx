@@ -136,7 +136,7 @@ const EditListing = () => {
           </div>
           <div className="flex-1">
             <div className="text-sm font-bold">{live ? "Live" : "Hidden"}</div>
-            <div className="text-[11px] text-muted-foreground">{live ? "Visible to guests" : "Only you can see this"}</div>
+            <div className="text-xs text-muted-foreground">{live ? "Visible to guests" : "Only you can see this"}</div>
           </div>
           <button onClick={() => setLive((v) => !v)} className="text-xs font-bold px-3 py-1.5 rounded-full bg-primary text-primary-foreground">
             {live ? "Unpublish" : "Publish"}
@@ -160,30 +160,30 @@ const EditListing = () => {
             <button onClick={() => fileInput.current?.click()} disabled={uploading}
               className="aspect-square rounded-lg border-2 border-dashed border-border flex flex-col items-center justify-center text-muted-foreground disabled:opacity-50">
               {uploading ? <Loader2 className="w-5 h-5 animate-spin" /> : <ImagePlus className="w-5 h-5" />}
-              <span className="text-[10px] mt-1">{uploading ? "Uploading…" : "Add"}</span>
+              <span className="text-xs mt-1">{uploading ? "Uploading…" : "Add"}</span>
             </button>
           </div>
         </section>
 
         <section className="space-y-4">
           <label className="block">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase">Title</span>
+            <span className="text-xs font-semibold text-muted-foreground">Title</span>
             <input value={title} onChange={(e) => setTitle(e.target.value)} className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm" />
           </label>
           <label className="block">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase">Price per night (₦)</span>
+            <span className="text-xs font-semibold text-muted-foreground">Price per night (₦)</span>
             <input type="number" value={price} onChange={(e) => setPrice(e.target.value)} className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm font-bold" />
           </label>
           <div className="grid grid-cols-3 gap-2">
-            <label className="block"><span className="text-[10px] text-muted-foreground uppercase">Beds</span>
+            <label className="block"><span className="text-xs text-muted-foreground">Beds</span>
               <input type="number" value={beds} onChange={(e) => setBeds(Number(e.target.value))} className="mt-1 w-full rounded-xl bg-card border border-border px-3 py-2 text-sm text-center" /></label>
-            <label className="block"><span className="text-[10px] text-muted-foreground uppercase">Baths</span>
+            <label className="block"><span className="text-xs text-muted-foreground">Baths</span>
               <input type="number" value={baths} onChange={(e) => setBaths(Number(e.target.value))} className="mt-1 w-full rounded-xl bg-card border border-border px-3 py-2 text-sm text-center" /></label>
-            <label className="block"><span className="text-[10px] text-muted-foreground uppercase">Area</span>
+            <label className="block"><span className="text-xs text-muted-foreground">Area</span>
               <input value={area} onChange={(e) => setArea(e.target.value)} className="mt-1 w-full rounded-xl bg-card border border-border px-3 py-2 text-sm text-center" /></label>
           </div>
           <label className="block">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase">Description</span>
+            <span className="text-xs font-semibold text-muted-foreground">Description</span>
             <textarea rows={5} value={desc} onChange={(e) => setDesc(e.target.value)} className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm resize-none" />
           </label>
         </section>

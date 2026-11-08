@@ -3,7 +3,7 @@ import { LocationCombobox } from "@/components/location/LocationCombobox";
 import { chainOf } from "@/lib/locations";
 
 const field = "mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm";
-const lbl = "text-[11px] font-semibold text-muted-foreground uppercase";
+const lbl = "text-xs font-semibold text-muted-foreground";
 
 /** State → City → Neighbourhood, picked from the master place list (same list partner stays are matched to). */
 export const PlaceFields = ({

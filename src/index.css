@@ -1,85 +1,98 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Figtree:wght@400;600&display=swap');
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Stay — Dark + Neon Lime Design System
- * Font: Plus Jakarta Sans. All colors HSL.
- * Tokens locked to selected direction (v1 — Modern high density).
- */
 
+/* StayGlobal design system (PRD §9). Light default; .dark only by user choice. */
 @layer base {
   :root {
-    /* Surfaces — #0B0B0E canvas, #1C1C21 cards */
-    --background: 240 12% 5%;          /* #0B0B0E */
-    --foreground: 0 0% 100%;           /* #FFFFFF */
+    --bg: 0 0% 100%;
+    --fg: 210 24% 14%;
+    --muted-fg: 210 10% 42%;
+    --line: 210 16% 89%;
+    --surface: 210 20% 97%;
+    --blue: 203 54% 34%;            /* #275f84 brand */
+    --blue-hover: 203 56% 28%;
+    --orange: 18 82% 52%;
+    --danger: 0 70% 48%;
+    --warn-bg: 36 100% 94%;
+    --warn-fg: 28 80% 30%;
+    --off: 210 10% 60%;
+    --scrim: 210 30% 8% / 0.5;
+    --chart-1: 213 67% 50%;
+    --chart-2: 17 82% 56%;
+    --chart-wash: 210 16% 80%;
 
-    --card: 240 8% 12%;                /* #1C1C21 */
-    --card-foreground: 0 0% 100%;
-
-    --popover: 240 8% 12%;
-    --popover-foreground: 0 0% 100%;
-
-    /* Brand: neon lime accent #D4FF3D */
-    --primary: 73 100% 62%;
-    --primary-foreground: 240 12% 5%;
-    --primary-dim: 73 72% 48%;
-
-    --secondary: 240 8% 12%;           /* #1C1C21 */
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 240 8% 12%;
-    --muted-foreground: 220 9% 46%;    /* gray-500 */
-
-    --accent: 73 100% 62%;
-    --accent-foreground: 240 12% 5%;
-
-    --destructive: 0 84% 60%;
+    --background: var(--bg);
+    --foreground: var(--fg);
+    --card: var(--bg);
+    --card-foreground: var(--fg);
+    --popover: var(--bg);
+    --popover-foreground: var(--fg);
+    --primary: var(--blue);
+    --primary-foreground: 0 0% 100%;
+    --primary-dim: var(--blue-hover);
+    --secondary: var(--surface);
+    --secondary-foreground: var(--fg);
+    --muted: var(--surface);
+    --muted-foreground: var(--muted-fg);
+    --accent: var(--surface);
+    --accent-foreground: var(--fg);
+    --destructive: var(--danger);
     --destructive-foreground: 0 0% 100%;
-
-    --success: 142 71% 45%;
-    --info: 217 91% 60%;
-    --warn: 73 100% 62%;
-
-    --border: 0 0% 100% / 0.05;        /* white/5 borders */
-    --input: 240 8% 12%;
-    --ring: 73 100% 62%;
-
-    --radius: 1.5rem;                  /* 24px — soft cards */
-
-    /* Shadows / glows */
-    --shadow-glow: 0 8px 32px hsl(73 100% 62% / 0.28);
-    --shadow-card: 0 4px 24px hsl(0 0% 0% / 0.4);
-
-    /* Search bar */
-    --search-surface: 240 8% 15%;
-    --search-muted: 240 8% 9%;
-    --search-hover: 240 8% 20%;
-    --search-shadow: 0 3px 12px hsl(0 0% 0% / 0.35);
-    --search-shadow-open: 0 8px 28px hsl(0 0% 0% / 0.55);
-    --hint-low: 142 60% 18%;
-    --hint-low-foreground: 142 71% 60%;
-    --hint-high: 0 60% 20%;
-    --hint-high-foreground: 0 84% 70%;
-
-    /* Motion */
+    --success: var(--blue);
+    --info: var(--blue);
+    --warn: var(--orange);
+    --border: var(--line);
+    --input: var(--line);
+    --ring: var(--blue);
+    --radius: 12px;
+    --shadow-glow: 0 4px 14px hsl(var(--blue) / 0.18);
+    --shadow-card: 0 1px 3px hsl(var(--fg) / 0.08);
+    --search-surface: var(--bg);
+    --search-muted: var(--surface);
+    --search-hover: var(--surface);
+    --search-shadow: 0 2px 10px hsl(var(--fg) / 0.1);
+    --search-shadow-open: 0 8px 28px hsl(var(--fg) / 0.16);
+    --hint-low: var(--surface);
+    --hint-low-foreground: var(--blue);
+    --hint-high: var(--warn-bg);
+    --hint-high-foreground: var(--warn-fg);
     --ease-smooth: cubic-bezier(0.32, 0.72, 0, 1);
-
-    --sidebar-background: 240 12% 5%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 73 100% 62%;
-    --sidebar-primary-foreground: 240 12% 5%;
-    --sidebar-accent: 240 8% 12%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 0 0% 100% / 0.05;
-    --sidebar-ring: 73 100% 62%;
+    --sidebar-background: var(--bg);
+    --sidebar-foreground: var(--fg);
+    --sidebar-primary: var(--blue);
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: var(--surface);
+    --sidebar-accent-foreground: var(--fg);
+    --sidebar-border: var(--line);
+    --sidebar-ring: var(--blue);
+  }
+  .dark {
+    --bg: 210 18% 9%;
+    --fg: 210 20% 94%;
+    --muted-fg: 210 10% 64%;
+    --line: 210 14% 20%;
+    --surface: 210 16% 13%;
+    --blue: 203 50% 52%;
+    --blue-hover: 203 54% 60%;
+    --orange: 18 80% 58%;
+    --danger: 0 72% 60%;
+    --warn-bg: 30 40% 16%;
+    --warn-fg: 36 90% 70%;
+    --off: 210 8% 46%;
+    --scrim: 0 0% 0% / 0.6;
+    --chart-1: 213 76% 56%;
+    --chart-2: 17 70% 50%;
+    --chart-wash: 210 10% 34%;
   }
 }
 
 @layer base {
   * {
-    border-color: hsl(0 0% 100% / 0.05);
+    border-color: hsl(var(--line));
   }
   html {
     -webkit-font-smoothing: antialiased;
@@ -87,13 +100,14 @@
   }
   body {
     @apply bg-background text-foreground;
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
+    font-size: 15px;
+    font-family: 'Figtree', system-ui, sans-serif;
     overscroll-behavior-y: none;
   }
   h1, h2, h3, h4, h5 {
-    font-family: 'Plus Jakarta Sans', system-ui, sans-serif;
-    letter-spacing: -0.02em;
-    font-weight: 800;
+    font-family: 'Figtree', system-ui, sans-serif;
+    letter-spacing: -0.01em;
+    font-weight: 600;
   }
 }
 

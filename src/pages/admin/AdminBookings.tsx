@@ -143,7 +143,7 @@ const AdminBookings = () => {
   );
 
   const Pill = ({ s }: { s: string }) => (
-    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${STATUS_COLORS[s] || "bg-secondary"}`}>{s.replace("_", " ")}</span>
+    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${STATUS_COLORS[s] || "bg-secondary"}`}>{s.replace("_", " ")}</span>
   );
 
   return (
@@ -206,8 +206,8 @@ const AdminBookings = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold truncate">{title(r)}</span>
-                  {r.listing_code && <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.listing_code.replace(/^RP-/, "RP·")}</span>}
-                  {r.source === "rayprop" && <span className="text-[10px] font-bold text-primary">Partner</span>}
+                  {r.listing_code && <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.listing_code.replace(/^RP-/, "RP·")}</span>}
+                  {r.source === "rayprop" && <span className="text-xs font-bold text-primary">Partner</span>}
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">{people[r.guest_id]?.name || "Guest"} · {day(r.check_in_date)} → {day(r.check_out_date)}</p>
               </div>
@@ -231,14 +231,14 @@ const AdminBookings = () => {
               <article key={r.id} className="rounded-2xl border border-border bg-card overflow-hidden">
                 <div className="flex flex-col sm:flex-row">
                   <div className="sm:w-40 aspect-[4/3] sm:aspect-auto bg-secondary/40 shrink-0">
-                    {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">No photo</div>}
+                    {img ? <img src={img} alt="" className="w-full h-full object-cover" /> : <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No photo</div>}
                   </div>
                   <div className="flex-1 p-4 space-y-3 min-w-0">
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {r.listing_code && <button onClick={() => copy(r.listing_code!)} className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.listing_code.replace(/^RP-/, "RP·")}</button>}
-                          <span className={`text-[10px] font-bold ${r.source === "rayprop" ? "text-primary" : "text-muted-foreground"}`}>{r.source === "rayprop" ? "Partner stay" : "Your stay"}</span>
+                          {r.listing_code && <button onClick={() => copy(r.listing_code!)} className="font-mono text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.listing_code.replace(/^RP-/, "RP·")}</button>}
+                          <span className={`text-xs font-bold ${r.source === "rayprop" ? "text-primary" : "text-muted-foreground"}`}>{r.source === "rayprop" ? "Partner stay" : "Your stay"}</span>
                           <Pill s={r.status} />
                         </div>
                         {r.listing_id ? (
@@ -248,22 +248,22 @@ const AdminBookings = () => {
                       </div>
                       <div className="text-right">
                         <p className="text-lg font-extrabold">{naira(Number(r.total_price))}</p>
-                        <p className="text-[10px] text-muted-foreground">{n} night{n === 1 ? "" : "s"}{r.guest_count ? ` · ${r.guest_count} guest${r.guest_count === 1 ? "" : "s"}` : ""}</p>
+                        <p className="text-xs text-muted-foreground">{n} night{n === 1 ? "" : "s"}{r.guest_count ? ` · ${r.guest_count} guest${r.guest_count === 1 ? "" : "s"}` : ""}</p>
                       </div>
                     </div>
 
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                       <div className="rounded-lg bg-secondary/50 p-2">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Dates</p>
+                        <p className="text-xs font-bold text-muted-foreground">Dates</p>
                         <p className="font-semibold">{day(r.check_in_date)} → {day(r.check_out_date)}</p>
                       </div>
                       <div className="rounded-lg bg-secondary/50 p-2 min-w-0">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Guest</p>
+                        <p className="text-xs font-bold text-muted-foreground">Guest</p>
                         <Link to={`/admin/users/${r.guest_id}`} className="font-semibold hover:text-primary truncate block">{g?.name || "…"}</Link>
                         <p className="text-muted-foreground truncate">{[g?.email, g?.phone].filter(Boolean).join(" · ")}</p>
                       </div>
                       <div className="rounded-lg bg-secondary/50 p-2 min-w-0">
-                        <p className="text-[10px] uppercase font-bold text-muted-foreground">Host</p>
+                        <p className="text-xs font-bold text-muted-foreground">Host</p>
                         {r.source === "rayprop" ? <p className="font-semibold">RayProp partner</p> : r.listing ? (
                           <>
                             <Link to={`/admin/users/${r.listing.host_id}`} className="font-semibold hover:text-primary truncate block">{h?.name || "…"}</Link>
@@ -273,7 +273,7 @@ const AdminBookings = () => {
                       </div>
                     </div>
 
-                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                    <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                       <span>Booked {new Date(r.created_at).toLocaleString()}</span>
                       {r.payment_reference && <button onClick={() => copy(r.payment_reference!)} className="inline-flex items-center gap-1 font-mono hover:text-foreground">Paystack {r.payment_reference}<Copy className="w-3 h-3" /></button>}
                       {r.rayprop_reservation_id && <span className="font-mono">RayProp res. {r.rayprop_reservation_id}</span>}

@@ -22,7 +22,7 @@ export const MobileSearchPill = ({ onOpen }: { onOpen: () => void }) => {
       {has ? (
         <span className="min-w-0 text-left">
           <span className="block text-sm font-semibold truncate">{search.where || "Anywhere"}</span>
-          <span className="block text-[11px] text-muted-foreground truncate">{whenSummary(search) || "Anytime"} · {whoSummary(search) || "Add guests"}</span>
+          <span className="block text-xs text-muted-foreground truncate">{whenSummary(search) || "Anytime"} · {whoSummary(search) || "Add guests"}</span>
         </span>
       ) : <span className="text-base font-medium">Start your search</span>}
     </button>
@@ -47,7 +47,7 @@ export const MobileSearchModal = ({ open, onOpenChange }: { open: boolean; onOpe
   const card = (id: Segment, title: string, label: string, summary: string, body: React.ReactNode) =>
     step === id ? (
       <section className="rounded-3xl bg-search-surface shadow-search-open p-6 animate-panel-in">
-        <h2 className="text-[22px] font-bold mb-4">{title}</h2>
+        <h2 className="text-2xl font-bold mb-4">{title}</h2>
         {body}
       </section>
     ) : (

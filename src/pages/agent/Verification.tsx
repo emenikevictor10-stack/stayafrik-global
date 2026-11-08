@@ -97,7 +97,7 @@ const Verification = () => {
     } as const;
     const m = map[submission.status];
     return (
-      <span className={`text-[10px] font-bold px-2 py-1 rounded-full border flex items-center gap-1 ${m.c}`}>
+      <span className={`text-xs font-bold px-2 py-1 rounded-full border flex items-center gap-1 ${m.c}`}>
         <m.I className="w-3 h-3" /> {m.l}
       </span>
     );
@@ -121,7 +121,7 @@ const Verification = () => {
               </div>
               <div className="flex-1">
                 <div className="text-sm font-bold">Government-issued ID</div>
-                <div className="text-[11px] text-muted-foreground">Required to host or receive payouts.</div>
+                <div className="text-xs text-muted-foreground">Required to host or receive payouts.</div>
               </div>
               {statusBadge()}
             </section>
@@ -131,19 +131,19 @@ const Verification = () => {
             ) : (
               <section className="mt-4 space-y-3">
                 <label className="block">
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase">ID type</span>
+                  <span className="text-xs font-semibold text-muted-foreground">ID type</span>
                   <select value={idType} onChange={(e) => setIdType(e.target.value)} className="mt-1.5 w-full rounded-xl bg-card border border-border px-3 py-3 text-sm">
                     {ID_TYPES.map((t) => <option key={t.v} value={t.v}>{t.l}</option>)}
                   </select>
                 </label>
                 <label className="block">
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase">ID number</span>
+                  <span className="text-xs font-semibold text-muted-foreground">ID number</span>
                   <input value={idNumber} onChange={(e) => setIdNumber(e.target.value)} placeholder="e.g. 12345678901"
                     className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm" />
                 </label>
 
                 <div>
-                  <span className="text-[11px] font-semibold text-muted-foreground uppercase">Photo of ID</span>
+                  <span className="text-xs font-semibold text-muted-foreground">Photo of ID</span>
                   <input ref={fileInput} type="file" accept="image/*" capture="environment" hidden
                     onChange={(e) => e.target.files?.[0] && upload(e.target.files[0])} />
                   <button onClick={() => fileInput.current?.click()} disabled={uploading}
@@ -170,7 +170,7 @@ const Verification = () => {
               </section>
             )}
 
-            <p className="text-center text-[10px] text-muted-foreground mt-6">
+            <p className="text-center text-xs text-muted-foreground mt-6">
               Documents are encrypted and reviewed by our compliance team within 48h.
             </p>
           </>

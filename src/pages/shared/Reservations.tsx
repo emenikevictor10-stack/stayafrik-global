@@ -35,7 +35,7 @@ const StatusChip = ({ status }: { status: Reservation["status"] }) => {
   };
   const m = map[status];
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full border text-[10px] font-bold ${m.cls}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-1 rounded-full border text-xs font-bold ${m.cls}`}>
       {m.icon} {m.label}
     </span>
   );
@@ -149,7 +149,7 @@ const Reservations = () => {
         <>
           {incoming.length > 0 && (
             <section className="mt-6">
-              <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Incoming ({incoming.length})</h2>
+              <h2 className="text-xs font-bold text-muted-foreground mb-2">Incoming ({incoming.length})</h2>
               <div className="space-y-3">
                 {incoming.map((r) => (
                   <ReservationCard key={r.id} r={r} meta={meta[r.listing_id]} isHost onChange={refresh} />
@@ -158,7 +158,7 @@ const Reservations = () => {
             </section>
           )}
           <section className="mt-6">
-            <h2 className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Your requests</h2>
+            <h2 className="text-xs font-bold text-muted-foreground mb-2">Your requests</h2>
             {outgoing.length === 0 ? (
               <div className="text-center py-10 rounded-2xl border border-dashed border-border text-sm text-muted-foreground">
                 No requests yet. Tap "Reserve for viewing" on any property.

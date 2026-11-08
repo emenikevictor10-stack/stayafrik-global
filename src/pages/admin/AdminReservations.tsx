@@ -42,7 +42,7 @@ const ACTIONS: Record<string, Action[]> = {
 
 const PersonBlock = ({ title, p }: { title: string; p?: Person }) => (
   <div className="rounded-lg bg-secondary/60 p-2.5 text-xs">
-    <p className="font-bold uppercase text-[10px] text-muted-foreground">{title}</p>
+    <p className="font-bold text-xs text-muted-foreground">{title}</p>
     <p className="font-semibold text-sm">{p?.name || "…"}</p>
     {p?.email && <a href={`mailto:${p.email}`} className="block text-primary truncate">{p.email}</a>}
     {p?.phone && <a href={`tel:${p.phone}`} className="block text-primary">{p.phone}</a>}
@@ -128,14 +128,14 @@ const AdminReservations = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold truncate">{r.listing?.title || "Listing"}</span>
-                  {r.listing?.listing_code && <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.listing.listing_code}</span>}
+                  {r.listing?.listing_code && <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.listing.listing_code}</span>}
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   Guest: {people[r.guest_id]?.name || "…"} · Host: {people[r.host_id]?.name || "…"}
                 </p>
                 <p className="text-xs text-muted-foreground">Requested {fmt(r.created_at)} · Visit {fmt(r.visit_at)}</p>
               </div>
-              <span className={`self-start md:self-center text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${COLORS[r.status] || "bg-secondary"}`}>{r.status === "rejected" ? "declined" : r.status}</span>
+              <span className={`self-start md:self-center text-xs font-bold px-2 py-0.5 rounded-full ${COLORS[r.status] || "bg-secondary"}`}>{r.status === "rejected" ? "declined" : r.status}</span>
             </button>
           ))}
         </div>

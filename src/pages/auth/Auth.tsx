@@ -5,7 +5,7 @@ import { lovable } from "@/integrations/lovable";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole, Role } from "@/contexts/RoleContext";
 import { toast } from "sonner";
-import icon from "@/assets/stay-logo-2.png";
+import { Logo } from "@/ui/kit";
 import { ChevronLeft, ShieldCheck, User, Briefcase } from "lucide-react";
 import { GoogleIcon } from "@/lib/google-icon";
 import { Seo } from "@/components/seo/Seo";
@@ -94,14 +94,14 @@ const Auth = () => {
       </button>
 
       <div className="flex-1 flex flex-col items-center justify-center text-center">
-        <img src={icon} alt="Stay" className="h-12 w-auto mb-5" />
+        <Logo className="h-12 mb-5" />
         <h1 className="text-3xl font-extrabold tracking-tight">Welcome to StayGlobal</h1>
         <p className="text-sm text-muted-foreground mt-3 max-w-xs">
           Choose your experience, then continue with Google. Fast, secure, no passwords.
         </p>
 
         <div className="w-full mt-8">
-          <p className="text-[11px] uppercase tracking-wide text-muted-foreground font-bold text-left mb-2">Choose your experience</p>
+          <p className="text-xs tracking-wide text-muted-foreground font-bold text-left mb-2">Choose your experience</p>
           <div className="grid grid-cols-2 gap-2">
             <button
               type="button"
@@ -137,12 +137,12 @@ const Auth = () => {
           <GoogleIcon className="w-5 h-5" /> Continue with Google
         </button>
 
-        <div className="mt-6 flex items-center gap-2 text-[11px] text-muted-foreground">
+        <div className="mt-6 flex items-center gap-2 text-xs text-muted-foreground">
           <ShieldCheck className="w-3.5 h-3.5 text-primary" />
           After signing in you can set a 4-digit PIN for quick access.
         </div>
 
-        <p className="text-[11px] text-muted-foreground mt-6 max-w-xs leading-relaxed">
+        <p className="text-xs text-muted-foreground mt-6 max-w-xs leading-relaxed">
           By continuing, you agree to our{" "}
           <a href="/terms" className="text-primary font-semibold">Terms</a> and{" "}
           <a href="/privacy-policy" className="text-primary font-semibold">Privacy Policy</a>.

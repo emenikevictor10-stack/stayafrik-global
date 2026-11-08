@@ -31,7 +31,7 @@ export const BottomNav = () => {
                 end
                 className={({ isActive }) =>
                   cn(
-                    "flex flex-col items-center justify-center gap-0.5 py-2.5 text-[10px] font-medium transition-colors relative",
+                    "flex flex-col items-center justify-center gap-0.5 py-2.5 text-xs font-medium transition-colors relative",
                     isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
                   )
                 }
@@ -39,7 +39,7 @@ export const BottomNav = () => {
                 <span className="relative">
                   <Icon className="w-5 h-5" aria-hidden />
                   {count > 0 && (
-                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-[9px] font-bold flex items-center justify-center border border-background">
+                    <span className="absolute -top-1.5 -right-2 min-w-[16px] h-[16px] px-1 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center border border-background">
                       {count > 9 ? "9+" : count}
                     </span>
                   )}

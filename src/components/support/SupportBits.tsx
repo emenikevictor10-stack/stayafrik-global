@@ -5,7 +5,7 @@ import type { DotTone } from "@/lib/support";
 import { toWebp } from "@/lib/media";
 
 const TONE: Record<DotTone, string> = {
-  act: "bg-warning",
+  act: "bg-orange",
   broken: "bg-destructive",
   done: "bg-primary",
   fact: "bg-muted-foreground",

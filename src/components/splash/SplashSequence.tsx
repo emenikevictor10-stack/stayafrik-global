@@ -63,7 +63,7 @@ export const SplashSequence = ({ onDone }: { onDone: () => void }) => {
 
   return (
     <div className="fixed inset-0 z-[100] bg-background text-foreground overflow-hidden flex items-center justify-center">
-      <div className="relative w-full h-full sm:max-w-[420px] sm:h-[860px] sm:max-h-[95vh] sm:rounded-[2.5rem] sm:overflow-hidden sm:shadow-2xl sm:border sm:border-white/5 bg-background flex flex-col">
+      <div className="relative w-full h-full sm:max-w-[420px] sm:h-[860px] sm:max-h-[95vh] sm:rounded-3xl sm:overflow-hidden sm:shadow-2xl sm:border sm:border-white/5 bg-background flex flex-col">
 
         {/* Hero photo */}
         <div key={step} className="relative flex-1 overflow-hidden animate-[splashFade_500ms_ease-out]">

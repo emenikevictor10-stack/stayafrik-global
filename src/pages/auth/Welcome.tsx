@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useRole } from "@/contexts/RoleContext";
 import { useAuth } from "@/contexts/AuthContext";
-import icon from "@/assets/stay-icon.png";
+import { Logo } from "@/ui/kit";
 import { ShieldCheck, MapPin, Wallet, Sparkles } from "lucide-react";
 
 const slides = [
@@ -48,7 +48,7 @@ const Welcome = () => {
   return (
     <main className="min-h-screen bg-background text-foreground flex flex-col max-w-md mx-auto px-6 pt-12 pb-8">
       <div className="flex items-center gap-2 mb-10">
-        <img src={icon} alt="Stay" className="h-7 w-7 rounded-md" />
+        <Logo />
         <span className="font-extrabold tracking-tight">Stay</span>
       </div>
 

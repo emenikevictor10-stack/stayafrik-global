@@ -61,7 +61,7 @@ const Performance = () => {
                 <k.Icon className="w-4 h-4 text-primary" />
               </div>
               <div className="text-xl font-extrabold mt-3">{k.v}</div>
-              <div className="text-[11px] text-muted-foreground">{k.l}</div>
+              <div className="text-xs text-muted-foreground">{k.l}</div>
             </div>
           ))}
         </section>
@@ -77,7 +77,7 @@ const Performance = () => {
                   <img src={l.image} alt="" className="w-10 h-10 rounded-lg object-cover" />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold truncate">{l.title}</div>
-                    <div className="text-[10px] text-muted-foreground">{l.verified ? "Live" : "Pending review"} · ⭐ {l.rating || "—"} ({l.reviews})</div>
+                    <div className="text-xs text-muted-foreground">{l.verified ? "Live" : "Pending review"} · ⭐ {l.rating || "—"} ({l.reviews})</div>
                   </div>
                   <div className="text-xs font-bold text-primary">{l.price}</div>
                 </Link>

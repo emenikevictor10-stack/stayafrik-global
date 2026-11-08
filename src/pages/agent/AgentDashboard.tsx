@@ -87,7 +87,7 @@ export const AgentDashboard = () => {
         <section className="relative overflow-hidden rounded-3xl border border-primary/40 bg-gradient-to-br from-primary/25 via-primary/5 to-transparent p-5">
           <div className="absolute -right-10 -top-10 w-48 h-48 bg-primary/30 blur-3xl rounded-full pointer-events-none" />
           <div className="relative">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/15 border border-success/30 text-[10px] font-bold text-success">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/15 border border-success/30 text-xs font-bold text-success">
               <BadgeCheck className="w-3 h-3" /> Verified Host
             </span>
             <h1 className="mt-3 text-2xl font-extrabold tracking-tight leading-tight">
@@ -120,7 +120,7 @@ export const AgentDashboard = () => {
               }`}
             >
               <a.Icon className="w-4 h-4" />
-              <span className="text-[10px] font-bold">{a.label}</span>
+              <span className="text-xs font-bold">{a.label}</span>
             </Link>
           ))}
         </section>
@@ -135,7 +135,7 @@ export const AgentDashboard = () => {
             >
               <s.Icon className="w-5 h-5 text-primary" />
               <div className="text-foreground font-extrabold text-xl mt-2">{s.v}</div>
-              <div className="text-[11px] text-muted-foreground mt-0.5">{s.l}</div>
+              <div className="text-xs text-muted-foreground mt-0.5">{s.l}</div>
             </Link>
           ))}
         </section>
@@ -188,16 +188,16 @@ export const AgentDashboard = () => {
                   <div className="flex items-start justify-between gap-2">
                     <h3 className="font-semibold text-sm truncate">{p.title}</h3>
                     {p.verified ? (
-                      <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/30">
+                      <span className="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/30">
                         ✓ Live
                       </span>
                     ) : (
-                      <span className="shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
+                      <span className="shrink-0 text-xs font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30">
                         Review
                       </span>
                     )}
                   </div>
-                  <p className="text-[11px] text-muted-foreground truncate">📍 {p.location}</p>
+                  <p className="text-xs text-muted-foreground truncate">📍 {p.location}</p>
                   <div className="text-primary font-extrabold text-sm mt-1.5">{p.price}</div>
                 </div>
               </Link>
@@ -212,11 +212,11 @@ export const AgentDashboard = () => {
           </div>
           <div className="flex-1 min-w-0">
             <h3 className="font-bold text-sm">Looking for a stay?</h3>
-            <p className="text-[11px] text-muted-foreground mt-0.5">Switch to guest mode from your profile.</p>
+            <p className="text-xs text-muted-foreground mt-0.5">Switch to guest mode from your profile.</p>
           </div>
           <Link
             to="/profile"
-            className="shrink-0 text-[11px] font-bold text-primary"
+            className="shrink-0 text-xs font-bold text-primary"
           >
             Switch →
           </Link>

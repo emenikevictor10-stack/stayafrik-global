@@ -33,7 +33,7 @@ export const ClientHome = () => {
         <section className="mt-6 rounded-2xl bg-card border border-border p-5 relative overflow-hidden">
           <div className="absolute inset-0 bg-grid opacity-30" />
           <div className="relative">
-            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 border border-success/30 text-[10px] font-semibold text-success">
+            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 border border-success/30 text-xs font-semibold text-success">
               <span className="w-1.5 h-1.5 rounded-full bg-success animate-pulse" />
               0 fraud cases on platform
             </span>
@@ -51,7 +51,7 @@ export const ClientHome = () => {
               ].map((s) => (
                 <div key={s.l} className="rounded-xl bg-secondary p-3">
                   <div className="text-primary font-extrabold text-base leading-none">{s.n}</div>
-                  <div className="text-[10px] text-muted-foreground mt-1 leading-tight">{s.l}</div>
+                  <div className="text-xs text-muted-foreground mt-1 leading-tight">{s.l}</div>
                 </div>
               ))}
             </div>
@@ -95,7 +95,7 @@ export const ClientHome = () => {
               >
                 <div className="text-2xl">{c.emoji}</div>
                 <div className="text-xs font-semibold mt-2">{c.name}</div>
-                <div className="text-[10px] text-muted-foreground">{c.count} stays</div>
+                <div className="text-xs text-muted-foreground">{c.count} stays</div>
               </button>
             ))}
           </div>

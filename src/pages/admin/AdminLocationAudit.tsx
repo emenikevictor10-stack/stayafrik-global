@@ -15,7 +15,7 @@ const pct = (a: number, b: number) => (b ? Math.round((a / b) * 100) : 0);
 
 const TotalsCard = ({ label, t }: { label: string; t?: Totals }) => (
   <div className="rounded-xl border border-border bg-card p-4">
-    <p className="text-xs font-semibold uppercase text-muted-foreground">{label}</p>
+    <p className="text-xs font-semibold text-muted-foreground">{label}</p>
     {!t ? <p className="text-sm text-muted-foreground mt-2">No data yet</p> : (
       <>
         <p className="text-2xl font-extrabold mt-1">{t.complete}<span className="text-sm font-medium text-muted-foreground"> / {t.total} complete</span></p>
@@ -148,7 +148,7 @@ const AdminLocationAudit = () => {
                 <div key={key} className="rounded-xl border border-border bg-card p-3 grid gap-3 md:grid-cols-[1.4fr_1fr_auto] md:items-center">
                   <div className="min-w-0">
                     <p className="text-sm font-semibold truncate">{r.title}</p>
-                    <p className="text-[11px] text-muted-foreground">
+                    <p className="text-xs text-muted-foreground">
                       <span className="font-mono">{r.code}</span> · {r.kind === "partner" ? "Partner" : "Your stay"} · {r.reason}
                     </p>
                     <p className="text-xs mt-1 break-words"><span className="text-muted-foreground">Raw:</span> {r.raw || "—"}</p>
@@ -204,7 +204,7 @@ const AdminLocationAudit = () => {
             <tbody>
               {merges.map((m) => (
                 <tr key={m.location_id} className="border-t border-border align-top">
-                  <td className="p-3"><span className="font-semibold">{m.location_name}</span><span className="block text-[11px] text-muted-foreground">{m.breadcrumb}</span></td>
+                  <td className="p-3"><span className="font-semibold">{m.location_name}</span><span className="block text-xs text-muted-foreground">{m.breadcrumb}</span></td>
                   <td className="p-3"><div className="flex flex-wrap gap-1">{m.variants.map((v) => <span key={v} className="rounded-full bg-muted px-2 py-0.5 text-xs">{v}</span>)}</div></td>
                   <td className="p-3 text-right">{m.listings}</td>
                 </tr>

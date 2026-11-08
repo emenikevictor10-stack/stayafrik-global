@@ -121,8 +121,8 @@ const AdminPayouts = () => {
                 <div className="flex items-start justify-between gap-3 flex-wrap">
                   <div className="min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      {r.booking?.listing_code && <span className="font-mono text-[10px] px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.booking.listing_code}</span>}
-                      <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${STATUS_COLORS[r.status] || "bg-secondary"}`}>{r.status}</span>
+                      {r.booking?.listing_code && <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.booking.listing_code}</span>}
+                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${STATUS_COLORS[r.status] || "bg-secondary"}`}>{r.status}</span>
                     </div>
                     <p className="font-bold">{r.booking?.listing?.title || (r.booking_id ? "Booking" : "Manual payout")}</p>
                     {r.booking && <p className="text-xs text-muted-foreground">Stay {r.booking.check_in_date} → {r.booking.check_out_date} · guest paid {money(Number(r.booking.total_price))}</p>}
@@ -131,16 +131,16 @@ const AdminPayouts = () => {
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
                   <div className="rounded-lg bg-secondary/50 p-2 min-w-0">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Host</p>
+                    <p className="text-xs font-bold text-muted-foreground">Host</p>
                     <Link to={`/admin/users/${r.host_id}`} className="font-semibold hover:text-primary truncate block">{h?.name || "…"}</Link>
                     <p className="text-muted-foreground truncate">{[h?.email, h?.phone].filter(Boolean).join(" · ")}</p>
                   </div>
                   <div className="rounded-lg bg-secondary/50 p-2">
-                    <p className="text-[10px] uppercase font-bold text-muted-foreground">Bank account</p>
+                    <p className="text-xs font-bold text-muted-foreground">Bank account</p>
                     {h?.bank ? <p className="font-semibold">{h.bank}</p> : <p className="text-warning font-semibold">Not added yet</p>}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   <span>Created {new Date(r.created_at).toLocaleString()}</span>
                   {r.processed_at && <span>Paid {new Date(r.processed_at).toLocaleString()}</span>}
                   {r.paystack_transfer_code && <span className="font-mono">Transfer {r.paystack_transfer_code}</span>}

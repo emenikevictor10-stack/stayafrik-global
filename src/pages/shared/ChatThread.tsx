@@ -155,10 +155,10 @@ const ChatThread = () => {
             )}
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Chatting about</div>
+            <div className="text-xs text-muted-foreground">Chatting about</div>
             <div className="text-xs font-bold truncate">{listing.title}</div>
             {listing.location && (
-              <div className="text-[10px] text-muted-foreground truncate">📍 {listing.location}</div>
+              <div className="text-xs text-muted-foreground truncate">📍 {listing.location}</div>
             )}
           </div>
           {listing.price_per_night != null && (
@@ -182,7 +182,7 @@ const ChatThread = () => {
                 : "bg-card border border-border rounded-bl-sm"
             }`}>
               <div className="whitespace-pre-wrap">{m.content}</div>
-              <div className={`text-[9px] mt-1 ${m.sender_id === user?.id ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
+              <div className={`text-xs mt-1 ${m.sender_id === user?.id ? "text-primary-foreground/70" : "text-muted-foreground"}`}>
                 {new Date(m.created_at).toLocaleTimeString("en-GB", { hour: "2-digit", minute: "2-digit" })}
               </div>
             </div>
@@ -196,7 +196,7 @@ const ChatThread = () => {
           <div className="flex gap-1.5 overflow-x-auto scrollbar-hide py-2">
             {quick.map((q) => (
               <button key={q} onClick={() => setDraft(q)}
-                className="shrink-0 text-[11px] px-3 py-1.5 rounded-full bg-card border border-border text-muted-foreground">
+                className="shrink-0 text-xs px-3 py-1.5 rounded-full bg-card border border-border text-muted-foreground">
                 {q}
               </button>
             ))}

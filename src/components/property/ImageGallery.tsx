@@ -73,7 +73,7 @@ export const ImageGallery = ({ images, alt }: { images: string[]; alt: string })
             ))}
           </div>
 
-          <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-background/70 backdrop-blur-md border border-border text-[11px] font-semibold">
+          <div className="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-background/70 backdrop-blur-md border border-border text-xs font-semibold">
             {idx + 1} / {total}
           </div>
         </>

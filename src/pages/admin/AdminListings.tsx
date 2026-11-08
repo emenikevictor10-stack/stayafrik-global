@@ -15,7 +15,7 @@ const SafeImg = ({ src, alt, className }: { src: string; alt: string; className?
     return (
       <div className="w-full h-full bg-secondary flex flex-col items-center justify-center gap-1 text-center p-2">
         <span className="text-lg">🖼️</span>
-        <span className="text-[10px] text-muted-foreground leading-tight">
+        <span className="text-xs text-muted-foreground leading-tight">
           Unsupported format (HEIC) — ask host to re-upload
         </span>
       </div>
@@ -218,7 +218,7 @@ const AdminListings = () => {
         </Link>
         <div className="flex-1">
           <h1 className="text-base font-extrabold">Listings</h1>
-          <p className="text-[11px] text-muted-foreground">{rows.length} {tab === "pending" ? "pending review" : "approved & live"}</p>
+          <p className="text-xs text-muted-foreground">{rows.length} {tab === "pending" ? "pending review" : "approved & live"}</p>
         </div>
         <select value={stateFilter} onChange={(e) => setStateFilter(e.target.value)} aria-label="Filter by state"
           className="h-9 rounded-full bg-card border border-border px-3 text-xs">
@@ -271,7 +271,7 @@ const AdminListings = () => {
         )}
         {view === "detail" && shown.length > 0 && (
         <div className="rounded-2xl border border-border bg-card overflow-hidden">
-          <div className="hidden md:grid grid-cols-[56px_1.6fr_1.2fr_0.7fr_0.8fr_1fr_0.9fr_auto] gap-3 px-3 py-2 bg-secondary/50 text-[10px] font-bold uppercase text-muted-foreground">
+          <div className="hidden md:grid grid-cols-[56px_1.6fr_1.2fr_0.7fr_0.8fr_1fr_0.9fr_auto] gap-3 px-3 py-2 bg-secondary/50 text-xs font-bold text-muted-foreground">
             <span />
             <span>Listing</span><span>Place</span><span>Beds / baths</span><span>Price / night</span><span>Host</span><span>{tab === "approved" ? "Status / approved" : "Submitted"}</span><span className="text-right">Actions</span>
           </div>
@@ -290,8 +290,8 @@ const AdminListings = () => {
               </div>
               <div className="min-w-0">
                 <p className="text-sm font-bold truncate flex items-center gap-1"><ChevronRight className={`w-3.5 h-3.5 shrink-0 text-muted-foreground transition-transform ${isOpen ? "rotate-90" : ""}`} />{r.title}</p>
-                <p className="text-[11px] text-muted-foreground truncate"><span className="font-mono">{r.listing_code}</span> · {r.type} · {images.length} photo{images.length === 1 ? "" : "s"}{r.video_url ? " · video" : ""}</p>
-                <p className="md:hidden text-[11px] text-muted-foreground truncate">{[r.neighborhood, r.city, r.state].filter(Boolean).join(", ")} · ₦{Number(r.price_per_night).toLocaleString()}</p>
+                <p className="text-xs text-muted-foreground truncate"><span className="font-mono">{r.listing_code}</span> · {r.type} · {images.length} photo{images.length === 1 ? "" : "s"}{r.video_url ? " · video" : ""}</p>
+                <p className="md:hidden text-xs text-muted-foreground truncate">{[r.neighborhood, r.city, r.state].filter(Boolean).join(", ")} · ₦{Number(r.price_per_night).toLocaleString()}</p>
               </div>
               <p className="hidden md:block text-xs text-muted-foreground truncate">{[r.neighborhood, r.city, r.state].filter(Boolean).join(", ") || "—"}</p>
               <p className="hidden md:block text-xs">{r.bedrooms} / {r.bathrooms}</p>
@@ -299,11 +299,11 @@ const AdminListings = () => {
               <p className="hidden md:block text-xs truncate">{host?.full_name || "Unknown host"}</p>
               {tab === "approved" ? (
                 <div className="hidden md:flex flex-col gap-0.5">
-                  <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-success/15 text-success w-fit">Live</span>
-                  <span className="text-[10px] text-muted-foreground">{new Date((r as any).approved_at || (r as any).updated_at || r.created_at).toLocaleDateString()}</span>
+                  <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-success/15 text-success w-fit">Live</span>
+                  <span className="text-xs text-muted-foreground">{new Date((r as any).approved_at || (r as any).updated_at || r.created_at).toLocaleDateString()}</span>
                 </div>
               ) : (
-                <p className="hidden md:block text-[11px] text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
+                <p className="hidden md:block text-xs text-muted-foreground">{new Date(r.created_at).toLocaleDateString()}</p>
               )}
               <div className="flex gap-1 justify-end items-center" onClick={(e) => e.stopPropagation()}>
                 {tab === "pending" && (
@@ -372,7 +372,7 @@ const AdminListings = () => {
                   <div className="min-w-0">
                     {r.listing_code && (
                       <button type="button" onClick={() => { navigator.clipboard?.writeText(r.listing_code!); toast.success("Listing ID copied"); }}
-                        className="mb-1 font-mono text-[11px] px-2 py-0.5 rounded-md bg-secondary text-muted-foreground hover:text-foreground">
+                        className="mb-1 font-mono text-xs px-2 py-0.5 rounded-md bg-secondary text-muted-foreground hover:text-foreground">
                         {r.listing_code}
                       </button>
                     )}
@@ -383,7 +383,7 @@ const AdminListings = () => {
                   </div>
                   <div className="text-right">
                     <p className="text-2xl font-extrabold text-primary">₦{Number(r.price_per_night).toLocaleString()}</p>
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground">per night</p>
+                    <p className="text-xs tracking-wide text-muted-foreground">per night</p>
                   </div>
                 </div>
 
@@ -391,26 +391,26 @@ const AdminListings = () => {
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
                   <div className="rounded-xl bg-secondary/50 px-3 py-2 flex items-center gap-2">
                     <Tag className="w-4 h-4 text-primary" />
-                    <div><p className="text-[10px] text-muted-foreground">Type</p><p className="text-xs font-bold">{r.type || "—"}</p></div>
+                    <div><p className="text-xs text-muted-foreground">Type</p><p className="text-xs font-bold">{r.type || "—"}</p></div>
                   </div>
                   <div className="rounded-xl bg-secondary/50 px-3 py-2 flex items-center gap-2">
                     <BedDouble className="w-4 h-4 text-primary" />
-                    <div><p className="text-[10px] text-muted-foreground">Bedrooms</p><p className="text-xs font-bold">{r.bedrooms}</p></div>
+                    <div><p className="text-xs text-muted-foreground">Bedrooms</p><p className="text-xs font-bold">{r.bedrooms}</p></div>
                   </div>
                   <div className="rounded-xl bg-secondary/50 px-3 py-2 flex items-center gap-2">
                     <Bath className="w-4 h-4 text-primary" />
-                    <div><p className="text-[10px] text-muted-foreground">Bathrooms</p><p className="text-xs font-bold">{r.bathrooms}</p></div>
+                    <div><p className="text-xs text-muted-foreground">Bathrooms</p><p className="text-xs font-bold">{r.bathrooms}</p></div>
                   </div>
                   <div className="rounded-xl bg-secondary/50 px-3 py-2 flex items-center gap-2">
                     <Ruler className="w-4 h-4 text-primary" />
-                    <div><p className="text-[10px] text-muted-foreground">Area</p><p className="text-xs font-bold">{r.area || "—"}</p></div>
+                    <div><p className="text-xs text-muted-foreground">Area</p><p className="text-xs font-bold">{r.area || "—"}</p></div>
                   </div>
                 </div>
 
                 {/* Description */}
                 {r.description && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold mb-1.5">Description</p>
+                    <p className="text-xs tracking-wide text-muted-foreground font-bold mb-1.5">Description</p>
                     <p className="text-sm leading-relaxed whitespace-pre-wrap">{r.description}</p>
                   </div>
                 )}
@@ -418,7 +418,7 @@ const AdminListings = () => {
                 {/* Amenities */}
                 {r.amenities && r.amenities.length > 0 && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold mb-1.5">Amenities ({r.amenities.length})</p>
+                    <p className="text-xs tracking-wide text-muted-foreground font-bold mb-1.5">Amenities ({r.amenities.length})</p>
                     <div className="flex flex-wrap gap-1.5">
                       {r.amenities.map((a, i) => (
                         <span key={i} className="text-xs px-2.5 py-1 rounded-full bg-secondary border border-border">{a}</span>
@@ -430,7 +430,7 @@ const AdminListings = () => {
                 {/* Video */}
                 {r.video_url && (
                   <div>
-                    <p className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold mb-1.5">Walk-through video</p>
+                    <p className="text-xs tracking-wide text-muted-foreground font-bold mb-1.5">Walk-through video</p>
                     <video src={r.video_url} controls className="w-full rounded-2xl bg-black aspect-video" />
                   </div>
                 )}
@@ -444,7 +444,7 @@ const AdminListings = () => {
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="text-sm font-bold truncate">{host?.full_name || "Unknown host"}</p>
-                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-[11px] text-muted-foreground">
+                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground">
                       {host?.email && <span className="flex items-center gap-1"><Mail className="w-3 h-3" />{host.email}</span>}
                       {host?.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{host.phone}</span>}
                     </div>
@@ -453,7 +453,7 @@ const AdminListings = () => {
                 </div>
 
                 {/* Meta */}
-                <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+                <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted-foreground">
                   <span>Submitted {new Date(r.created_at).toLocaleString()}</span>
                   <span>{images.length} photo{images.length === 1 ? "" : "s"}</span>
                   <span>{r.video_url ? "Video included" : "No video"}</span>
@@ -489,14 +489,14 @@ const AdminListings = () => {
                 className="text-left rounded-2xl border border-border bg-card overflow-hidden hover:border-primary/50 transition-colors">
                 <div className="aspect-[4/3] bg-secondary/40">
                   {r.images?.[0] ? <SafeImg src={r.images[0]} alt={r.title} className="w-full h-full object-cover" />
-                    : <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">No photo</div>}
+                    : <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No photo</div>}
                 </div>
                 <div className="p-2.5 space-y-0.5">
-                  {r.listing_code && <p className="font-mono text-[10px] text-muted-foreground">{r.listing_code}</p>}
+                  {r.listing_code && <p className="font-mono text-xs text-muted-foreground">{r.listing_code}</p>}
                   <p className="text-xs font-bold line-clamp-2 leading-snug">{r.title}</p>
-                  <p className="text-[11px] text-muted-foreground truncate">{[r.neighborhood, r.city, r.state].filter(Boolean).join(", ") || "No place"}</p>
-                  <p className="text-xs font-extrabold text-primary">₦{Number(r.price_per_night).toLocaleString()}<span className="text-[10px] font-normal text-muted-foreground"> /night</span></p>
-                  <p className="text-[10px] text-muted-foreground truncate">{hosts[r.host_id]?.full_name || "Unknown host"} · {r.images?.length || 0} photos</p>
+                  <p className="text-xs text-muted-foreground truncate">{[r.neighborhood, r.city, r.state].filter(Boolean).join(", ") || "No place"}</p>
+                  <p className="text-xs font-extrabold text-primary">₦{Number(r.price_per_night).toLocaleString()}<span className="text-xs font-normal text-muted-foreground"> /night</span></p>
+                  <p className="text-xs text-muted-foreground truncate">{hosts[r.host_id]?.full_name || "Unknown host"} · {r.images?.length || 0} photos</p>
                 </div>
               </button>
             ))}
@@ -507,7 +507,7 @@ const AdminListings = () => {
       {lightbox && <Lightbox images={lightbox.images} start={lightbox.start} onClose={() => setLightbox(null)} />}
 
       {confirmAction && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={() => !submitting && setConfirmAction(null)}>
+        <div className="fixed inset-0 z-50 bg-scrim backdrop-blur-sm flex items-end sm:items-center justify-center p-4" onClick={() => !submitting && setConfirmAction(null)}>
           <div className="w-full max-w-md bg-card border border-border rounded-3xl shadow-xl overflow-hidden" onClick={(e) => e.stopPropagation()}>
             <div className="p-5 border-b border-border">
               <h3 className="text-lg font-extrabold">
@@ -529,7 +529,7 @@ const AdminListings = () => {
                     The listing will be hidden from guests and moved back to pending review. You can approve it again later.
                   </p>
                   <div>
-                    <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold">Reason (optional)</label>
+                    <label className="text-xs tracking-wide text-muted-foreground font-bold">Reason (optional)</label>
                     <textarea
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
@@ -538,7 +538,7 @@ const AdminListings = () => {
                       placeholder="e.g. Reported issue, outdated photos, price needs review…"
                       className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
-                    <p className="text-[10px] text-muted-foreground mt-1 text-right">{rejectReason.length}/500</p>
+                    <p className="text-xs text-muted-foreground mt-1 text-right">{rejectReason.length}/500</p>
                   </div>
                 </>
               )}
@@ -548,7 +548,7 @@ const AdminListings = () => {
                     The listing will be permanently removed. The host will be notified with your reason (optional).
                   </p>
                   <div>
-                    <label className="text-[10px] uppercase tracking-wide text-muted-foreground font-bold">Reason (optional)</label>
+                    <label className="text-xs tracking-wide text-muted-foreground font-bold">Reason (optional)</label>
                     <textarea
                       value={rejectReason}
                       onChange={(e) => setRejectReason(e.target.value)}
@@ -557,7 +557,7 @@ const AdminListings = () => {
                       placeholder="e.g. Photos are low quality, address unclear, price seems incorrect…"
                       className="mt-1 w-full rounded-xl border border-border bg-background px-3 py-2 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-primary/40"
                     />
-                    <p className="text-[10px] text-muted-foreground mt-1 text-right">{rejectReason.length}/500</p>
+                    <p className="text-xs text-muted-foreground mt-1 text-right">{rejectReason.length}/500</p>
                   </div>
                 </>
               )}

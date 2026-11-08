@@ -85,7 +85,7 @@ export const SinglePropertyMap = ({
           center: { lat: p.lat, lng: p.lng },
           radius: 900,
           strokeOpacity: 0,
-          fillColor: "#84cc16",
+          fillColor: "#275f84",
           fillOpacity: 0.25,
         });
       } else {
@@ -108,9 +108,9 @@ const fmtPrice = (n: number) => {
 
 const pricePinIcon = (g: any, selected = false): any => ({
   path: "M -28 -28 L 28 -28 A 14 14 0 0 1 28 0 L 6 0 L 0 12 L -6 0 L -28 0 A 14 14 0 0 1 -28 -28 Z",
-  fillColor: selected ? "#16a34a" : "#ffffff",
+  fillColor: selected ? "#275f84" : "#ffffff",
   fillOpacity: 1,
-  strokeColor: selected ? "#16a34a" : "#0f172a",
+  strokeColor: selected ? "#275f84" : "#0f172a",
   strokeWeight: 1.5,
   scale: 0.9,
   labelOrigin: new g.maps.Point(0, -14),

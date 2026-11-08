@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import icon from "@/assets/stay-icon.png";
+import { Logo } from "@/ui/kit";
 import { ChevronLeft, KeyRound } from "lucide-react";
 
 const ResetPassword = () => {
@@ -41,7 +41,7 @@ const ResetPassword = () => {
         <ChevronLeft className="w-4 h-4" />
       </button>
       <div className="flex items-center gap-3 mb-2">
-        <img src={icon} alt="Stay" className="h-10 w-10 rounded-lg" />
+        <Logo className="h-10" />
         <h1 className="text-2xl font-extrabold">Set a new password</h1>
       </div>
       <p className="text-sm text-muted-foreground mb-7 flex items-center gap-2">

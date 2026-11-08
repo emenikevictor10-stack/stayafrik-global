@@ -92,7 +92,7 @@ const Help = () => {
               >
                 <div className="text-2xl mb-2">{t.e}</div>
                 <div className="text-sm font-semibold leading-tight">{t.l}</div>
-                <div className="text-[10px] text-muted-foreground mt-0.5">{t.c}</div>
+                <div className="text-xs text-muted-foreground mt-0.5">{t.c}</div>
               </button>
             ))}
           </div>
@@ -134,24 +134,24 @@ const Help = () => {
               className="rounded-2xl bg-primary text-primary-foreground p-4 flex flex-col items-center gap-1.5 shadow-glow"
             >
               <MessageCircle className="w-5 h-5" />
-              <span className="text-[11px] font-bold">Live chat</span>
-              <span className="text-[9px] opacity-80">~2 min</span>
+              <span className="text-xs font-bold">Live chat</span>
+              <span className="text-xs opacity-80">~2 min</span>
             </button>
             <button
               onClick={() => toast.success("Calling support")}
               className="rounded-2xl bg-card border border-border p-4 flex flex-col items-center gap-1.5"
             >
               <Phone className="w-5 h-5 text-primary" />
-              <span className="text-[11px] font-bold">Call</span>
-              <span className="text-[9px] text-muted-foreground">24/7</span>
+              <span className="text-xs font-bold">Call</span>
+              <span className="text-xs text-muted-foreground">24/7</span>
             </button>
             <button
               onClick={() => toast.success("Opening email")}
               className="rounded-2xl bg-card border border-border p-4 flex flex-col items-center gap-1.5"
             >
               <Mail className="w-5 h-5 text-primary" />
-              <span className="text-[11px] font-bold">Email</span>
-              <span className="text-[9px] text-muted-foreground">~4h</span>
+              <span className="text-xs font-bold">Email</span>
+              <span className="text-xs text-muted-foreground">~4h</span>
             </button>
           </div>
         </section>
@@ -160,19 +160,19 @@ const Help = () => {
           <div className="text-2xl">🛟</div>
           <div className="flex-1">
             <div className="text-sm font-bold">Emergency dispute?</div>
-            <div className="text-[11px] text-muted-foreground">
+            <div className="text-xs text-muted-foreground">
               For escrow or fraud issues, tap to escalate immediately.
             </div>
           </div>
           <button
             onClick={() => toast.success("Escalation team notified")}
-            className="px-3 py-1.5 rounded-full bg-destructive/15 border border-destructive/40 text-destructive text-[11px] font-bold"
+            className="px-3 py-1.5 rounded-full bg-destructive/15 border border-destructive/40 text-destructive text-xs font-bold"
           >
             Escalate
           </button>
         </div>
 
-        <div className="mt-6 flex items-center justify-center gap-3 text-[10px] text-muted-foreground flex-wrap">
+        <div className="mt-6 flex items-center justify-center gap-3 text-xs text-muted-foreground flex-wrap">
           <span>Stay Support · Lagos, Accra, Nairobi 🌍</span>
           <Link to="/privacy-policy" className="hover:text-primary transition-colors underline">Privacy</Link>
           <Link to="/terms" className="hover:text-primary transition-colors underline">Terms</Link>

@@ -38,7 +38,7 @@ export const NearbyServices = ({ p }: { p: Property }) => {
             </div>
             <div className="min-w-0 flex-1">
               <div className="text-xs font-semibold truncate">{it.label}</div>
-              <div className="text-[10px] text-muted-foreground">{it.tag} · {it.dist}</div>
+              <div className="text-xs text-muted-foreground">{it.tag} · {it.dist}</div>
             </div>
           </div>
         );

@@ -166,14 +166,14 @@ const PayoutAccount = () => {
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="text-sm font-bold">{a.bank}</div>
-                  <div className="text-[11px] text-muted-foreground">{a.num} · {a.name}</div>
+                  <div className="text-xs text-muted-foreground">{a.num} · {a.name}</div>
                 </div>
                 {a.primary ? (
-                  <span className="text-[10px] font-bold px-2 py-1 rounded-full bg-primary/15 text-primary border border-primary/30 flex items-center gap-1">
+                  <span className="text-xs font-bold px-2 py-1 rounded-full bg-primary/15 text-primary border border-primary/30 flex items-center gap-1">
                     <CheckCircle2 className="w-3 h-3" /> Primary
                   </span>
                 ) : (
-                  <button disabled={saving} onClick={() => setPrimary(a.id)} className="text-[10px] font-bold text-primary disabled:opacity-50">Set primary</button>
+                  <button disabled={saving} onClick={() => setPrimary(a.id)} className="text-xs font-bold text-primary disabled:opacity-50">Set primary</button>
                 )}
               </div>
             </div>
@@ -189,7 +189,7 @@ const PayoutAccount = () => {
           <section className="mt-4 rounded-2xl bg-card border border-border p-4 space-y-3">
             <h3 className="text-sm font-bold">New bank account</h3>
             <label className="block">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase">Bank</span>
+              <span className="text-xs font-semibold text-muted-foreground">Bank</span>
               <select value={bankCode} onChange={(e) => setBankCode(e.target.value)}
                 className="mt-1.5 w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm">
                 <option value="">{banks.length ? "Select bank…" : "Loading banks…"}</option>
@@ -197,9 +197,9 @@ const PayoutAccount = () => {
               </select>
             </label>
             <label className="block">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase">Account number</span>
+              <span className="text-xs font-semibold text-muted-foreground">Account number</span>
               <input value={acctNum} onChange={(e) => setAcctNum(e.target.value.replace(/\D/g, ""))} maxLength={10} placeholder="0123456789"
-                className="mt-1.5 w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm tracking-wider" />
+                className="mt-1.5 w-full rounded-xl bg-secondary border border-border px-3 py-3 text-sm" />
             </label>
 
             {(verifying || resolvedName) && (
@@ -220,7 +220,7 @@ const PayoutAccount = () => {
           </section>
         )}
 
-        <p className="text-[11px] text-muted-foreground text-center mt-6">
+        <p className="text-xs text-muted-foreground text-center mt-6">
           Account details are encrypted. Payouts arrive within 24h after escrow release.
         </p>
       </main>

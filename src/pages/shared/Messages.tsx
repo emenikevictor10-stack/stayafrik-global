@@ -151,12 +151,12 @@ const Messages = () => {
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-2">
                     <span className="font-semibold text-sm truncate">{t.name}</span>
-                    <span className="text-[10px] text-muted-foreground shrink-0">{t.time}</span>
+                    <span className="text-xs text-muted-foreground shrink-0">{t.time}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-0.5">
                     <p className="text-xs text-muted-foreground truncate flex-1">{t.last}</p>
                     {t.unread > 0 && (
-                      <span className="shrink-0 w-5 h-5 rounded-full bg-primary text-primary-foreground text-[10px] font-bold flex items-center justify-center">
+                      <span className="shrink-0 w-5 h-5 rounded-full bg-primary text-primary-foreground text-xs font-bold flex items-center justify-center">
                         {t.unread}
                       </span>
                     )}
@@ -173,10 +173,10 @@ const Messages = () => {
                     )}
                   </div>
                   <div className="min-w-0 flex-1">
-                    <div className="text-[10px] uppercase tracking-wider text-muted-foreground">About</div>
+                    <div className="text-xs text-muted-foreground">About</div>
                     <div className="text-xs font-semibold truncate">{t.listing.title}</div>
                     {t.listing.location && (
-                      <div className="text-[10px] text-muted-foreground truncate">📍 {t.listing.location}</div>
+                      <div className="text-xs text-muted-foreground truncate">📍 {t.listing.location}</div>
                     )}
                   </div>
                 </div>

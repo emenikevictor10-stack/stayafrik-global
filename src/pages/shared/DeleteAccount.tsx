@@ -77,12 +77,12 @@ const DeleteAccount = () => {
         </div>
       </div>
 
-      <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+      <label className="text-xs font-bold text-muted-foreground">
         Signed in as
       </label>
       <p className="text-sm mb-4">{user?.email}</p>
 
-      <label className="text-xs font-bold uppercase tracking-wider text-muted-foreground">
+      <label className="text-xs font-bold text-muted-foreground">
         Type <span className="text-destructive">DELETE</span> to confirm
       </label>
       <Input

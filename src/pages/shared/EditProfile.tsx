@@ -127,14 +127,14 @@ const EditProfile = () => {
             { l: "Phone", v: phone, set: setPhone, type: "tel" },
           ].map((f) => (
             <label key={f.l} className="block">
-              <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">{f.l}</span>
+              <span className="text-xs font-semibold text-muted-foreground">{f.l}</span>
               <input type={f.type} value={f.v} onChange={(e) => f.set(e.target.value)}
                 className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm" />
             </label>
           ))}
 
           <label className="block">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs font-semibold text-muted-foreground">
               WhatsApp number {isHost && <span className="text-destructive">*</span>}
             </span>
             <input
@@ -144,7 +144,7 @@ const EditProfile = () => {
               placeholder="+234…"
               className="mt-1.5 w-full rounded-xl bg-card border border-border px-4 py-3 text-sm"
             />
-            <span className="text-[10px] text-muted-foreground mt-1 block">
+            <span className="text-xs text-muted-foreground mt-1 block">
               {isHost
                 ? "Required so guests and support can reach you quickly."
                 : "Optional — lets hosts and support reach you on WhatsApp."}
@@ -152,7 +152,7 @@ const EditProfile = () => {
           </label>
 
           <label className="block">
-            <span className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wider">
+            <span className="text-xs font-semibold text-muted-foreground">
               About you
             </span>
             <textarea

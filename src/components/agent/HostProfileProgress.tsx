@@ -50,7 +50,7 @@ export const HostProfileProgress = () => {
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between gap-2">
             <h3 className="font-bold text-sm">Complete your host profile</h3>
-            <span className="text-[11px] font-extrabold text-primary">{pct}%</span>
+            <span className="text-xs font-extrabold text-primary">{pct}%</span>
           </div>
           <div className="mt-2 h-1.5 rounded-full bg-secondary overflow-hidden">
             <div
@@ -58,7 +58,7 @@ export const HostProfileProgress = () => {
               style={{ width: `${pct}%` }}
             />
           </div>
-          <p className="text-[11px] text-muted-foreground mt-2">
+          <p className="text-xs text-muted-foreground mt-2">
             A complete profile builds trust and helps support reach you.
           </p>
         </div>
@@ -82,7 +82,7 @@ export const HostProfileProgress = () => {
       {next && (
         <Link
           to={next.to}
-          className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-4 py-2 text-[11px] font-extrabold"
+          className="mt-3 inline-flex items-center gap-1.5 rounded-full bg-primary text-primary-foreground px-4 py-2 text-xs font-extrabold"
         >
           {next.label} <ArrowRight className="w-3 h-3" />
         </Link>

@@ -83,7 +83,7 @@ export const AIAssistant = () => {
               </div>
               <div>
                 <h2 className="font-bold text-sm">Aria</h2>
-                <p className="text-[11px] text-muted-foreground">Your Stay AI · {role}</p>
+                <p className="text-xs text-muted-foreground">Your Stay AI · {role}</p>
               </div>
             </div>
             <button

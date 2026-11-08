@@ -114,7 +114,7 @@ const AdminKyc = () => {
               <article key={r.id} className="rounded-2xl border border-border bg-card overflow-hidden flex flex-col sm:flex-row">
                 <a href={urls[r.id]} target="_blank" rel="noreferrer" className="sm:w-56 aspect-[4/3] bg-secondary/40 shrink-0 block">
                   {urls[r.id] ? <img src={urls[r.id]} alt="ID document" className="w-full h-full object-cover" />
-                    : <div className="w-full h-full flex items-center justify-center text-[10px] text-muted-foreground">No image</div>}
+                    : <div className="w-full h-full flex items-center justify-center text-xs text-muted-foreground">No image</div>}
                 </a>
                 <div className="flex-1 p-4 space-y-3 min-w-0">
                   <div className="flex items-start justify-between gap-2 flex-wrap">
@@ -122,14 +122,14 @@ const AdminKyc = () => {
                       <Link to={`/admin/users/${r.user_id}`} className="font-bold hover:text-primary">{p?.name || "…"}</Link>
                       <p className="text-xs text-muted-foreground truncate">{[p?.email, p?.phone].filter(Boolean).join(" · ")}{p?.is_host ? " · Host" : ""}</p>
                     </div>
-                    <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${COLORS[r.status] || "bg-secondary"}`}>{r.status}</span>
+                    <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${COLORS[r.status] || "bg-secondary"}`}>{r.status}</span>
                   </div>
                   <dl className="text-xs grid grid-cols-[auto_1fr] gap-x-3 gap-y-1">
                     <dt className="text-muted-foreground">ID type</dt><dd className="font-semibold">{r.id_type}</dd>
                     <dt className="text-muted-foreground">ID number</dt>
                     <dd className="font-mono">
                       {reveal[r.id] ? r.id_number : mask(r.id_number)}{" "}
-                      <button onClick={() => setReveal((v) => ({ ...v, [r.id]: !v[r.id] }))} className="text-primary font-sans text-[11px]">{reveal[r.id] ? "Hide" : "Show"}</button>
+                      <button onClick={() => setReveal((v) => ({ ...v, [r.id]: !v[r.id] }))} className="text-primary font-sans text-xs">{reveal[r.id] ? "Hide" : "Show"}</button>
                     </dd>
                     <dt className="text-muted-foreground">Submitted</dt><dd>{new Date(r.created_at).toLocaleString()}</dd>
                     {r.reviewed_at && (<><dt className="text-muted-foreground">Reviewed</dt><dd>{new Date(r.reviewed_at).toLocaleString()}</dd></>)}

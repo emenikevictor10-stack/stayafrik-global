@@ -33,7 +33,7 @@ export const PropertyCard = ({ p, nights = 0 }: { p: Property; nights?: number }
         />
         <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />
         <div className="absolute top-3 left-3 right-3 flex items-start justify-between">
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-background/70 backdrop-blur-md border border-primary/30 text-[10px] font-semibold text-primary">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-background/70 backdrop-blur-md border border-primary/30 text-xs font-semibold text-primary">
             <span aria-hidden>{p.emoji}</span> {p.type}
           </span>
           <button
@@ -47,7 +47,7 @@ export const PropertyCard = ({ p, nights = 0 }: { p: Property; nights?: number }
         </div>
         {p.verified && (
           <div className="absolute bottom-3 left-3">
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-success text-success-foreground text-[10px] font-bold shadow-lg">
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-success text-success-foreground text-xs font-bold shadow-lg">
               ✓ {p.source === "rayprop" ? "Verified Partner" : "Verified Host"}
             </span>
           </div>
@@ -57,13 +57,13 @@ export const PropertyCard = ({ p, nights = 0 }: { p: Property; nights?: number }
             {nights > 0 && p.priceNum > 0 ? (
               <>
                 ₦{(p.priceNum * nights).toLocaleString()}
-                <span className="text-[10px] font-medium text-foreground/80"> for {nights} night{nights > 1 ? "s" : ""}</span>
+                <span className="text-xs font-medium text-foreground/80"> for {nights} night{nights > 1 ? "s" : ""}</span>
               </>
             ) : (
               <>
                 {p.price}
                 {p.type === "Shortlet" && (
-                  <span className="text-[10px] font-medium text-foreground/80"> /night</span>
+                  <span className="text-xs font-medium text-foreground/80"> /night</span>
                 )}
               </>
             )}
@@ -81,7 +81,7 @@ export const PropertyCard = ({ p, nights = 0 }: { p: Property; nights?: number }
         </div>
         <p className="text-xs text-muted-foreground mt-0.5 truncate">📍 {approxLocation(p.location)}</p>
         {p.beds > 0 && (
-          <div className="flex items-center gap-3 mt-2.5 text-[11px] text-muted-foreground">
+          <div className="flex items-center gap-3 mt-2.5 text-xs text-muted-foreground">
             <span className="inline-flex items-center gap-1"><BedDouble className="w-3 h-3" />{p.beds} bed</span>
             <span className="inline-flex items-center gap-1"><Bath className="w-3 h-3" />{p.baths} bath</span>
             {p.area && <span>📐 {p.area}</span>}

@@ -129,17 +129,17 @@ const PropertyDetail = () => {
       <div className="px-5 pt-5 lg:grid lg:grid-cols-[minmax(0,1fr)_360px] lg:gap-10 lg:items-start">
         <div className="min-w-0">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 border border-primary/30 text-[10px] font-bold text-primary">
+          <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-primary/10 border border-primary/30 text-xs font-bold text-primary">
             {p.emoji} {p.type}
           </span>
           {p.verified && (
-            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-success text-white text-[10px] font-bold">
+            <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-success text-primary-foreground text-xs font-bold">
               ✓ PropertyVerify™
             </span>
           )}
         </div>
         <h1 className="mt-3 text-2xl font-extrabold tracking-tight leading-tight">{p.title}</h1>
-        <p className="text-sm text-muted-foreground mt-1">📍 {shownLocation}{!unlocked && <span className="ml-1 text-[11px]">· exact address after booking</span>}</p>
+        <p className="text-sm text-muted-foreground mt-1">📍 {shownLocation}{!unlocked && <span className="ml-1 text-xs">· exact address after booking</span>}</p>
         <div className="flex items-center gap-2 mt-2 text-sm">
           <Star className="w-4 h-4 fill-primary text-primary" />
           <span className="font-semibold">{p.rating}</span>
@@ -151,17 +151,17 @@ const PropertyDetail = () => {
             <div className="rounded-xl bg-card border border-border p-3 text-center">
               <div className="text-xl">🛏️</div>
               <div className="text-sm font-bold mt-1">{p.beds}</div>
-              <div className="text-[10px] text-muted-foreground">Bedrooms</div>
+              <div className="text-xs text-muted-foreground">Bedrooms</div>
             </div>
             <div className="rounded-xl bg-card border border-border p-3 text-center">
               <div className="text-xl">🛁</div>
               <div className="text-sm font-bold mt-1">{p.baths}</div>
-              <div className="text-[10px] text-muted-foreground">Bathrooms</div>
+              <div className="text-xs text-muted-foreground">Bathrooms</div>
             </div>
             <div className="rounded-xl bg-card border border-border p-3 text-center">
               <div className="text-xl">📐</div>
               <div className="text-sm font-bold mt-1">{p.area}</div>
-              <div className="text-[10px] text-muted-foreground">Area</div>
+              <div className="text-xs text-muted-foreground">Area</div>
             </div>
           </div>
         )}
@@ -177,9 +177,9 @@ const PropertyDetail = () => {
               )}
             </div>
             <div className="flex-1 min-w-0">
-              <div className="text-[10px] uppercase tracking-wider text-muted-foreground">Hosted by</div>
+              <div className="text-xs text-muted-foreground">Hosted by</div>
               <div className="font-bold text-sm truncate">{p.agent}</div>
-              <div className="text-[11px] text-success font-medium inline-flex items-center gap-1">
+              <div className="text-xs text-success font-medium inline-flex items-center gap-1">
                 <BadgeCheck className="w-3 h-3" /> {p.agentTag}
               </div>
             </div>
@@ -200,7 +200,7 @@ const PropertyDetail = () => {
                 💬 Message host in app
               </Link>
             )}
-            <p className="mt-2 text-[10px] text-muted-foreground text-center">
+            <p className="mt-2 text-xs text-muted-foreground text-center">
               For your safety, all conversations stay inside Stay. Hosts are alerted instantly.
             </p>
           </div>
@@ -216,9 +216,9 @@ const PropertyDetail = () => {
           <section className="mt-6">
             <h2 className="font-bold text-sm mb-3">Good to know</h2>
             <div className="grid grid-cols-3 gap-2 text-center">
-              {p.maxGuests ? <div className="rounded-xl bg-card border border-border p-2"><div className="text-[10px] text-muted-foreground">Max guests</div><div className="text-sm font-bold">{p.maxGuests}</div></div> : null}
-              {p.checkInTime ? <div className="rounded-xl bg-card border border-border p-2"><div className="text-[10px] text-muted-foreground">Check-in</div><div className="text-sm font-bold">{p.checkInTime}</div></div> : null}
-              {p.checkOutTime ? <div className="rounded-xl bg-card border border-border p-2"><div className="text-[10px] text-muted-foreground">Check-out</div><div className="text-sm font-bold">{p.checkOutTime}</div></div> : null}
+              {p.maxGuests ? <div className="rounded-xl bg-card border border-border p-2"><div className="text-xs text-muted-foreground">Max guests</div><div className="text-sm font-bold">{p.maxGuests}</div></div> : null}
+              {p.checkInTime ? <div className="rounded-xl bg-card border border-border p-2"><div className="text-xs text-muted-foreground">Check-in</div><div className="text-sm font-bold">{p.checkInTime}</div></div> : null}
+              {p.checkOutTime ? <div className="rounded-xl bg-card border border-border p-2"><div className="text-xs text-muted-foreground">Check-out</div><div className="text-sm font-bold">{p.checkOutTime}</div></div> : null}
             </div>
             {p.houseRules && p.houseRules.length > 0 && (
               <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
@@ -264,16 +264,16 @@ const PropertyDetail = () => {
                 href={`https://www.google.com/maps/dir/?api=1&destination=${p.lat},${p.lng}`}
                 target="_blank"
                 rel="noreferrer"
-                className="text-[11px] font-semibold text-primary inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30"
+                className="text-xs font-semibold text-primary inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30"
               >
                 🧭 Get directions
               </a>
             )}
           </div>
           <SinglePropertyMap p={p} height={220} approximate={!unlocked} />
-          <p className="text-[11px] text-muted-foreground mt-2">📍 {shownLocation}</p>
+          <p className="text-xs text-muted-foreground mt-2">📍 {shownLocation}</p>
           {!unlocked && (
-            <div className="mt-2 rounded-xl bg-card border border-border p-3 text-[11px] text-muted-foreground flex items-start gap-2">
+            <div className="mt-2 rounded-xl bg-card border border-border p-3 text-xs text-muted-foreground flex items-start gap-2">
               <span className="text-sm">🔒</span>
               <span>
                 For host safety we only show the approximate area. The exact address and directions
@@ -283,7 +283,7 @@ const PropertyDetail = () => {
           )}
 
           <div className="mt-4">
-            <h3 className="text-xs font-bold text-muted-foreground mb-2 uppercase tracking-wider">What's nearby</h3>
+            <h3 className="text-xs font-bold text-muted-foreground mb-2">What's nearby</h3>
             <NearbyServices p={p} />
           </div>
         </section>
@@ -360,7 +360,7 @@ const PropertyDetail = () => {
                 Request inspection
               </Button>
             )}
-            <p className="mt-3 text-[11px] text-muted-foreground text-center">
+            <p className="mt-3 text-xs text-muted-foreground text-center">
               🔐 Secured by PropertyEscrow™ — payment held safely until after check-in.
             </p>
           </div>
@@ -384,7 +384,7 @@ const PropertyDetail = () => {
         <div className="max-w-md mx-auto px-5 py-3 pb-20 md:pb-3 flex items-center gap-3">
           <div className="flex-1">
             <div className="text-primary font-extrabold text-lg leading-none">{p.price}</div>
-            <div className="text-[11px] text-muted-foreground mt-1">
+            <div className="text-xs text-muted-foreground mt-1">
               {p.type === "Shortlet" ? "per night · taxes incl." : "Escrow protected"}
             </div>
           </div>

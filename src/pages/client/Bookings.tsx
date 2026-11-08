@@ -183,17 +183,17 @@ const Bookings = () => {
                 <img src={img} alt={title} className="w-24 h-24 rounded-xl object-cover" loading="lazy" />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm truncate">{title}</h3>
-                  <p className="text-[11px] text-muted-foreground truncate">📍 {place || "—"}</p>
+                  <p className="text-xs text-muted-foreground truncate">📍 {place || "—"}</p>
                   <p className="text-xs mt-2">🗓️ {b.check_in_date} → {b.check_out_date}</p>
                   <div className="mt-2 flex items-center justify-between">
-                    <span className={`text-[10px] font-bold px-2 py-1 rounded-full border capitalize ${statusBadge(b.status)}`}>{b.status === "needs_attention" ? "processing" : b.status}</span>
+                    <span className={`text-xs font-bold px-2 py-1 rounded-full border capitalize ${statusBadge(b.status)}`}>{b.status === "needs_attention" ? "processing" : b.status}</span>
                     <span className="text-xs font-extrabold text-primary">{fmt(b.total_price)}</span>
                   </div>
                 </div>
               </Link>
 
               {partner && b.status === "needs_attention" && (
-                <p className="mt-3 text-[11px] text-muted-foreground">Payment received. We're finalising this stay with our partner — you'll be notified shortly.</p>
+                <p className="mt-3 text-xs text-muted-foreground">Payment received. We're finalising this stay with our partner — you'll be notified shortly.</p>
               )}
               {partner && b.status === "confirmed" && (
                 <AlertDialog>
@@ -231,7 +231,7 @@ const Bookings = () => {
               )}
               {!partner && b.status === "confirmed" && (
                 <div className="mt-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 p-3">
-                  <div className="flex items-center gap-2 text-[11px] text-primary font-bold">
+                  <div className="flex items-center gap-2 text-xs text-primary font-bold">
                     <ShieldCheck className="w-3.5 h-3.5" /> Funds held in escrow
                   </div>
                   {canRelease ? (
@@ -244,7 +244,7 @@ const Bookings = () => {
                       Approve & release to host
                     </button>
                   ) : (
-                    <div className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+                    <div className="mt-2 flex items-center gap-1.5 text-xs text-muted-foreground">
                       <Clock className="w-3.5 h-3.5" />
                       You can release in <span className="font-mono font-bold text-foreground">{mm}:{ss}</span>. Auto-releases 24h after check-out.
                     </div>
@@ -253,7 +253,7 @@ const Bookings = () => {
               )}
 
               {b.status === "released" && b.released_at && (
-                <div className="mt-3 flex items-center gap-1.5 text-[11px] text-success font-semibold">
+                <div className="mt-3 flex items-center gap-1.5 text-xs text-success font-semibold">
                   <CheckCircle2 className="w-3.5 h-3.5" /> Released {new Date(b.released_at).toLocaleString()}
                 </div>
               )}
@@ -263,7 +263,7 @@ const Bookings = () => {
                   ? b.partner_address
                   : [b.listings?.address, b.listings?.neighborhood, b.listings?.city, b.listings?.state].filter(Boolean).join(", ");
                 return (
-                  <div className="mt-3 rounded-xl border border-border p-3 text-[11px] space-y-1">
+                  <div className="mt-3 rounded-xl border border-border p-3 text-xs space-y-1">
                     <div className="flex items-start gap-1.5"><MapPin className="w-3.5 h-3.5 mt-0.5 text-primary shrink-0" />
                       <span><span className="font-bold">Address:</span> {addr || "Will be sent before check-in"}</span></div>
                     {addr && <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(addr)}`} target="_blank" rel="noreferrer" className="text-primary font-bold">Get directions →</a>}
@@ -285,7 +285,7 @@ const Bookings = () => {
 
               {!partner && ["confirmed", "released", "completed"].includes(b.status) && b.check_out_date <= new Date().toISOString().slice(0, 10) && (
                 reviewed[b.id]
-                  ? <p className="mt-3 text-[11px] text-success font-semibold">✓ Thanks for your review</p>
+                  ? <p className="mt-3 text-xs text-success font-semibold">✓ Thanks for your review</p>
                   : <ReviewForm booking={b} onDone={() => setReviewed((r) => ({ ...r, [b.id]: true }))} />
               )}
             </article>

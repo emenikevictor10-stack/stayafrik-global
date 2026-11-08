@@ -38,7 +38,7 @@ const AdminAudit = () => {
 
       <div className="rounded-xl border border-border bg-card overflow-x-auto">
         <table className="w-full text-sm min-w-[640px]">
-          <thead className="bg-secondary/50 text-xs uppercase text-muted-foreground">
+          <thead className="bg-secondary/50 text-xs text-muted-foreground">
             <tr>
               <th className="text-left px-4 py-2.5">When</th>
               <th className="text-left px-4 py-2.5">Actor</th>

@@ -206,7 +206,7 @@ const Explore = () => {
           <button
             type="button"
             onClick={() => setNearMe(null)}
-            className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-primary px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30"
+            className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-primary px-2.5 py-1 rounded-full bg-primary/10 border border-primary/30"
           >
             📍 Sorted by distance · clear <X className="w-3 h-3" />
           </button>
@@ -243,7 +243,7 @@ const Explore = () => {
           ))}
         </div>
         {hasSearch && !loading && (
-          <div className="mt-3 flex flex-wrap items-center gap-2 text-[11px] text-muted-foreground">
+          <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             {heading && <h2 className="w-full text-lg font-bold text-foreground">{heading}</h2>}
             <span className="font-semibold text-foreground">{summarize(search).where} · {summarize(search).when} · {summarize(search).who}</span>
             {checking && <span className="inline-flex items-center gap-1"><span className="w-3 h-3 rounded-full border-2 border-primary border-t-transparent animate-spin" />Checking dates…</span>}
@@ -254,7 +254,7 @@ const Explore = () => {
           </div>
         )}
         {smart.length > 0 && (
-          <p className="mt-2 text-[11px] text-muted-foreground">
+          <p className="mt-2 text-xs text-muted-foreground">
             {SMART_FILTERS.filter((f) => smart.includes(f.key)).map((f) => f.hint).join(" · ")}
           </p>
         )}
@@ -273,8 +273,8 @@ const Explore = () => {
                   />
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold truncate">{selected.title}</div>
-                    <div className="text-[11px] text-muted-foreground truncate">📍 {selected.location}</div>
-                    <div className="text-primary font-extrabold text-sm mt-0.5">{selected.price} <span className="text-[10px] font-medium text-muted-foreground">/night</span></div>
+                    <div className="text-xs text-muted-foreground truncate">📍 {selected.location}</div>
+                    <div className="text-primary font-extrabold text-sm mt-0.5">{selected.price} <span className="text-xs font-medium text-muted-foreground">/night</span></div>
                   </div>
                   <button
                     onClick={() => setSelected(null)}
@@ -310,14 +310,14 @@ const Explore = () => {
                 No properties match your search.
                 {q && rescueCities(properties, q).length > 0 && (
                   <div className="mt-4">
-                    <div className="text-[11px] mb-2">Try these places instead:</div>
+                    <div className="text-xs mb-2">Try these places instead:</div>
                     <div className="flex flex-wrap justify-center gap-1.5">
                       {rescueCities(properties, q).map((c) => (
                         <button
                           key={c}
                           type="button"
                           onClick={() => setQ(c)}
-                          className="text-[11px] font-semibold px-2.5 py-1 rounded-full bg-secondary hover:bg-primary/10 border border-border"
+                          className="text-xs font-semibold px-2.5 py-1 rounded-full bg-secondary hover:bg-primary/10 border border-border"
                         >
                           Stays in {c}
                         </button>
@@ -349,7 +349,7 @@ const Explore = () => {
               </div>
             )}
             {!hasMore && !loadingMore && properties.some((p) => p.source === "rayprop") && (
-              <div className="text-[11px] text-muted-foreground">That's everything ✨</div>
+              <div className="text-xs text-muted-foreground">That's everything ✨</div>
             )}
           </div>
         )}

@@ -85,11 +85,11 @@ const AdminReviews = () => {
                     <span className="inline-flex">{Array.from({ length: 5 }).map((_, i) =>
                       <Star key={i} className={`w-3.5 h-3.5 ${i < r.rating ? "fill-primary text-primary" : "text-muted-foreground/40"}`} />)}</span>
                     <Link to={`/property/${r.listing_id}`} target="_blank" className="text-sm font-bold truncate hover:underline">{r.listings?.title || "Stay"}</Link>
-                    <span className="text-[11px] font-mono text-muted-foreground">{r.listings?.listing_code}</span>
-                    {r.hidden && <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-destructive/15 text-destructive">Hidden</span>}
+                    <span className="text-xs font-mono text-muted-foreground">{r.listings?.listing_code}</span>
+                    {r.hidden && <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-destructive/15 text-destructive">Hidden</span>}
                   </div>
                   {r.comment && <p className="text-xs text-muted-foreground mt-1">{r.comment}</p>}
-                  <p className="text-[11px] text-muted-foreground mt-1">{names[r.guest_id] || "Guest"} · {new Date(r.created_at).toLocaleDateString()}</p>
+                  <p className="text-xs text-muted-foreground mt-1">{names[r.guest_id] || "Guest"} · {new Date(r.created_at).toLocaleDateString()}</p>
                 </div>
                 <button onClick={() => toggle(r)} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-border inline-flex items-center gap-1">
                   {r.hidden ? <><Eye className="w-3.5 h-3.5" /> Restore</> : <><EyeOff className="w-3.5 h-3.5" /> Hide</>}

@@ -59,7 +59,7 @@ export const ReviewsSection = ({
                 )}
                 <div className="min-w-0 flex-1">
                   <div className="text-sm font-semibold truncate">{r.guest_name}</div>
-                  <div className="text-[10px] text-success font-medium">✓ Verified stay · {fmtDate(r.created_at)}</div>
+                  <div className="text-xs text-success font-medium">✓ Verified stay · {fmtDate(r.created_at)}</div>
                 </div>
               </header>
               <div className="mt-2 flex items-center gap-0.5">

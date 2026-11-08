@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import icon from "@/assets/stay-logo-2.png";
+import { Logo } from "@/ui/kit";
 import { ShieldCheck, Loader2 } from "lucide-react";
 
 // Beta namespace — provide a local typed wrapper.
@@ -75,7 +75,7 @@ export default function OAuthConsent() {
   return (
     <main className="min-h-screen bg-background text-foreground px-6 pt-10 pb-12 max-w-md mx-auto flex flex-col">
       <div className="flex flex-col items-center text-center mb-8">
-        <img src={icon} alt="Stay" className="h-10 w-auto mb-3" />
+        <Logo className="h-10 mb-3" />
         <div className="w-14 h-14 rounded-full bg-primary/10 border border-primary/30 flex items-center justify-center mb-4">
           <ShieldCheck className="w-6 h-6 text-primary" />
         </div>
@@ -87,7 +87,7 @@ export default function OAuthConsent() {
 
       <div className="rounded-2xl border border-border bg-card p-4 space-y-3 text-sm">
         <div>
-          <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">What it can do</div>
+          <div className="text-xs text-muted-foreground mb-1">What it can do</div>
           <ul className="list-disc list-inside space-y-1 text-foreground">
             <li>Search verified shortlet listings</li>
             <li>Read your bookings, listings and notifications</li>
@@ -96,7 +96,7 @@ export default function OAuthConsent() {
         </div>
         {details.redirect_uri && (
           <div>
-            <div className="text-[11px] uppercase tracking-wider text-muted-foreground mb-1">Redirects to</div>
+            <div className="text-xs text-muted-foreground mb-1">Redirects to</div>
             <div className="text-xs text-muted-foreground break-all">{details.redirect_uri}</div>
           </div>
         )}

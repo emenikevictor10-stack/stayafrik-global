@@ -59,7 +59,7 @@ const LanguageCurrency = () => {
                 <span className="text-xl">{l.f}</span>
                 <div className="flex-1">
                   <div className="text-sm font-semibold">{l.l}</div>
-                  <div className="text-[11px] text-muted-foreground">{l.n}</div>
+                  <div className="text-xs text-muted-foreground">{l.n}</div>
                 </div>
                 {lang === l.c && <Check className="w-4 h-4 text-primary" />}
               </button>
@@ -75,7 +75,7 @@ const LanguageCurrency = () => {
                 <span className="w-8 text-center font-bold text-primary">{c.s}</span>
                 <div className="flex-1">
                   <div className="text-sm font-semibold">{c.c}</div>
-                  <div className="text-[11px] text-muted-foreground">{c.n}</div>
+                  <div className="text-xs text-muted-foreground">{c.n}</div>
                 </div>
                 {curr === c.c && <Check className="w-4 h-4 text-primary" />}
               </button>
@@ -83,7 +83,7 @@ const LanguageCurrency = () => {
           </section>
         )}
 
-        <p className="text-[11px] text-muted-foreground text-center mt-4">
+        <p className="text-xs text-muted-foreground text-center mt-4">
           Prices and content will display in <span className="text-foreground font-semibold">{LANGS.find(l=>l.c===lang)?.l}</span> · <span className="text-foreground font-semibold">{curr}</span>
         </p>
 

@@ -47,7 +47,7 @@ const Listings = () => {
           ].map((s) => (
             <div key={s.l} className="rounded-xl bg-card border border-border py-3">
               <div className={`text-lg font-extrabold ${s.c}`}>{s.v}</div>
-              <div className="text-[10px] text-muted-foreground">{s.l}</div>
+              <div className="text-xs text-muted-foreground">{s.l}</div>
             </div>
           ))}
         </div>
@@ -83,18 +83,18 @@ const Listings = () => {
                 <div className="flex items-start justify-between gap-2">
                   <h3 className="font-semibold text-sm truncate">{p.title}</h3>
                   {p.verified ? (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/30 shrink-0">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-success/15 text-success border border-success/30 shrink-0">
                       ✓ Live
                     </span>
                   ) : (
-                    <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 shrink-0">
+                    <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-primary/15 text-primary border border-primary/30 shrink-0">
                       Pending review
                     </span>
                   )}
                 </div>
-                <p className="text-[11px] text-muted-foreground truncate">📍 {p.location}</p>
+                <p className="text-xs text-muted-foreground truncate">📍 {p.location}</p>
                 <div className="text-primary font-extrabold text-sm mt-1.5">{p.price}</div>
-                <div className="flex items-center gap-3 mt-1 text-[10px] text-muted-foreground">
+                <div className="flex items-center gap-3 mt-1 text-xs text-muted-foreground">
                   <span className="inline-flex items-center gap-1"><MessageSquare className="w-3 h-3" /> {leadCounts[p.id] || 0} leads</span>
                   <span className="inline-flex items-center gap-1"><Eye className="w-3 h-3" /> {p.reviews} reviews</span>
                 </div>

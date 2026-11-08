@@ -53,7 +53,7 @@ export const LocationCombobox = ({
               <MapPin className="w-4 h-4 text-muted-foreground shrink-0" />
               <span className="flex-1 min-w-0">
                 <span className="font-medium">{l.name}</span>
-                <span className="block text-[11px] text-muted-foreground truncate">
+                <span className="block text-xs text-muted-foreground truncate">
                   {l.type === "neighbourhood" ? "Neighbourhood" : l.type === "city" ? "City / area" : "State"}
                   {breadcrumb(l, byId) ? ` · ${breadcrumb(l, byId)}` : ""}
                 </span>

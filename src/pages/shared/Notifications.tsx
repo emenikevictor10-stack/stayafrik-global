@@ -51,7 +51,7 @@ const Notifications = () => {
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between gap-2">
                       <div className="text-sm font-bold truncate">{n.title}</div>
-                      <div className="text-[10px] text-muted-foreground shrink-0">
+                      <div className="text-xs text-muted-foreground shrink-0">
                         {formatDistanceToNow(new Date(n.created_at), { addSuffix: true })}
                       </div>
                     </div>

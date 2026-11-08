@@ -71,7 +71,7 @@ const AdminDashboard = () => {
               </div>
               <p className="mt-3 text-2xl font-extrabold">{value}</p>
               <p className="text-xs font-semibold text-muted-foreground">{label}</p>
-              {hint && <p className="text-[10px] text-muted-foreground mt-1">{hint}</p>}
+              {hint && <p className="text-xs text-muted-foreground mt-1">{hint}</p>}
             </Link>
           ))}
         </div>

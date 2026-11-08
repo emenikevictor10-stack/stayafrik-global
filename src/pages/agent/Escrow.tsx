@@ -48,14 +48,14 @@ const Escrow = () => {
       <main className="px-5 pt-4 pb-8 space-y-4">
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           <div className="rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 border border-primary/30 p-4">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-primary uppercase"><Lock className="w-3 h-3" /> Held</div>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-primary"><Lock className="w-3 h-3" /> Held</div>
             <div className="text-xl font-extrabold mt-1">{fmt(totalHeld)}</div>
-            <div className="text-[10px] text-muted-foreground">{held.length} booking{held.length !== 1 ? "s" : ""}</div>
+            <div className="text-xs text-muted-foreground">{held.length} booking{held.length !== 1 ? "s" : ""}</div>
           </div>
           <div className="rounded-2xl bg-card border border-border p-4">
-            <div className="flex items-center gap-1.5 text-[10px] font-bold text-success uppercase"><CheckCircle2 className="w-3 h-3" /> Released</div>
+            <div className="flex items-center gap-1.5 text-xs font-bold text-success"><CheckCircle2 className="w-3 h-3" /> Released</div>
             <div className="text-xl font-extrabold mt-1">{fmt(totalReleased)}</div>
-            <div className="text-[10px] text-muted-foreground">{released.length} payout{released.length !== 1 ? "s" : ""}</div>
+            <div className="text-xs text-muted-foreground">{released.length} payout{released.length !== 1 ? "s" : ""}</div>
           </div>
         </div>
 
@@ -77,18 +77,18 @@ const Escrow = () => {
                 <img src={img} alt={r.listings?.title || "Listing"} className="w-14 h-14 rounded-xl object-cover" loading="lazy" />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm truncate">{r.listings?.title || "Listing"}</h3>
-                  <p className="text-[11px] text-muted-foreground mt-0.5">{r.check_in_date} → {r.check_out_date}</p>
+                  <p className="text-xs text-muted-foreground mt-0.5">{r.check_in_date} → {r.check_out_date}</p>
                 </div>
                 <div className="text-primary font-extrabold text-sm shrink-0">{fmt(r.total_price)}</div>
               </div>
 
               <div className="mt-3 flex items-center justify-between">
-                <span className={`inline-flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full border ${
+                <span className={`inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full border ${
                   isHeld ? "bg-primary/15 text-primary border-primary/30" : "bg-success/15 text-success border-success/30"
                 }`}>
                   {isHeld ? <><Clock className="w-3 h-3" /> Awaiting client release</> : <><CheckCircle2 className="w-3 h-3" /> Released</>}
                 </span>
-                <span className="text-[10px] text-muted-foreground">
+                <span className="text-xs text-muted-foreground">
                   {isHeld ? `Booked ${new Date(r.created_at).toLocaleDateString()}` : r.released_at ? `Paid ${new Date(r.released_at).toLocaleDateString()}` : ""}
                 </span>
               </div>

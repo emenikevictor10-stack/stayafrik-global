@@ -37,6 +37,7 @@ const clientItems: Item[] = [
   { Icon: ShieldCheck, title: "Escrow history", subtitle: "Past protected payments", to: "/bookings" },
   { Icon: Lock, title: "Unlock PIN", subtitle: "App lock & security", to: "/profile/pin" },
   { Icon: Globe, title: "Language & currency", subtitle: "Regional preferences", to: "/profile/language" },
+  { Icon: LifeBuoy, title: "Your problems", subtitle: "Issues you reported during a stay", to: "/issues" },
   { Icon: LifeBuoy, title: "Help & support", subtitle: "Get assistance", to: "/profile/help" },
 ];
 

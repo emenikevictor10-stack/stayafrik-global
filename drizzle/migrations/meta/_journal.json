@@ -127,6 +127,20 @@
       "when": 1792360572612,
       "tag": "0017_booking_details_and_reviews",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1794169808411,
+      "tag": "0018_support_issues",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1794170086150,
+      "tag": "0019_support_issues_private_has_role",
+      "breakpoints": true
     }
   ]
 }

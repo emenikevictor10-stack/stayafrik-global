@@ -7,6 +7,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { PropertiesMap } from "@/components/map/PropertyMap";
+import { useSettings } from "@/hooks/useSettings";
 import { useListings } from "@/hooks/useListings";
 import { Seo } from "@/components/seo/Seo";
 import { SearchProvider, useSearch, type Segment } from "@/components/search/SearchProvider";
@@ -118,6 +119,7 @@ const Explore = () => {
   const setQ = (where: string) => applySearch({ ...search, where });
   const [smart, setSmart] = useState<SmartFilter[]>([]);
   const [view, setView] = useState<"list" | "map">("list");
+  const { features } = useSettings();
   const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
   const [selected, setSelected] = useState<Property | null>(null);
   const { data: properties, loading: listLoading, loadingMore, hasMore, loadMore, searchPartner, searching } = useListings();
@@ -194,9 +196,9 @@ const Explore = () => {
       />
       <TopBar title="Explore" />
       <main className="px-5 pt-5 pb-8">
-        <SearchProvider places={places} hints={hints} onLocate={(c) => { setNearMe(c); setView("map"); }}>
+        <SearchProvider places={places} hints={hints} onLocate={(c) => { setNearMe(c); if (features.map) setView("map"); }}>
           <ExploreSearch
-            mapToggle={
+            mapToggle={!features.map ? null :
               <button
                 onClick={() => setView(view === "list" ? "map" : "list")}
                 className="shrink-0 w-12 h-12 rounded-full bg-search-surface border border-border shadow-search flex items-center justify-center text-primary"
@@ -266,7 +268,7 @@ const Explore = () => {
         )}
 
 
-        {view === "map" ? (
+        {view === "map" && features.map ? (
           <div className="mt-5 relative">
             <PropertiesMap list={visible} height={520} onSelect={setSelected} />
             {selected && (

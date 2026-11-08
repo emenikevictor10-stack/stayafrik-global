@@ -40,6 +40,10 @@ import AdminPayouts from "./pages/admin/AdminPayouts";
 import AdminKyc from "./pages/admin/AdminKyc";
 import AdminAudit from "./pages/admin/AdminAudit";
 import AdminLocationAudit from "./pages/admin/AdminLocationAudit";
+import AdminSupport from "./pages/admin/AdminSupport";
+import ReportProblem from "./pages/client/ReportProblem";
+import IssueThread from "./pages/client/IssueThread";
+import MyIssues from "./pages/client/MyIssues";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import Messages from "./pages/shared/Messages";
@@ -127,6 +131,9 @@ const App = () => (
                     <Route path="/booking/confirm" element={<BookingConfirm />} />
                     <Route path="/reservations" element={<Reservations />} />
                     <Route path="/profile/delete" element={<DeleteAccount />} />
+                    <Route path="/trips/:id/report" element={<ReportProblem />} />
+                    <Route path="/issues" element={<MyIssues />} />
+                    <Route path="/issues/:id" element={<IssueThread />} />
                     
                   </Route>
                 </Route>
@@ -139,6 +146,7 @@ const App = () => (
                     <Route path="/admin/users" element={<AdminUsers />} />
                     <Route path="/admin/users/:id" element={<AdminUserDetail />} />
                     <Route path="/admin/bookings" element={<AdminBookings />} />
+                    <Route path="/admin/support" element={<AdminSupport />} />
                     <Route path="/admin/partner-bookings" element={<AdminPartnerBookings />} />
                     <Route path="/admin/reservations" element={<AdminReservations />} />
                     <Route path="/admin/reviews" element={<AdminReviews />} />

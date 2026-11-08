@@ -974,6 +974,124 @@ export type Database = {
           },
         ]
       }
+      support_issue_events: {
+        Row: {
+          author_id: string | null
+          author_type: string
+          body: string | null
+          channel: string
+          created_at: string
+          id: string
+          issue_id: string
+          kind: string
+          media: string[]
+        }
+        Insert: {
+          author_id?: string | null
+          author_type: string
+          body?: string | null
+          channel?: string
+          created_at?: string
+          id?: string
+          issue_id: string
+          kind: string
+          media?: string[]
+        }
+        Update: {
+          author_id?: string | null
+          author_type?: string
+          body?: string | null
+          channel?: string
+          created_at?: string
+          id?: string
+          issue_id?: string
+          kind?: string
+          media?: string[]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_issue_events_issue_id_fkey"
+            columns: ["issue_id"]
+            isOneToOne: false
+            referencedRelation: "support_issues"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      support_issues: {
+        Row: {
+          asked_fixed_at: string | null
+          booking_id: string
+          category: string
+          closed_at: string | null
+          created_at: string
+          first_reply_at: string | null
+          id: string
+          last_guest_message_at: string | null
+          media: string[]
+          note: string
+          owner_id: string | null
+          rating: number | null
+          ref: string
+          reopened_count: number
+          reply_due_at: string
+          status: string
+          updated_at: string
+          urgent: boolean
+          user_id: string
+        }
+        Insert: {
+          asked_fixed_at?: string | null
+          booking_id: string
+          category: string
+          closed_at?: string | null
+          created_at?: string
+          first_reply_at?: string | null
+          id?: string
+          last_guest_message_at?: string | null
+          media?: string[]
+          note: string
+          owner_id?: string | null
+          rating?: number | null
+          ref: string
+          reopened_count?: number
+          reply_due_at: string
+          status?: string
+          updated_at?: string
+          urgent?: boolean
+          user_id: string
+        }
+        Update: {
+          asked_fixed_at?: string | null
+          booking_id?: string
+          category?: string
+          closed_at?: string | null
+          created_at?: string
+          first_reply_at?: string | null
+          id?: string
+          last_guest_message_at?: string | null
+          media?: string[]
+          note?: string
+          owner_id?: string | null
+          rating?: number | null
+          ref?: string
+          reopened_count?: number
+          reply_due_at?: string
+          status?: string
+          updated_at?: string
+          urgent?: boolean
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "support_issues_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       suppressed_emails: {
         Row: {
           created_at: string
@@ -1025,6 +1143,16 @@ export type Database = {
     }
     Functions: {
       auto_release_due_bookings: { Args: never; Returns: number }
+      create_support_issue: {
+        Args: {
+          _booking_id: string
+          _category: string
+          _media?: string[]
+          _note: string
+          _urgent: boolean
+        }
+        Returns: string
+      }
       delete_email: {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
@@ -1045,6 +1173,16 @@ export type Database = {
           user_id: string
           whatsapp: string
         }[]
+      }
+      guest_issue_action: {
+        Args: {
+          _action: string
+          _body?: string
+          _issue_id: string
+          _media?: string[]
+          _value?: number
+        }
+        Returns: undefined
       }
       has_role: {
         Args: {
@@ -1107,6 +1245,10 @@ export type Database = {
         }
         Returns: number
       }
+      notify_admins: {
+        Args: { _body: string; _link: string; _title: string }
+        Returns: undefined
+      }
       popular_locations: {
         Args: { _limit?: number }
         Returns: {
@@ -1162,6 +1304,15 @@ export type Database = {
       }
       set_listing_location: {
         Args: { _id: string; _kind: string; _location_id: string }
+        Returns: undefined
+      }
+      staff_issue_action: {
+        Args: {
+          _action: string
+          _body?: string
+          _issue_id: string
+          _status?: string
+        }
         Returns: undefined
       }
       tag_partner_locations: {

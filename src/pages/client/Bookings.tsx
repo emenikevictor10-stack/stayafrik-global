@@ -268,6 +268,12 @@ const Bookings = () => {
                 );
               })()}
 
+              {["confirmed", "released", "completed", "needs_attention"].includes(b.status) && (
+                <Link to={`/trips/${b.id}/report`} className="mt-3 flex items-center justify-center w-full h-11 rounded-lg border border-border text-[13px] font-semibold">
+                  Report a problem
+                </Link>
+              )}
+
               {!partner && ["confirmed", "released", "completed"].includes(b.status) && b.check_out_date <= new Date().toISOString().slice(0, 10) && (
                 reviewed[b.id]
                   ? <p className="mt-3 text-[11px] text-success font-semibold">✓ Thanks for your review</p>

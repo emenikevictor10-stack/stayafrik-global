@@ -1,3 +1,4 @@
+import { getSetting } from "../_shared/settings.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { raypropGetHold, raypropGetQuote, unwrapRayProp } from "../_shared/rayprop.ts";
@@ -106,7 +107,8 @@ Deno.serve(async (req) => {
     }
     const nights = Math.max(1, Math.round((co - ci) / 86400000));
     const subtotal = Number(listing.price_per_night) * nights;
-    const fees = Math.round(subtotal * 0.08);
+    const feeBps = await getSetting<number>("service_fee_bps", 800);
+    const fees = Math.round((subtotal * feeBps) / 10000);
     const total = subtotal + fees;
     const amountKobo = Math.round(total * 100);
 

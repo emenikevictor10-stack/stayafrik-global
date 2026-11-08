@@ -1,3 +1,4 @@
+import { useSettings } from "@/hooks/useSettings";
 import { TopBar } from "@/components/shell/TopBar";
 import { ChevronLeft, Search, MessageCircle, Phone, Mail, ChevronDown } from "lucide-react";
 import { Link } from "react-router-dom";
@@ -40,6 +41,7 @@ const faqs = [
 ];
 
 const Help = () => {
+  const { supportEmail } = useSettings();
   const { role } = useRole();
   const topics = role === "agent" ? topicsAgent : topicsClient;
   const [open, setOpen] = useState<number | null>(0);
@@ -145,14 +147,13 @@ const Help = () => {
               <span className="text-xs font-bold">Call</span>
               <span className="text-xs text-muted-foreground">24/7</span>
             </button>
-            <button
-              onClick={() => toast.success("Opening email")}
-              className="rounded-2xl bg-card border border-border p-4 flex flex-col items-center gap-1.5"
+            <a href={`mailto:${supportEmail}`}
+              className="rounded-2xl bg-card border border-border p-4 flex flex-col items-center gap-1.5 min-w-0"
             >
               <Mail className="w-5 h-5 text-primary" />
               <span className="text-xs font-bold">Email</span>
-              <span className="text-xs text-muted-foreground">~4h</span>
-            </button>
+              <span className="text-xs text-muted-foreground truncate max-w-full">{supportEmail}</span>
+            </a>
           </div>
         </section>
 

@@ -40,6 +40,7 @@ import AdminReviews from "./pages/admin/AdminReviews";
 import AdminPayouts from "./pages/admin/AdminPayouts";
 import AdminKyc from "./pages/admin/AdminKyc";
 import AdminAudit from "./pages/admin/AdminAudit";
+import AdminSettings from "./pages/admin/AdminSettings";
 import AdminLocationAudit from "./pages/admin/AdminLocationAudit";
 import AdminSupport from "./pages/admin/AdminSupport";
 import ReportProblem from "./pages/client/ReportProblem";
@@ -160,6 +161,7 @@ const App = () => (
                     <Route path="/admin/payouts" element={<AdminPayouts />} />
                     <Route path="/admin/kyc" element={<AdminKyc />} />
                     <Route path="/admin/audit" element={<AdminAudit />} />
+                    <Route path="/admin/settings" element={<AdminSettings />} />
                     <Route path="/admin/location-audit" element={<AdminLocationAudit />} />
                   </Route>
                 </Route>

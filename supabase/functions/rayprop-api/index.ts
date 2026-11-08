@@ -1,3 +1,4 @@
+import { getSetting } from "../_shared/settings.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import {
@@ -206,7 +207,8 @@ Deno.serve(async (req) => {
       if (!listing_id || !DATE.test(check_in || "") || !DATE.test(check_out || "") || !Number.isInteger(guests) || guests < 1 || guests > 20) {
         return json(400, { error: "Invalid quote details" });
       }
-      const markup = markupPerNightKobo();
+      const saved = await getSetting<number>("markup_per_night_kobo", -1);
+      const markup = saved >= 0 ? Math.round(saved) : markupPerNightKobo();
       return json(200, { data: unwrapRayProp(await raypropQuote({
         listing_id: stripRp(listing_id), check_in_date: check_in!, check_out_date: check_out!, guest_count: guests,
         ...(markup ? { developer_markup_per_night: markup } : {}),

@@ -44,6 +44,30 @@ export type Database = {
         }
         Relationships: []
       }
+      app_settings: {
+        Row: {
+          is_public: boolean
+          key: string
+          updated_at: string
+          updated_by: string | null
+          value: Json
+        }
+        Insert: {
+          is_public?: boolean
+          key: string
+          updated_at?: string
+          updated_by?: string | null
+          value: Json
+        }
+        Update: {
+          is_public?: boolean
+          key?: string
+          updated_at?: string
+          updated_by?: string | null
+          value?: Json
+        }
+        Relationships: []
+      }
       bookings: {
         Row: {
           attention_reason: string | null
@@ -1315,6 +1339,7 @@ export type Database = {
         Args: { _id: string; _kind: string; _location_id: string }
         Returns: undefined
       }
+      setting_int: { Args: { _default: number; _key: string }; Returns: number }
       staff_issue_action: {
         Args: {
           _action: string

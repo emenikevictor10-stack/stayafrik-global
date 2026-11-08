@@ -1,3 +1,5 @@
+import { useSettings } from "@/hooks/useSettings";
+import { serviceFee } from "@/lib/settings";
 import { recallSearch } from "@/lib/search-state";
 import { useParams, useNavigate, Link } from "react-router-dom";
 import { useEffect, useMemo, useState } from "react";
@@ -25,6 +27,7 @@ const fmt = (n: number) => "₦" + Math.round(n).toLocaleString();
 
 const BookProperty = () => {
   const { id } = useParams();
+  const { serviceFeeBps } = useSettings();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: p, loading } = useListing(id);
@@ -94,7 +97,7 @@ const BookProperty = () => {
 
   const isPartner = p.source === "rayprop";
   const subtotal = p.priceNum * nights;
-  const fees = isPartner ? 0 : Math.round(subtotal * 0.08);
+  const fees = isPartner ? 0 : serviceFee(subtotal, serviceFeeBps);
   const total = isPartner && quote ? koboToNaira(quote.totalKobo) : subtotal + fees;
   const holdSecsLeft = hold ? Math.max(0, Math.floor((new Date(hold.expiresAt).getTime() - nowMs) / 1000)) : 0;
   const holdExpired = isPartner && !!hold && holdSecsLeft === 0;

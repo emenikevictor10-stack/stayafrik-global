@@ -1,3 +1,4 @@
+import { useSettings } from "@/hooks/useSettings";
 import { Tag } from "@/ui/kit";
 import { TopBar } from "@/components/shell/TopBar";
 import { rememberViewed } from "@/hooks/useRecentlyViewed";
@@ -22,6 +23,7 @@ import { cn } from "@/lib/utils";
 
 
 const PropertyDetail = () => {
+  const { features } = useSettings();
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -274,7 +276,7 @@ const PropertyDetail = () => {
               </a>
             )}
           </div>
-          <SinglePropertyMap p={p} height={220} approximate={!unlocked} />
+          {features.map && <SinglePropertyMap p={p} height={220} approximate={!unlocked} />}
           <p className="text-xs text-muted-foreground mt-2">📍 {shownLocation}</p>
           {!unlocked && (
             <div className="mt-2 rounded-xl bg-card border border-border p-3 text-xs text-muted-foreground flex items-start gap-2">

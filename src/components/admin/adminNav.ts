@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Building2, Users, CalendarDays, Banknote, ShieldCheck, ScrollText,
-  Handshake, MapPinned, Star, LifeBuoy, Eye,
+  Handshake, MapPinned, Star, LifeBuoy, Eye, Settings,
 } from "lucide-react";
 
 export type AdminCountKey = "support" | "listings" | "kyc" | "payouts" | "viewings" | "partner";
@@ -28,6 +28,7 @@ export const ADMIN_NAV: { group: string; items: AdminNavItem[] }[] = [
   ] },
   { group: "System", items: [
     { to: "/admin/audit", label: "Audit log", Icon: ScrollText },
+    { to: "/admin/settings", label: "Settings", Icon: Settings },
   ] },
 ];
 

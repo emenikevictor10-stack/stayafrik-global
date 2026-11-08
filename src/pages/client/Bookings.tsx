@@ -1,3 +1,4 @@
+import { useSettings } from "@/hooks/useSettings";
 import { ErrorState, ListSkeleton } from "@/ui/kit";
 import { toneFor, statusLabel } from "@/lib/status-tone";
 import { Tag } from "@/ui/kit";
@@ -79,6 +80,7 @@ const ReviewForm = ({ booking, onDone }: { booking: BookingRow; onDone: () => vo
 };
 
 const Bookings = () => {
+  const { features } = useSettings();
   const { user } = useAuth();
   const [items, setItems] = useState<BookingRow[]>([]);
   const [loading, setLoading] = useState(true);
@@ -277,7 +279,7 @@ const Bookings = () => {
                   <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-orange" aria-hidden />Problem {openIssues[b.id].ref} · {guestStatusText[openIssues[b.id].status as IssueStatus]}</span>
                   <span className="font-semibold">Open</span>
                 </Link>
-              ) : ["confirmed", "released", "completed", "needs_attention"].includes(b.status) && (
+              ) : features.report_problem && ["confirmed", "released", "completed", "needs_attention"].includes(b.status) && (
                 <Link to={`/trips/${b.id}/report`} className="mt-3 flex items-center justify-center w-full h-11 rounded-lg border border-border text-[13px] font-semibold">
                   Report a problem
                 </Link>

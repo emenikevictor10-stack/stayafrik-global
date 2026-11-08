@@ -1025,11 +1025,14 @@ export type Database = {
           category: string
           closed_at: string | null
           created_at: string
+          credit_naira: number | null
+          credit_reason: string | null
           first_reply_at: string | null
           id: string
           last_guest_message_at: string | null
           media: string[]
           note: string
+          overdue_alerted_at: string | null
           owner_id: string | null
           rating: number | null
           ref: string
@@ -1046,11 +1049,14 @@ export type Database = {
           category: string
           closed_at?: string | null
           created_at?: string
+          credit_naira?: number | null
+          credit_reason?: string | null
           first_reply_at?: string | null
           id?: string
           last_guest_message_at?: string | null
           media?: string[]
           note: string
+          overdue_alerted_at?: string | null
           owner_id?: string | null
           rating?: number | null
           ref: string
@@ -1067,11 +1073,14 @@ export type Database = {
           category?: string
           closed_at?: string | null
           created_at?: string
+          credit_naira?: number | null
+          credit_reason?: string | null
           first_reply_at?: string | null
           id?: string
           last_guest_message_at?: string | null
           media?: string[]
           note?: string
+          overdue_alerted_at?: string | null
           owner_id?: string | null
           rating?: number | null
           ref?: string
@@ -1315,6 +1324,11 @@ export type Database = {
         }
         Returns: undefined
       }
+      staff_offer_credit: {
+        Args: { _amount: number; _issue_id: string; _reason: string }
+        Returns: undefined
+      }
+      support_issue_tick: { Args: never; Returns: Json }
       tag_partner_locations: {
         Args: { _force?: boolean; _rows: Json }
         Returns: number

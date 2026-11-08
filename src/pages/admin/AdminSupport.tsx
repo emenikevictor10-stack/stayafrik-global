@@ -43,6 +43,9 @@ const AdminSupport = () => {
   const [prompt, setPrompt] = useState<Prompt | null>(null);
   const [promptText, setPromptText] = useState("");
   const [, tick] = useState(0);
+  const [creditOpen, setCreditOpen] = useState(false);
+  const [creditAmt, setCreditAmt] = useState("");
+  const [creditReason, setCreditReason] = useState("");
 
   useEffect(() => { supabase.auth.getUser().then(({ data }) => setMe(data.user?.id ?? null)); }, []);
   useEffect(() => { const t = setInterval(() => tick((n) => n + 1), 30000); return () => clearInterval(t); }, []);
@@ -112,6 +115,20 @@ const AdminSupport = () => {
     if (!prompt) return;
     if (prompt.required && !promptText.trim()) return toast.error("Add a few words first");
     if (await run(prompt.action, promptText.trim())) { toast.success("Done"); setPrompt(null); setPromptText(""); }
+  };
+
+  const offerCredit = async () => {
+    if (!sel) return;
+    const amt = Number(creditAmt.replace(/[^0-9.]/g, ""));
+    if (!amt || amt <= 0) return toast.error("Enter an amount above zero");
+    if (!creditReason.trim()) return toast.error("Add a reason");
+    setBusy(true);
+    const { error } = await supabase.rpc("staff_offer_credit", { _issue_id: sel.id, _amount: amt, _reason: creditReason.trim() });
+    setBusy(false);
+    if (error) return toast.error(error.message);
+    toast.success("Credit recorded and the guest was told");
+    setCreditOpen(false);
+    await Promise.all([loadList(), loadEvents()]);
   };
 
   const guest = sel ? people[sel.user_id] : undefined;
@@ -210,6 +227,7 @@ const AdminSupport = () => {
                     <DropdownMenuItem onClick={() => setPrompt({ action: "log_host_contact", title: "Log host contact", desc: "What did the host say or agree to? Moves the problem to Waiting on host.", label: "Save", required: true })}>Log host contact</DropdownMenuItem>
                     {sel.status !== "closed" && <DropdownMenuItem onClick={() => run("ask_fixed")}>Ask "Is it fixed?"</DropdownMenuItem>}
                     {!sel.urgent && <DropdownMenuItem onClick={() => run("escalate")}>Mark urgent</DropdownMenuItem>}
+                    <DropdownMenuItem onClick={() => { setCreditAmt(""); setCreditReason(""); setCreditOpen(true); }}>Offer credit</DropdownMenuItem>
                     <DropdownMenuSeparator />
                     {sel.status !== "closed"
                       ? <DropdownMenuItem onClick={() => setPrompt({ action: "close", title: "Close this problem?", desc: "Optional: a short closing note the guest will see.", label: "Close" })}>Close</DropdownMenuItem>
@@ -279,6 +297,7 @@ const AdminSupport = () => {
                     <Row k="First reply" v={sel.first_reply_at ? lagos(sel.first_reply_at) : "Not yet"} />
                     <Row k="Reopened" v={String(sel.reopened_count)} />
                     {sel.closed_at && <Row k="Closed" v={lagos(sel.closed_at)} />}
+                    {(sel as any).credit_naira ? <Row k="Credit offered" v={`₦${Number((sel as any).credit_naira).toLocaleString()} · ${(sel as any).credit_reason || ""}`} /> : null}
                   </dl>
                 </aside>
               </div>
@@ -286,6 +305,21 @@ const AdminSupport = () => {
           )}
         </section>
       </div>
+
+      <Dialog open={creditOpen} onOpenChange={setCreditOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Offer credit</DialogTitle>
+            <DialogDescription>Recorded on this problem and shown to the guest. Staff apply it to their next booking.</DialogDescription>
+          </DialogHeader>
+          <Input inputMode="numeric" placeholder="Amount in naira, e.g. 10000" value={creditAmt} onChange={(e) => setCreditAmt(e.target.value)} />
+          <Textarea placeholder="Reason, e.g. no power for 6 hours" value={creditReason} onChange={(e) => setCreditReason(e.target.value)} rows={2} />
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setCreditOpen(false)}>Cancel</Button>
+            <Button disabled={busy} onClick={offerCredit}>Offer credit</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <Dialog open={!!prompt} onOpenChange={(o) => { if (!o) { setPrompt(null); setPromptText(""); } }}>
         <DialogContent>

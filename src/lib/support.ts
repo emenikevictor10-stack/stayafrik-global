@@ -69,3 +69,14 @@ export const dueText = (minutesLeft: number) => {
   const t = m >= 60 ? `${Math.floor(m / 60)} h ${m % 60} min` : `${m} min`;
   return minutesLeft < 0 ? `${t} late` : `due in ${t}`;
 };
+
+/** "Is it fixed?" closes itself after 24 h without an answer. */
+export const AUTO_CLOSE_HOURS = 24;
+export const shouldAutoClose = (i: { status: string; asked_fixed_at: string | null }, now = Date.now()) =>
+  i.status === "asked_fixed" && !!i.asked_fixed_at && now - new Date(i.asked_fixed_at).getTime() > AUTO_CLOSE_HOURS * 3600_000;
+
+/** Staff are alerted once per reply clock when a reply is late. */
+export const shouldAlertOverdue = (
+  i: { status: string; reply_due_at: string; overdue_alerted_at: string | null },
+  now = Date.now(),
+) => slaState(i, now).overdue && !i.overdue_alerted_at;

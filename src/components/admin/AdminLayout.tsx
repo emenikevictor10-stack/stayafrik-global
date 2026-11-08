@@ -5,6 +5,7 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
+import { useSupportQueueCount } from "@/hooks/useSupportQueueCount";
 
 const NAV = [
   { to: "/admin", label: "Overview", Icon: LayoutDashboard, end: true },
@@ -23,6 +24,12 @@ const NAV = [
 
 export const AdminLayout = () => {
   const { profile, signOut } = useAuth();
+  const support = useSupportQueueCount();
+  const badge = (to: string) =>
+    to === "/admin/support" && support.waiting > 0 ? (
+      <span className={cn("ml-auto text-[12px] font-semibold", support.overdue ? "text-destructive" : "text-warning")}
+        aria-label={`${support.waiting} waiting${support.overdue ? `, ${support.overdue} overdue` : ""}`}>{support.waiting}</span>
+    ) : null;
   return (
     <div className="min-h-screen bg-background text-foreground flex">
       <aside className="hidden md:flex w-60 shrink-0 flex-col border-r border-border bg-card">
@@ -45,7 +52,7 @@ export const AdminLayout = () => {
                 )
               }
             >
-              <Icon className="w-4 h-4" /> {label}
+              <Icon className="w-4 h-4" /> {label}{badge(to)}
             </NavLink>
           ))}
         </nav>
@@ -75,7 +82,7 @@ export const AdminLayout = () => {
                 )
               }
             >
-              <Icon className="w-3.5 h-3.5" /> {label}
+              <Icon className="w-3.5 h-3.5" /> {label}{badge(to)}
             </NavLink>
           ))}
         </div>

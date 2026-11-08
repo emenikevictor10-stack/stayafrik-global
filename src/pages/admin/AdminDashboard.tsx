@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { Building2, Users, CalendarDays, Banknote, ShieldCheck, ArrowRight } from "lucide-react";
+import { Building2, Users, CalendarDays, Banknote, ShieldCheck, ArrowRight, LifeBuoy } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/seo/Seo";
 
@@ -15,17 +15,21 @@ const AdminDashboard = () => {
 
   useEffect(() => {
     (async () => {
-      const [pendingListings, totalListings, totalUsers, escrowAgg, pendingPayouts, pendingKyc] = await Promise.all([
+      const [pendingListings, totalListings, totalUsers, escrowAgg, pendingPayouts, pendingKyc, needsReply] = await Promise.all([
         supabase.from("listings").select("id", { count: "exact", head: true }).eq("verified", false),
         supabase.from("listings").select("id", { count: "exact", head: true }),
         supabase.from("profiles").select("user_id", { count: "exact", head: true }),
-        supabase.from("bookings").select("total_amount").eq("status", "confirmed" as any),
+        supabase.from("bookings").select("total_price").eq("status", "confirmed" as any),
         supabase.from("payouts" as any).select("amount").eq("status", "pending"),
         (supabase.from("kyc_submissions") as any).select("id", { count: "exact", head: true }).eq("status", "pending"),
+        supabase.from("support_issues").select("reply_due_at").in("status", ["received", "in_progress"]),
       ]);
-      const escrowHeld = (escrowAgg.data || []).reduce((s: number, r: any) => s + Number(r.total_amount || 0), 0);
+      const waiting = needsReply.data || [];
+      const overdue = waiting.filter((r) => new Date(r.reply_due_at).getTime() < Date.now()).length;
+      const escrowHeld = (escrowAgg.data || []).reduce((s: number, r: any) => s + Number(r.total_price || 0), 0);
       const payoutsDue = ((pendingPayouts.data as any[]) || []).reduce((s: number, r: any) => s + Number(r.amount || 0), 0);
       setStats([
+        { label: "Problems waiting for a reply", value: waiting.length, href: "/admin/support", Icon: LifeBuoy, hint: overdue ? `${overdue} overdue` : "None overdue" },
         { label: "Pending listings", value: pendingListings.count ?? 0, href: "/admin/listings", Icon: Building2, hint: "Awaiting approval" },
         { label: "Total listings", value: totalListings.count ?? 0, href: "/admin/listings", Icon: Building2 },
         { label: "Users", value: totalUsers.count ?? 0, href: "/admin/users", Icon: Users },

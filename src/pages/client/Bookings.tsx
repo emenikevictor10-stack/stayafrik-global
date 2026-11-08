@@ -6,6 +6,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, ShieldCheck, Clock, CheckCircle2, MapPin, Star } from "lucide-react";
 import { toast } from "sonner";
 import { cancelRayPropBooking } from "@/lib/rayprop";
+import { guestStatusText, type IssueStatus } from "@/lib/support";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 type BookingRow = {
@@ -87,6 +88,7 @@ const Bookings = () => {
   const [now, setNow] = useState(Date.now());
   const [releasing, setReleasing] = useState<string | null>(null);
   const [reviewed, setReviewed] = useState<Record<string, boolean>>({});
+  const [openIssues, setOpenIssues] = useState<Record<string, { id: string; ref: string; status: string }>>({});
 
   const load = async () => {
     if (!user) return;
@@ -98,6 +100,8 @@ const Bookings = () => {
     setItems((data as any) || []);
     const { data: revs } = await supabase.from("reviews").select("booking_id").eq("guest_id", user.id);
     setReviewed(Object.fromEntries((revs || []).map((r) => [r.booking_id, true])));
+    const { data: iss } = await supabase.from("support_issues").select("id,ref,status,booking_id").eq("user_id", user.id).neq("status", "closed");
+    setOpenIssues(Object.fromEntries((iss || []).map((i) => [i.booking_id, i])));
     setLoading(false);
   };
 
@@ -268,7 +272,12 @@ const Bookings = () => {
                 );
               })()}
 
-              {["confirmed", "released", "completed", "needs_attention"].includes(b.status) && (
+              {openIssues[b.id] ? (
+                <Link to={`/issues/${openIssues[b.id].id}`} className="mt-3 flex items-center justify-between w-full h-11 px-3 rounded-lg border border-warning/40 bg-warning/10 text-[13px]">
+                  <span className="flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-warning" aria-hidden />Problem {openIssues[b.id].ref} · {guestStatusText[openIssues[b.id].status as IssueStatus]}</span>
+                  <span className="font-semibold">Open</span>
+                </Link>
+              ) : ["confirmed", "released", "completed", "needs_attention"].includes(b.status) && (
                 <Link to={`/trips/${b.id}/report`} className="mt-3 flex items-center justify-center w-full h-11 rounded-lg border border-border text-[13px] font-semibold">
                   Report a problem
                 </Link>

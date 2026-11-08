@@ -48,7 +48,7 @@ const ReportProblem = () => {
   };
 
   if (loading) return (<><TopBar title="Report a problem" /><main className="p-10 flex justify-center"><Loader2 className="w-6 h-6 animate-spin text-primary" /></main></>);
-  if (!booking) return (<><TopBar title="Report a problem" /><main className="px-4 py-10 text-center text-[15px]">We couldn't find that booking. <Link to="/bookings" className="text-primary font-semibold">Back to trips</Link></main></>);
+  if (!booking) return (<><TopBar title="Report a problem" /><main className="px-4 py-10 text-center text-[15px]">We couldn't find that booking. <Link to="/trips" className="text-primary font-semibold">Back to trips</Link></main></>);
 
   const title = booking.listings?.title || booking.partner_title || "Your stay";
 

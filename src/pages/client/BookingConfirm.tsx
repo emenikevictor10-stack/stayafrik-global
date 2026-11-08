@@ -83,7 +83,7 @@ const BookingConfirm = () => {
             </div>
 
             <div className="mt-6 grid gap-2">
-              <Link to="/bookings" className="rounded-2xl bg-primary text-primary-foreground py-3 font-bold text-sm">
+              <Link to="/trips" className="rounded-2xl bg-primary text-primary-foreground py-3 font-bold text-sm">
                 View my bookings
               </Link>
               <Link to="/explore" className="rounded-2xl border border-border bg-card py-3 font-bold text-sm">
@@ -104,7 +104,7 @@ const BookingConfirm = () => {
               <Link to="/explore" className="rounded-2xl bg-primary text-primary-foreground py-3 font-bold text-sm">
                 Back to explore
               </Link>
-              <Link to="/bookings" className="rounded-2xl border border-border bg-card py-3 font-bold text-sm">
+              <Link to="/trips" className="rounded-2xl border border-border bg-card py-3 font-bold text-sm">
                 View my bookings
               </Link>
             </div>

@@ -230,7 +230,7 @@ const TermsConditions = () => {
           {/* Header */}
           <div className="mb-6">
             <Link
-              to="/profile"
+              to="/account"
               className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-4"
             >
               <ChevronLeft className="w-3.5 h-3.5" /> Back

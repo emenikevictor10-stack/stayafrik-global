@@ -13,13 +13,12 @@ export const BottomNav = () => {
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl safe-bottom"
+      className="xl:hidden fixed bottom-0 inset-x-0 z-40 border-t border-border bg-background/95 backdrop-blur-xl safe-bottom"
       aria-label="Primary"
     >
       <ul
         className={cn(
-          "max-w-md mx-auto grid",
-          role === "client" ? "grid-cols-4" : "grid-cols-5",
+          "max-w-xl mx-auto grid grid-cols-5 h-[58px]",
         )}
       >
         {tabs.map(({ to, Icon, label, key }) => {
@@ -28,10 +27,10 @@ export const BottomNav = () => {
             <li key={to}>
               <NavLink
                 to={to}
-                end
+                end={to === "/"}
                 className={({ isActive }) =>
                   cn(
-                    "flex flex-col items-center justify-center gap-0.5 py-2.5 text-xs font-medium transition-colors relative",
+                    "h-[58px] flex flex-col items-center justify-center gap-0.5 text-xs font-semibold transition-colors relative",
                     isActive ? "text-primary" : "text-muted-foreground hover:text-foreground",
                   )
                 }

@@ -26,7 +26,7 @@ const MyIssues = () => {
           <div className="rounded-xl border border-dashed border-border p-8 text-center">
             <p className="text-[15px] font-semibold">No problems reported</p>
             <p className="text-[13px] text-muted-foreground mt-1">If something goes wrong during a stay, open the trip and tap "Report a problem".</p>
-            <Link to="/bookings" className="inline-block mt-3 text-[15px] font-semibold text-primary">Go to trips</Link>
+            <Link to="/trips" className="inline-block mt-3 text-[15px] font-semibold text-primary">Go to trips</Link>
           </div>
         ) : rows.map((r) => (
           <Link key={r.id} to={`/issues/${r.id}`} className="flex items-center gap-3 rounded-xl border border-border bg-card p-3">

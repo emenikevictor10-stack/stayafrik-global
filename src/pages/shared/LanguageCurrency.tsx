@@ -31,14 +31,14 @@ const LanguageCurrency = () => {
 
   const save = () => {
     toast.success("Preferences saved");
-    navigate("/profile");
+    navigate("/account");
   };
 
   return (
     <>
       <TopBar title="Language & currency" />
       <main className="px-5 pt-4 pb-32">
-        <Link to="/profile" className="inline-flex items-center gap-1 text-xs text-muted-foreground mb-4">
+        <Link to="/account" className="inline-flex items-center gap-1 text-xs text-muted-foreground mb-4">
           <ChevronLeft className="w-3.5 h-3.5" /> Back
         </Link>
 

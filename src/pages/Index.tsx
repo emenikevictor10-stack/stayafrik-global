@@ -1,10 +1,10 @@
 import { useRole } from "@/contexts/RoleContext";
-import Explore from "./client/Explore";
+import Home from "./client/Home";
 import { AgentDashboard } from "./agent/AgentDashboard";
 
 const Index = () => {
   const { role } = useRole();
-  return role === "agent" ? <AgentDashboard /> : <Explore />;
+  return role === "agent" ? <AgentDashboard /> : <Home />;
 };
 
 export default Index;

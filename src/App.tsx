@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { useState } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,6 +13,7 @@ import OAuthConsent from "./pages/auth/OAuthConsent";
 import { MobileShell } from "@/components/shell/MobileShell";
 import Index from "./pages/Index";
 import Explore from "./pages/client/Explore";
+import Saved from "./pages/client/Saved";
 import PropertyDetail from "./pages/client/PropertyDetail";
 import Bookings from "./pages/client/Bookings";
 import BookProperty from "./pages/client/BookProperty";
@@ -97,7 +98,8 @@ const App = () => (
                 {/* Public routes — explore is the default page, browsable without login */}
                 <Route element={<PinGate><MobileShell /></PinGate>}>
                   <Route path="/" element={<Index />} />
-                  <Route path="/explore" element={<Index />} />
+                  <Route path="/explore" element={<Explore />} />
+                  <Route path="/saved" element={<Saved />} />
                   <Route path="/property/:id" element={<PropertyDetail />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsConditions />} />
@@ -110,12 +112,14 @@ const App = () => (
                     <Route path="/become-host" element={<BecomeHost />} />
                     <Route path="/listings/new" element={<NewListing />} />
                     <Route path="/listings/:id/edit" element={<EditListing />} />
-                    <Route path="/bookings" element={<ThirdTab />} />
+                    <Route path="/trips" element={<ThirdTab />} />
+                    <Route path="/bookings" element={<Navigate to="/trips" replace />} />
                     <Route path="/escrow" element={<ThirdTab />} />
                     <Route path="/escrow/:code" element={<EscrowDetail />} />
                     <Route path="/messages" element={<Messages />} />
                     <Route path="/messages/:agentId" element={<ChatThread />} />
-                    <Route path="/profile" element={<Profile />} />
+                    <Route path="/account" element={<Profile />} />
+                    <Route path="/profile" element={<Navigate to="/account" replace />} />
                     <Route path="/profile/edit" element={<EditProfile />} />
                     <Route path="/profile/agent" element={<AgentProfile />} />
                     <Route path="/profile/verification" element={<Verification />} />

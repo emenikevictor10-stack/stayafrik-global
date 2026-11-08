@@ -215,7 +215,7 @@ export const AgentDashboard = () => {
             <p className="text-xs text-muted-foreground mt-0.5">Switch to guest mode from your profile.</p>
           </div>
           <Link
-            to="/profile"
+            to="/account"
             className="shrink-0 text-xs font-bold text-primary"
           >
             Switch →

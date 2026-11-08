@@ -23,7 +23,7 @@ const AgentProfile = () => {
       <TopBar title="Agent profile" subtitle="Manage your public page" />
       <main className="px-5 pt-4 pb-8">
         <Link
-          to="/profile"
+          to="/account"
           className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-3"
         >
           <ChevronLeft className="w-3.5 h-3.5" /> Back to profile

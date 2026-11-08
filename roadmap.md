@@ -28,7 +28,7 @@ Keep (clashes): Paystack (not Payaza), Google sign-in + PIN (not email codes), 3
 
 - [x] P1 Report a problem + Admin Support queue (SLA 15/60 min, Is it fixed?, rating, notes, host contact, offer credit, overdue alert, 24h auto-close, menu count, overview card, trip link). Real end-to-end run waits on a paid test booking (Paystack test keys).
 - [x] P2 Design system (tokens, Figtree, scales, kit, theme switch, logo, check:ui done; per-screen badge→dot sweep continues in later phases) (§9): Figtree 400/600, blue #275f84 + orange/red tokens, size & radius scales, light default + dark in Account, dot statuses, underlined tabs, 44px targets, wordmark logo, empty/error/skeleton states, check:ui script
-- [ ] P3 App shell + navigation (§3): phone bottom nav Home/Explore/Trips/Saved/Account + drawer; PC floating dock / pinned sidebar; routes /home /search /results /stays/:id /trips /account
+- [x] P3 App shell + navigation (§3): phone bottom nav Home/Explore/Trips/Saved/Account + drawer; PC floating dock / pinned sidebar; routes /home /search /results /stays/:id /trips /account
 - [ ] P4 Admin shell (§5): 248px sidebar → 72px rail, grouped Today/Stays/People/System, counts, next-step box on every detail
 - [ ] P5 Settings + feature switches (§8): settings table + Admin Settings (markup, hold/payment windows, fee, commission, payout delay, support email, staff alerts, company, guarantee); switches (id_required, report_problem, map, holds…)
 - [ ] P6 Booking lifecycle (§4): unified statuses, booking events timeline, saved markup/commission/host payout per booking, hold 15 min + payment window, release job, overlap constraint

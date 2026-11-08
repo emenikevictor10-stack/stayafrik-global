@@ -1,3 +1,4 @@
+import { rememberViewed } from "@/hooks/useRecentlyViewed";
 import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useListing } from "@/hooks/useListings";
 import { ChevronLeft, Heart, Share2, Star, User, BadgeCheck } from "lucide-react";
@@ -11,7 +12,7 @@ import { ImageGallery } from "@/components/property/ImageGallery";
 import { ReviewsSection } from "@/components/property/ReviewsSection";
 import { NearbyServices } from "@/components/property/NearbyServices";
 import { ReserveDialog } from "@/components/property/ReserveDialog";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { useWishlist } from "@/hooks/useWishlist";
 import { useListingAccess, approxLocation } from "@/hooks/useListingAccess";
@@ -25,6 +26,7 @@ const PropertyDetail = () => {
   const { role } = useRole();
   const { session } = useAuth();
   const { data: p, loading } = useListing(id);
+  useEffect(() => { if (id) rememberViewed(id); }, [id]);
   const { has, toggle } = useWishlist();
   const [reserveOpen, setReserveOpen] = useState(false);
   const { unlocked } = useListingAccess(p?.id, p?.hostId);

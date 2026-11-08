@@ -35,7 +35,7 @@ const clientItems: Item[] = [
   { Icon: Heart, title: "Saved properties", subtitle: "Your favourite stays", to: "/explore" },
   { Icon: CreditCard, title: "Payment methods", subtitle: "Cards & escrow", to: "/profile/payments" },
   { Icon: Clock, title: "Reservations", subtitle: "Viewing holds (4h)", to: "/reservations" },
-  { Icon: ShieldCheck, title: "Escrow history", subtitle: "Past protected payments", to: "/bookings" },
+  { Icon: ShieldCheck, title: "Escrow history", subtitle: "Past protected payments", to: "/trips" },
   { Icon: Lock, title: "Unlock PIN", subtitle: "App lock & security", to: "/profile/pin" },
   { Icon: Globe, title: "Language & currency", subtitle: "Regional preferences", to: "/profile/language" },
   { Icon: LifeBuoy, title: "Your problems", subtitle: "Issues you reported during a stay", to: "/issues" },

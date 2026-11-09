@@ -29,5 +29,5 @@
 - Maps use Leaflet + OSM (not MapLibre); pins/circles use `approxPoint`/`AREA_CIRCLE_M` from `src/lib/map-pins.ts`, never exact coords. Why: free; privacy in one place.
 - Shared saved lists: members live in `wishlist_members`, joined only via `join_wishlist(token)`; member access checked by `private.is_wishlist_member`. Compare links parse only via `src/lib/compare.ts`; Compare bar renders once in `MobileShell`. Why: no recursive policies.
 - Private listing details live in `listing_private` (host RLS), read by guests only via `trip_access` once confirmed. Why: `listings` is public.
-- Blocked accounts live in `user_status` and change only via `staff_user_action`; `private.is_blocked` gates message/viewing inserts and `paystack-init` refuses payment (rules in `_shared/user-block-core.ts`). Why: one switch stops a bad actor everywhere.
-- Help guides are rows in `help_guides` (staff edit at /admin/guides, guests see published via `useGuides`, `src/data/guides.ts` is only a fallback); review replies only via `staff_review_reply`. Why: content changes need no code change.
+- Blocks: `user_status` via `staff_user_action`; `private.is_blocked` gates inserts, `paystack-init` refuses. Why: one switch.
+- Guides in `help_guides` (`useGuides`); review replies via `staff_review_reply`. Why: no code change for content.

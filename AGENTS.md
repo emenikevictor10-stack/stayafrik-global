@@ -27,7 +27,7 @@
 - Bank transfer: `paystack-init` method `bank_transfer` → `bank_transfers`; guest `submit_bank_transfer`, staff `staff_bank_transfer_action` (local → `confirm_local_payment`) or `bank-transfer-approve` (partner). Why: one confirm path.
 - Email-sending and queue database functions are service-role only; never grant them to anon/authenticated. Why: otherwise anyone could send email as us.
 - Maps use Leaflet + OSM (not MapLibre); pins/circles use `approxPoint`/`AREA_CIRCLE_M` from `src/lib/map-pins.ts`, never exact coords. Why: free; privacy in one place.
-- Shared saved lists: members live in `wishlist_members`, joined only via `join_wishlist(token)`; member access checked by `private.is_wishlist_member`. Compare links parse only via `src/lib/compare.ts`; Compare bar renders once in `MobileShell`. Why: no recursive policies.
-- Private listing details live in `listing_private` (host RLS), read by guests only via `trip_access` once confirmed. Why: `listings` is public.
+- Shared lists: `wishlist_members` via `join_wishlist`, checked by `private.is_wishlist_member`; compare links via `src/lib/compare.ts`. Why: no recursive policies.
+- `listing_private` read by guests only via `trip_access`. Why: `listings` is public.
 - Blocks: `user_status` via `staff_user_action`; `private.is_blocked` gates inserts, `paystack-init` refuses. Why: one switch.
 - Guides in `help_guides` (`useGuides`); review replies via `staff_review_reply`. Why: no code change for content.

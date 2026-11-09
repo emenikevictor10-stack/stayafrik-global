@@ -232,6 +232,13 @@
       "when": 1794208832420,
       "tag": "0032_fix_invoice_lines",
       "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1794208950622,
+      "tag": "0033_split_payments_addons",
+      "breakpoints": true
     }
   ]
 }

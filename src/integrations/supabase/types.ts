@@ -14,6 +14,108 @@ export type Database = {
   }
   public: {
     Tables: {
+      addon_orders: {
+        Row: {
+          addon_id: string
+          addon_name: string
+          amount_kobo: number
+          arranged_at: string | null
+          arranged_by: string | null
+          booking_id: string
+          created_at: string
+          guest_id: string
+          id: string
+          note: string | null
+          paid_at: string | null
+          qty: number
+          reference: string | null
+          staff_note: string | null
+          status: string
+        }
+        Insert: {
+          addon_id: string
+          addon_name: string
+          amount_kobo: number
+          arranged_at?: string | null
+          arranged_by?: string | null
+          booking_id: string
+          created_at?: string
+          guest_id: string
+          id?: string
+          note?: string | null
+          paid_at?: string | null
+          qty: number
+          reference?: string | null
+          staff_note?: string | null
+          status?: string
+        }
+        Update: {
+          addon_id?: string
+          addon_name?: string
+          amount_kobo?: number
+          arranged_at?: string | null
+          arranged_by?: string | null
+          booking_id?: string
+          created_at?: string
+          guest_id?: string
+          id?: string
+          note?: string | null
+          paid_at?: string | null
+          qty?: number
+          reference?: string | null
+          staff_note?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "addon_orders_addon_id_fkey"
+            columns: ["addon_id"]
+            isOneToOne: false
+            referencedRelation: "addons"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "addon_orders_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      addons: {
+        Row: {
+          active: boolean
+          created_at: string
+          description: string | null
+          id: string
+          name: string
+          price_kobo: number
+          sort: number
+          unit: string
+        }
+        Insert: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name: string
+          price_kobo: number
+          sort?: number
+          unit?: string
+        }
+        Update: {
+          active?: boolean
+          created_at?: string
+          description?: string | null
+          id?: string
+          name?: string
+          price_kobo?: number
+          sort?: number
+          unit?: string
+        }
+        Relationships: []
+      }
       admin_audit_log: {
         Row: {
           action: string
@@ -176,6 +278,7 @@ export type Database = {
           host_payout_kobo: number | null
           host_respond_by: string | null
           id: string
+          is_split: boolean
           listing_code: string | null
           listing_id: string | null
           markup_kobo: number | null
@@ -220,6 +323,7 @@ export type Database = {
           host_payout_kobo?: number | null
           host_respond_by?: string | null
           id?: string
+          is_split?: boolean
           listing_code?: string | null
           listing_id?: string | null
           markup_kobo?: number | null
@@ -264,6 +368,7 @@ export type Database = {
           host_payout_kobo?: number | null
           host_respond_by?: string | null
           id?: string
+          is_split?: boolean
           listing_code?: string | null
           listing_id?: string | null
           markup_kobo?: number | null
@@ -1067,6 +1172,59 @@ export type Database = {
         }
         Relationships: []
       }
+      payment_shares: {
+        Row: {
+          amount_kobo: number
+          booking_id: string
+          created_at: string
+          id: string
+          label: string | null
+          paid_at: string | null
+          payer_user_id: string | null
+          reference: string | null
+          refunded_at: string | null
+          share_no: number
+          status: string
+          token: string
+        }
+        Insert: {
+          amount_kobo: number
+          booking_id: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          paid_at?: string | null
+          payer_user_id?: string | null
+          reference?: string | null
+          refunded_at?: string | null
+          share_no: number
+          status?: string
+          token: string
+        }
+        Update: {
+          amount_kobo?: number
+          booking_id?: string
+          created_at?: string
+          id?: string
+          label?: string | null
+          paid_at?: string | null
+          payer_user_id?: string | null
+          reference?: string | null
+          refunded_at?: string | null
+          share_no?: number
+          status?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "payment_shares_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       payouts: {
         Row: {
           amount: number
@@ -1595,6 +1753,32 @@ export type Database = {
       auto_release_due_bookings: { Args: never; Returns: number }
       booking_actor: { Args: never; Returns: string }
       booking_lifecycle_tick: { Args: never; Returns: Json }
+      confirm_addon_payment: {
+        Args: { _amount_kobo: number; _reference: string }
+        Returns: {
+          addon_id: string
+          addon_name: string
+          amount_kobo: number
+          arranged_at: string | null
+          arranged_by: string | null
+          booking_id: string
+          created_at: string
+          guest_id: string
+          id: string
+          note: string | null
+          paid_at: string | null
+          qty: number
+          reference: string | null
+          staff_note: string | null
+          status: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "addon_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       confirm_local_payment: {
         Args: { _amount_kobo: number; _reference: string }
         Returns: {
@@ -1616,6 +1800,7 @@ export type Database = {
           host_payout_kobo: number | null
           host_respond_by: string | null
           id: string
+          is_split: boolean
           listing_code: string | null
           listing_id: string | null
           markup_kobo: number | null
@@ -1681,6 +1866,24 @@ export type Database = {
         }[]
       }
       generate_listing_code: { Args: never; Returns: string }
+      get_payment_share: {
+        Args: { _token: string }
+        Returns: {
+          amount_kobo: number
+          booking_id: string
+          booking_status: string
+          check_in: string
+          check_out: string
+          city: string
+          expires_at: string
+          lead_first_name: string
+          share_id: string
+          shares_paid: number
+          shares_total: number
+          status: string
+          title: string
+        }[]
+      }
       get_public_profiles: {
         Args: { _user_ids: string[] }
         Returns: {
@@ -1840,6 +2043,60 @@ export type Database = {
           read_ct: number
         }[]
       }
+      record_share_payment: {
+        Args: { _amount_kobo: number; _payer: string; _reference: string }
+        Returns: {
+          attention_reason: string | null
+          cancelled_at: string | null
+          check_in_date: string
+          check_in_time: string | null
+          check_out_date: string
+          cleaning_fee_kobo: number | null
+          completed_at: string | null
+          confirmed_at: string | null
+          created_at: string
+          discount_kobo: number | null
+          fee_kobo: number | null
+          guest_count: number | null
+          guest_id: string
+          hold_expires_at: string | null
+          host_id: string | null
+          host_payout_kobo: number | null
+          host_respond_by: string | null
+          id: string
+          is_split: boolean
+          listing_code: string | null
+          listing_id: string | null
+          markup_kobo: number | null
+          nightly_breakdown: Json | null
+          paid_at: string | null
+          partner_address: string | null
+          partner_city: string | null
+          partner_image: string | null
+          partner_title: string | null
+          payment_expires_at: string | null
+          payment_reference: string | null
+          rayprop_hold_expires_at: string | null
+          rayprop_hold_id: string | null
+          rayprop_listing_id: string | null
+          rayprop_quote_id: string | null
+          rayprop_quote_total_kobo: number | null
+          rayprop_reservation_id: string | null
+          released_at: string | null
+          review_prompted_at: string | null
+          source: string
+          status: string
+          subtotal_kobo: number | null
+          total_price: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "bookings"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       refresh_location_counts: { Args: never; Returns: undefined }
       retag_local_listings: { Args: never; Returns: number }
       search_locations: {
@@ -1878,6 +2135,10 @@ export type Database = {
         Returns: undefined
       }
       setting_int: { Args: { _default: number; _key: string }; Returns: number }
+      staff_addon_action: {
+        Args: { _action: string; _note: string; _order_id: string }
+        Returns: undefined
+      }
       staff_booking_action: {
         Args: { _action: string; _booking_id: string; _note?: string }
         Returns: undefined

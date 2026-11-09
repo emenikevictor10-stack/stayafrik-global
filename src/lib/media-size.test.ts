@@ -26,3 +26,13 @@ describe("partnerVideos", () => {
     expect(partnerVideos({ listing_videos: [] })).toBeUndefined();
   });
 });
+
+describe("video-only partner stays", () => {
+  it("use the video preview, never a stock photo", async () => {
+    const { raypropToProperty } = await import("./rayprop-map");
+    const p = raypropToProperty({ unique_listing_id: "ABC", listing_images: [], listing_videos: [{ video_url: "v.mp4", thumbnail_url: "t.jpg" }] }, "stock.jpg")!;
+    expect(p.image).toBe("t.jpg");
+    expect(p.images).toEqual(["t.jpg"]);
+    expect(p.videoOnly).toBe(true);
+  });
+});

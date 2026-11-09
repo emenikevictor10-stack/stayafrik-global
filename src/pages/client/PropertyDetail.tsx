@@ -27,6 +27,7 @@ import { quoteLocalStay } from "../../../supabase/functions/_shared/booking-core
 import { koboToNaira } from "@/lib/rayprop-map";
 import { factualTitle, essentials, cancellationLines } from "@/lib/stay-facts";
 import { Images, Play } from "lucide-react";
+import { StayVideos } from "@/components/property/StayVideos";
 
 
 /** Live price for the searched dates (local stays): nightly breakdown, cleaning, discounts, fee, total. */
@@ -150,13 +151,14 @@ const PropertyDetail = () => {
       />
       {/* Image header */}
       <div className="relative">
-        <ImageGallery images={p.images && p.images.length ? p.images : [p.image]} alt={factualTitle(p)} />
-        {!!p.videos?.length && (
+        {p.videoOnly && p.videos ? <div className="pt-16 px-4 lg:px-0 max-w-[960px] mx-auto"><StayVideos videos={p.videos.slice(0, 1)} /></div>
+          : <ImageGallery images={p.images && p.images.length ? p.images : [p.image]} alt={factualTitle(p)} />}
+        {!!p.videos?.length && !(p.videoOnly && p.videos.length === 1) && (
           <Link to={`/stays/${p.id}/media`} className="absolute bottom-3 left-3 z-10 inline-flex items-center gap-1.5 min-h-11 px-3.5 rounded-lg bg-background/90 border border-border text-[13px] font-semibold">
             <Play className="w-4 h-4 fill-current" aria-hidden /> Video
           </Link>
         )}
-        {(p.images?.length || 0) > 1 && (
+        {!p.videoOnly && (p.images?.length || 0) > 1 && (
           <Link to={`/stays/${p.id}/media`} className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 min-h-11 px-3.5 rounded-lg bg-background/90 border border-border text-[13px] font-semibold">
             <Images className="w-4 h-4" aria-hidden /> All {p.images!.length} photos
           </Link>

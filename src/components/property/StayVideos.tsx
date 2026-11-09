@@ -26,7 +26,7 @@ const VideoTile = ({ v, n }: { v: StayVideo; n: number }) => {
 };
 
 export const StayVideos = ({ videos }: { videos: StayVideo[] }) => (
-  <div className="grid gap-3 md:grid-cols-2">
+  <div className={videos.length > 1 ? "grid gap-3 md:grid-cols-2" : "grid"}>
     {videos.map((v, i) => <VideoTile key={(v.url || v.youtube || "") + i} v={v} n={i + 1} />)}
   </div>
 );

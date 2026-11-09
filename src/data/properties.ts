@@ -49,6 +49,8 @@ export type Property = {
   listingCode?: string;
   /** Walkthrough videos (partner stays). Loaded only when played. */
   videos?: StayVideo[];
+  /** Partner stay with a video but no photos. */
+  videoOnly?: boolean;
 };
 
 export type StayVideo = { url?: string; youtube?: string; poster?: string; duration?: number };

@@ -66,12 +66,15 @@ const partnerAmenities = (raw: Record<string, any>) => {
   return out;
 };
 
-export const raypropToProperty = (raw: Record<string, any>, fallbackImage: string): Property | null => {
+export const raypropToProperty = (raw: Record<string, any>, _fallbackImage?: string): Property | null => {
   const rawId = str(raw.unique_listing_id || raw.id || raw.listing_id);
   if (!rawId) return null;
   const imgs = Array.isArray(raw.listing_images) ? [...raw.listing_images] : [];
   imgs.sort((a: any, b: any) => Number(!!b?.is_primary) - Number(!!a?.is_primary));
-  const images = imgs.map((i: any) => str(i?.image_url)).filter(Boolean);
+  const photos = imgs.map((i: any) => str(i?.image_url)).filter(Boolean);
+  const videos = partnerVideos(raw);
+  // Video-only stays: use the video's own preview image, never a stock photo.
+  const images = photos.length ? photos : (videos || []).map((v) => v.poster || "").filter(Boolean);
   const priceNum = koboToNaira(raw.price_per_night);
   const city = str(raw.city);
   const hood = str(raw.neighborhood);
@@ -92,8 +95,9 @@ export const raypropToProperty = (raw: Record<string, any>, fallbackImage: strin
     agentTag: "Verified Partner",
     agentEmoji: "✓",
     emoji: "🏖️",
-    image: images[0] || fallbackImage,
-    images: images.length ? images : [fallbackImage],
+    image: images[0] || "",
+    images,
+    videoOnly: !photos.length && !!videos?.length,
     rating: num(raw.rating),
     reviews: num(raw.reviews_count),
     desc: str(raw.description),
@@ -110,7 +114,7 @@ export const raypropToProperty = (raw: Record<string, any>, fallbackImage: strin
     checkOutTime: hhmm(raw.check_out_time) || undefined,
     houseRules: list(raw.house_rules),
     createdAt: str(raw.created_at) || undefined,
-    videos: partnerVideos(raw),
+    videos,
   };
 };
 

@@ -168,6 +168,14 @@ Deno.serve(async (req) => {
 
     if (action === "search" || action === "places") {
       if (!configured) return json(200, { data: [], disabled: true });
+      // Fast path: one stay by id reads one saved row instead of the whole catalogue.
+      if (action === "search" && body?.listing_id && !catalogue) {
+        const id = text(stripRp(String(body.listing_id)), 120);
+        if (id) {
+          const { data: row } = await admin().from("partner_catalogue").select("record").eq("rayprop_listing_id", id).maybeSingle();
+          if (row?.record) return json(200, { data: [row.record], meta: { total: 1, hasMore: false } });
+        }
+      }
       const all = await loadCatalogue();
       if (action === "places") {
         const tally = new Map<string, { city: string; state: string; area: string; count: number }>();

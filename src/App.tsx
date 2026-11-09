@@ -1,93 +1,106 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { useEffect } from "react";
+import { lazy, Suspense, useEffect } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { RoleProvider, useRole } from "@/contexts/RoleContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import Auth from "./pages/auth/Auth";
-import Welcome from "./pages/auth/Welcome";
-import ResetPassword from "./pages/auth/ResetPassword";
-import OAuthConsent from "./pages/auth/OAuthConsent";
 import { MobileShell } from "@/components/shell/MobileShell";
 import Index from "./pages/Index";
 import Explore from "./pages/client/Explore";
-import Saved from "./pages/client/Saved";
 import PropertyDetail from "./pages/client/PropertyDetail";
-import Bookings from "./pages/client/Bookings";
-import BookProperty from "./pages/client/BookProperty";
-import BookingConfirm from "./pages/client/BookingConfirm";
-import Listings from "./pages/agent/Listings";
-import BecomeHost from "./pages/agent/BecomeHost";
-import NewListing from "./pages/agent/NewListing";
-import EditListing from "./pages/agent/EditListing";
-import HostHome from "./pages/host/HostHome";
-import HostRequests from "./pages/host/HostRequests";
-import HostLocation from "./pages/host/HostLocation";
-import HostBookings from "./pages/host/HostBookings";
-import HostPayouts from "./pages/host/HostPayouts";
-import HostCalendar from "./pages/host/HostCalendar";
-import ListYourPlace from "./pages/host/ListYourPlace";
-import EscrowDetail from "./pages/agent/EscrowDetail";
-import AgentProfile from "./pages/agent/AgentProfile";
-import Verification from "./pages/agent/Verification";
-import Commission from "./pages/agent/Commission";
-import PayoutAccount from "./pages/agent/PayoutAccount";
-import Performance from "./pages/agent/Performance";
-import AdminListings from "./pages/admin/AdminListings";
-import AdminDashboard from "./pages/admin/AdminDashboard";
-import AdminUsers from "./pages/admin/AdminUsers";
-import AdminUserDetail from "./pages/admin/AdminUserDetail";
-import AdminBookings from "./pages/admin/AdminBookings";
-import AdminPartnerBookings from "./pages/admin/AdminPartnerBookings";
-import AdminReservations from "./pages/admin/AdminReservations";
-import AdminReviews from "./pages/admin/AdminReviews";
-import AdminGuides from "./pages/admin/AdminGuides";
-import AdminInsights from "./pages/admin/AdminInsights";
-import { AdminAddons, AdminDateChanges } from "./pages/admin/AdminExtras";
-import AdminBankTransfers from "./pages/admin/AdminBankTransfers";
-import TransferPay from "./pages/client/TransferPay";
-import { AdminPayments, AdminMessages, AdminHealth, AdminTeam } from "./pages/admin/AdminOps";
-import AdminHosts from "./pages/admin/AdminHosts";
-import AdminPayouts from "./pages/admin/AdminPayouts";
-import AdminKyc from "./pages/admin/AdminKyc";
-import AdminAudit from "./pages/admin/AdminAudit";
-import AdminSettings from "./pages/admin/AdminSettings";
-import AdminLocationAudit from "./pages/admin/AdminLocationAudit";
-import AdminSupport from "./pages/admin/AdminSupport";
-import ReportProblem from "./pages/client/ReportProblem";
-import IssueThread from "./pages/client/IssueThread";
-import MyIssues from "./pages/client/MyIssues";
 import { RequireAdmin } from "@/components/admin/RequireAdmin";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import Messages from "./pages/shared/Messages";
-import ChatThread from "./pages/shared/ChatThread";
-import Profile from "./pages/shared/Profile";
-import EditProfile from "./pages/shared/EditProfile";
-import LanguageCurrency from "./pages/shared/LanguageCurrency";
-import Help from "./pages/shared/Help";
-import PrivacyPolicy from "./pages/shared/PrivacyPolicy";
-import TermsConditions from "./pages/shared/TermsConditions";
-import Reservations from "./pages/shared/Reservations";
-import PaymentMethods from "./pages/client/PaymentMethods";
-import PinSettings from "./pages/shared/PinSettings";
-import DeleteAccount from "./pages/shared/DeleteAccount";
 import { PinGate } from "@/components/auth/PinGate";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import NotFound from "./pages/NotFound";
-import StayMedia from "./pages/client/StayMedia";
-import SharedList from "./pages/client/SharedList";
-import Compare from "./pages/client/Compare";
-import AreaPage from "./pages/client/AreaPage";
-import { TripDetail, TripCancel, TripReview, TripInvoice, FindBooking, TripMove, TripGuests } from "./pages/client/TripPages";
-import GuestDetails from "./pages/client/GuestDetails";
-import { PayShare } from "./pages/client/SplitAddons";
-import { GuidesIndex, GuidePage } from "./pages/client/Guides";
 import { syncWishlist } from "@/hooks/useWishlist";
 import { useAuth } from "@/contexts/AuthContext";
 
-const queryClient = new QueryClient();
+const Auth = lazy(() => import("./pages/auth/Auth"));
+const Welcome = lazy(() => import("./pages/auth/Welcome"));
+const ResetPassword = lazy(() => import("./pages/auth/ResetPassword"));
+const OAuthConsent = lazy(() => import("./pages/auth/OAuthConsent"));
+const Saved = lazy(() => import("./pages/client/Saved"));
+const Bookings = lazy(() => import("./pages/client/Bookings"));
+const BookProperty = lazy(() => import("./pages/client/BookProperty"));
+const BookingConfirm = lazy(() => import("./pages/client/BookingConfirm"));
+const Listings = lazy(() => import("./pages/agent/Listings"));
+const BecomeHost = lazy(() => import("./pages/agent/BecomeHost"));
+const NewListing = lazy(() => import("./pages/agent/NewListing"));
+const EditListing = lazy(() => import("./pages/agent/EditListing"));
+const HostHome = lazy(() => import("./pages/host/HostHome"));
+const HostRequests = lazy(() => import("./pages/host/HostRequests"));
+const HostLocation = lazy(() => import("./pages/host/HostLocation"));
+const HostBookings = lazy(() => import("./pages/host/HostBookings"));
+const HostPayouts = lazy(() => import("./pages/host/HostPayouts"));
+const HostCalendar = lazy(() => import("./pages/host/HostCalendar"));
+const ListYourPlace = lazy(() => import("./pages/host/ListYourPlace"));
+const EscrowDetail = lazy(() => import("./pages/agent/EscrowDetail"));
+const AgentProfile = lazy(() => import("./pages/agent/AgentProfile"));
+const Verification = lazy(() => import("./pages/agent/Verification"));
+const Commission = lazy(() => import("./pages/agent/Commission"));
+const PayoutAccount = lazy(() => import("./pages/agent/PayoutAccount"));
+const Performance = lazy(() => import("./pages/agent/Performance"));
+const AdminListings = lazy(() => import("./pages/admin/AdminListings"));
+const AdminDashboard = lazy(() => import("./pages/admin/AdminDashboard"));
+const AdminUsers = lazy(() => import("./pages/admin/AdminUsers"));
+const AdminUserDetail = lazy(() => import("./pages/admin/AdminUserDetail"));
+const AdminBookings = lazy(() => import("./pages/admin/AdminBookings"));
+const AdminPartnerBookings = lazy(() => import("./pages/admin/AdminPartnerBookings"));
+const AdminReservations = lazy(() => import("./pages/admin/AdminReservations"));
+const AdminReviews = lazy(() => import("./pages/admin/AdminReviews"));
+const AdminGuides = lazy(() => import("./pages/admin/AdminGuides"));
+const AdminInsights = lazy(() => import("./pages/admin/AdminInsights"));
+const AdminAddons = lazy(() => import("./pages/admin/AdminExtras").then((m) => ({ default: m.AdminAddons })));
+const AdminDateChanges = lazy(() => import("./pages/admin/AdminExtras").then((m) => ({ default: m.AdminDateChanges })));
+const AdminBankTransfers = lazy(() => import("./pages/admin/AdminBankTransfers"));
+const TransferPay = lazy(() => import("./pages/client/TransferPay"));
+const AdminPayments = lazy(() => import("./pages/admin/AdminOps").then((m) => ({ default: m.AdminPayments })));
+const AdminMessages = lazy(() => import("./pages/admin/AdminOps").then((m) => ({ default: m.AdminMessages })));
+const AdminHealth = lazy(() => import("./pages/admin/AdminOps").then((m) => ({ default: m.AdminHealth })));
+const AdminTeam = lazy(() => import("./pages/admin/AdminOps").then((m) => ({ default: m.AdminTeam })));
+const AdminHosts = lazy(() => import("./pages/admin/AdminHosts"));
+const AdminPayouts = lazy(() => import("./pages/admin/AdminPayouts"));
+const AdminKyc = lazy(() => import("./pages/admin/AdminKyc"));
+const AdminAudit = lazy(() => import("./pages/admin/AdminAudit"));
+const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminLocationAudit = lazy(() => import("./pages/admin/AdminLocationAudit"));
+const AdminSupport = lazy(() => import("./pages/admin/AdminSupport"));
+const ReportProblem = lazy(() => import("./pages/client/ReportProblem"));
+const IssueThread = lazy(() => import("./pages/client/IssueThread"));
+const MyIssues = lazy(() => import("./pages/client/MyIssues"));
+const Messages = lazy(() => import("./pages/shared/Messages"));
+const ChatThread = lazy(() => import("./pages/shared/ChatThread"));
+const Profile = lazy(() => import("./pages/shared/Profile"));
+const EditProfile = lazy(() => import("./pages/shared/EditProfile"));
+const LanguageCurrency = lazy(() => import("./pages/shared/LanguageCurrency"));
+const Help = lazy(() => import("./pages/shared/Help"));
+const PrivacyPolicy = lazy(() => import("./pages/shared/PrivacyPolicy"));
+const TermsConditions = lazy(() => import("./pages/shared/TermsConditions"));
+const Reservations = lazy(() => import("./pages/shared/Reservations"));
+const PaymentMethods = lazy(() => import("./pages/client/PaymentMethods"));
+const PinSettings = lazy(() => import("./pages/shared/PinSettings"));
+const DeleteAccount = lazy(() => import("./pages/shared/DeleteAccount"));
+const StayMedia = lazy(() => import("./pages/client/StayMedia"));
+const SharedList = lazy(() => import("./pages/client/SharedList"));
+const Compare = lazy(() => import("./pages/client/Compare"));
+const AreaPage = lazy(() => import("./pages/client/AreaPage"));
+const TripDetail = lazy(() => import("./pages/client/TripPages").then((m) => ({ default: m.TripDetail })));
+const TripCancel = lazy(() => import("./pages/client/TripPages").then((m) => ({ default: m.TripCancel })));
+const TripReview = lazy(() => import("./pages/client/TripPages").then((m) => ({ default: m.TripReview })));
+const TripInvoice = lazy(() => import("./pages/client/TripPages").then((m) => ({ default: m.TripInvoice })));
+const FindBooking = lazy(() => import("./pages/client/TripPages").then((m) => ({ default: m.FindBooking })));
+const TripMove = lazy(() => import("./pages/client/TripPages").then((m) => ({ default: m.TripMove })));
+const TripGuests = lazy(() => import("./pages/client/TripPages").then((m) => ({ default: m.TripGuests })));
+const GuestDetails = lazy(() => import("./pages/client/GuestDetails"));
+const PayShare = lazy(() => import("./pages/client/SplitAddons").then((m) => ({ default: m.PayShare })));
+const GuidesIndex = lazy(() => import("./pages/client/Guides").then((m) => ({ default: m.GuidesIndex })));
+const GuidePage = lazy(() => import("./pages/client/Guides").then((m) => ({ default: m.GuidePage })));
+
+const queryClient = new QueryClient({ defaultOptions: { queries: { staleTime: 60_000, refetchOnWindowFocus: false } } });
+const PageFallback = () => <div className="min-h-[50vh]" aria-busy="true" />;
 
 const ThirdTab = () => {
   const { role } = useRole();
@@ -111,6 +124,7 @@ const App = () => (
           <PushBridge />
           <WishlistBridge />
           <BrowserRouter>
+              <Suspense fallback={<PageFallback />}>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
@@ -228,6 +242,7 @@ const App = () => (
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </Suspense>
           </BrowserRouter>
         </RoleProvider>
       </AuthProvider>

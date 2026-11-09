@@ -37,7 +37,7 @@ Keep (clashes): Paystack (not Payaza), Google sign-in + PIN (not email codes), 3
 - [x] P7 Own-inventory rate calendar (§5): base/weekend rates, date prices, blocks, min/max nights, cleaning fee, weekly/monthly discounts, instant book vs request-to-book (24h host accept, auto refund), iCal import (host bookings read access added; host calendar lives on Edit listing until P8)
 - [x] P8 Host portal (§3): /host home, listings, calendar, requests, bookings (first name only pre-confirm), payouts; /list-your-place. Reconfirmed: all host pages load signed in with no errors.
 - [x] P9 Admin Hosts + Payouts (§5): host table, approve/suspend, bank verify (audited), payouts due day after check-in, hold with reason, mark paid with ref, CSV. Done: /admin/hosts, staff_host_action/staff_payout_action, payout_block_reason gate, host hold/ref view. Real transfer waits on Paystack test keys.
-- [ ] P10 Search & results (§3): /results sort + filters (power, water, verified, rating 4+), 12/page auto-load, no-result suggestions; card spec (no title, heart, compare)
+- [x] P10 Search & results (§3): /results sort + filters (price, beds, type, power, water, verified, rating 4+) in the link, 12/page auto-load + More stays, no-result nearby areas + nearest dates; PRD card (no title, heart, compare kept on device until P13)
 - [ ] P11 Map & Explore (§3): map with all price pins, approximate circles only
 - [ ] P12 Stay page (§3): factual title + source title, listing ID, nightly breakdown quote, power/water/security, rules, policy, area circle, gallery /stays/:id/media
 - [ ] P13 Saved lists + compare (§3): hearts, wishlists, share links, compare up to 3

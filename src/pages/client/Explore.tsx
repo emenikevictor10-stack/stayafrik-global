@@ -2,7 +2,11 @@ import { useLocations } from "@/hooks/useLocations";
 import { TopBar } from "@/components/shell/TopBar";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { type Property } from "@/data/properties";
-import { Map as MapIcon, List as ListIcon, X, Sparkles, Wallet, Star, Users, Zap, Laptop, Gem, type LucideIcon } from "lucide-react";
+import { Map as MapIcon, List as ListIcon, X, Wallet, Star, Users, Zap, BadgeCheck, SlidersHorizontal, type LucideIcon } from "lucide-react";
+import { FiltersSheet } from "@/components/search/FiltersSheet";
+import { Skeleton, EmptyState, Button } from "@/ui/kit";
+import { supabase } from "@/integrations/supabase/client";
+import { SORTS, PAGE_SIZE, applyFilters, sortStays, parseFilters, writeFilters, activeFilterCount, nearestFreeStart, addDays, emptyFilters, type Filters, type SortKey } from "@/lib/results";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -29,30 +33,17 @@ const distKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }
   return 2 * R * Math.asin(Math.sqrt(s));
 };
 
-type SmartFilter = "budget" | "toprated" | "family" | "power" | "workstay" | "luxury";
-
-const SMART_FILTERS: { key: SmartFilter; label: string; Icon: LucideIcon; hint: string }[] = [
-  { key: "budget", label: "Budget friendly", Icon: Wallet, hint: "Under ₦100k / night" },
-  { key: "toprated", label: "Top rated", Icon: Star, hint: "4.5+ rating" },
-  { key: "family", label: "Family size", Icon: Users, hint: "3+ bedrooms" },
-  { key: "power", label: "Never dark", Icon: Zap, hint: "Generator / inverter" },
-  { key: "workstay", label: "Work stay", Icon: Laptop, hint: "Fast Wi-Fi" },
-  { key: "luxury", label: "Luxury", Icon: Gem, hint: "Premium homes" },
+/** Quick chips: shortcuts into the same filters as the Filters sheet. */
+const QUICK: { key: string; label: string; Icon: LucideIcon; on: (f: Filters) => boolean; flip: (f: Filters) => Filters }[] = [
+  { key: "budget", label: "Under ₦100k", Icon: Wallet, on: (f) => f.maxPrice === 100000, flip: (f) => ({ ...f, maxPrice: f.maxPrice === 100000 ? undefined : 100000 }) },
+  { key: "r4", label: "Rated 4+", Icon: Star, on: (f) => f.rating4, flip: (f) => ({ ...f, rating4: !f.rating4 }) },
+  { key: "family", label: "3+ bedrooms", Icon: Users, on: (f) => f.beds === 3, flip: (f) => ({ ...f, beds: f.beds === 3 ? undefined : 3 }) },
+  { key: "power", label: "Backup power", Icon: Zap, on: (f) => f.power.length > 0, flip: (f) => ({ ...f, power: f.power.length ? [] : ["24h", "generator", "inverter", "solar"] }) },
+  { key: "verified", label: "Verified", Icon: BadgeCheck, on: (f) => f.verified, flip: (f) => ({ ...f, verified: !f.verified }) },
 ];
 
 const hasAmenity = (p: Property, words: string[]) =>
   p.amenities.some((a) => words.some((w) => a.label.toLowerCase().includes(w)));
-
-const matchesSmart = (p: Property, f: SmartFilter) => {
-  switch (f) {
-    case "budget": return p.priceNum > 0 && p.priceNum <= 100000;
-    case "toprated": return p.rating >= 4.5;
-    case "family": return p.beds >= 3 || hasAmenity(p, ["family friendly"]);
-    case "power": return hasAmenity(p, ["generator", "inverter", "solar", "power", "electricity"]);
-    case "workstay": return hasAmenity(p, ["wi-fi", "wifi", "internet"]);
-    case "luxury": return p.priceNum >= 200000 || hasAmenity(p, ["pool", "gym", "swimming pool", "hot tub", "cinema"]);
-  }
-};
 
 /** Search area: desktop pill + compact sticky bar, or phone pill + full-screen sheet. */
 const ExploreSearch = ({ mapToggle }: { mapToggle: React.ReactNode }) => {
@@ -115,9 +106,12 @@ const Explore = () => {
   const [params, setParams] = useSearchParams();
   const search = useMemo(() => parseSearch(params), [params]);
   const q = search.where;
-  const applySearch = (s: SearchState) => setParams(serializeSearch(s));
+  const filters = useMemo(() => parseFilters(params), [params]);
+  const setFilters = (f: Filters) => setParams(writeFilters(params, f), { replace: true });
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [shown, setShown] = useState(PAGE_SIZE);
+  const applySearch = (s: SearchState) => setParams(writeFilters(serializeSearch(s), filters));
   const setQ = (where: string) => applySearch({ ...search, where });
-  const [smart, setSmart] = useState<SmartFilter[]>([]);
   const [view, setView] = useState<"list" | "map">("list");
   const { features } = useSettings();
   const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
@@ -142,30 +136,26 @@ const Explore = () => {
   // Auto-load more partner stays as the guest scrolls near the bottom
   useEffect(() => {
     const el = sentinelRef.current;
-    if (!el || !hasMore) return;
+    if (!el || !(hasMore || moreLocal)) return;
     const obs = new IntersectionObserver((entries) => {
-      if (entries.some((e) => e.isIntersecting)) loadMore();
-    }, { rootMargin: "600px" });
+      if (entries.some((e) => e.isIntersecting)) showMore();
+    }, { rootMargin: "400px" });
     obs.observe(el);
     return () => obs.disconnect();
-  }, [hasMore, loadMore]);
+  });
 
-  const toggleSmart = (k: SmartFilter) =>
-    setSmart((s) => (s.includes(k) ? s.filter((x) => x !== k) : [...s, k]));
 
   const places = useMemo(() => buildLocationIndex(properties), [properties]);
 
   // While a place search is still fetching partner stays, show the loading cards instead of "no results".
   const loading = listLoading || (searching && !!(picked || q));
-  const { list, fallbackCity } = useMemo(() => {
+  const { base, fallbackCity } = useMemo(() => {
     const shortlets = properties.filter((p) => p.type === "Shortlet");
     // Place picked from the list → match by place (Lekki includes Chevron); partner stays already come filtered by place.
     const { results, fallbackCity } = picked
       ? { results: shortlets.filter((p) => (p.source === "rayprop" ? true : !!p.placeIds?.includes(picked.id))), fallbackCity: null as string | null }
       : searchProperties(shortlets, q);
-    let out = results.filter((p) => smart.every((f) => matchesSmart(p, f)));
-    if (smart.includes("budget")) out = [...out].sort((a, b) => a.priceNum - b.priceNum);
-    else if (smart.includes("toprated")) out = [...out].sort((a, b) => b.rating - a.rating);
+    let out = results;
     if (nearMe) {
       out = out
         .map((p) => ({ p, d: distKm(nearMe, { lat: p.lat, lng: p.lng }) }))
@@ -176,13 +166,45 @@ const Explore = () => {
     if (g) out = out.filter((p) => fitsGuests(p, g));
     if (search.pets) out = out.filter((p) => hasAmenity(p, ["pet"]));
     if (search.bedrooms) out = out.filter((p) => (p.beds || 0) >= search.bedrooms);
-    if (search.mode === "flexible" && !smart.length && !nearMe) out = [...out].sort((a, b) => (a.priceNum || Infinity) - (b.priceNum || Infinity));
-    return { list: out, fallbackCity };
-  }, [properties, q, smart, nearMe, search, picked]);
+    if (search.mode === "flexible" && !nearMe) out = [...out].sort((a, b) => (a.priceNum || Infinity) - (b.priceNum || Infinity));
+    return { base: out, fallbackCity };
+  }, [properties, q, nearMe, search, picked]);
+  const sortBy = (l: Property[], f: Filters) => (f.sort === "recommended" ? l : sortStays(l, f.sort));
+  const list = useMemo(() => sortBy(applyFilters(base, filters), filters), [base, filters]);
+  const countFor = (f: Filters) => applyFilters(base, f).length;
+  const filterKey = params.toString();
+  useEffect(() => setShown(PAGE_SIZE), [filterKey]);
+  // Only the stays on screen (plus the next page) get a live date check.
+  const checkList = useMemo(() => list.slice(0, shown + PAGE_SIZE), [list, shown]);
 
-  const { unavailable, checking } = useSearchAvailability(list, search.mode === "dates" ? search.checkIn : undefined, search.mode === "dates" ? search.checkOut : undefined, search.flex);
+  const { unavailable, checking } = useSearchAvailability(checkList, search.mode === "dates" ? search.checkIn : undefined, search.mode === "dates" ? search.checkOut : undefined, search.flex);
   const hints = usePriceHints(useMemo(() => (q ? list.filter((p) => p.source === "rayprop") : []), [list, q]), q);
-  const visible = useMemo(() => list.filter((p) => !unavailable.has(p.id)), [list, unavailable]);
+  const available = useMemo(() => list.filter((p) => !unavailable.has(p.id)), [list, unavailable]);
+  const visible = useMemo(() => available.slice(0, shown), [available, shown]);
+  const moreLocal = available.length > shown;
+  const showMore = () => { if (moreLocal) setShown((n) => n + PAGE_SIZE); else if (hasMore) loadMore(); };
+  const nFilters = activeFilterCount(filters);
+
+  // No results: sibling areas with stays, and nearest open dates for local stays.
+  const nearbyAreas = useMemo(() => {
+    if (!picked) return [];
+    const parent = picked.type === "state" ? null : picked.parent_id;
+    return allPlaces.filter((l) => l.id !== picked.id && (parent ? l.parent_id === parent : l.parent_id === picked.id) && (l as { listing_count?: number }).listing_count! > 0).slice(0, 6);
+  }, [picked, allPlaces]);
+  const [altDates, setAltDates] = useState<string | null>(null);
+  const datesKey = `${search.checkIn}|${search.checkOut}|${list.length}|${available.length}`;
+  useEffect(() => {
+    setAltDates(null);
+    if (search.mode !== "dates" || !search.checkIn || !search.checkOut || available.length || !list.length || checking) return;
+    const local = list.filter((p) => p.source !== "rayprop").slice(0, 8);
+    if (!local.length) return;
+    let off = false;
+    const n = nightsOf(search);
+    const today = new Date().toISOString().slice(0, 10);
+    Promise.all(local.map((p) => supabase.rpc("listing_booked_ranges", { _listing_id: p.id }).then((r) => nearestFreeStart((r.data as { check_in: string; check_out: string }[]) || [], search.checkIn!, n, today))))
+      .then((starts) => { if (off) return; const best = starts.filter(Boolean).sort((a, b) => Math.abs(+new Date(a!) - +new Date(search.checkIn!)) - Math.abs(+new Date(b!) - +new Date(search.checkIn!)))[0]; setAltDates(best || null); });
+    return () => { off = true; };
+  }, [datesKey, checking]); // eslint-disable-line react-hooks/exhaustive-deps
   const nights = nightsOf(search);
   const hasSearch = !!(q || search.checkIn || search.months.length || guestCount(search) || search.pets || search.bedrooms);
   const heading = picked ? `Stays in ${picked.name}${pickedParent && picked.type !== "state" ? `, ${pickedParent.name}` : ""}` : q ? `Stays matching "${q}"` : "";
@@ -220,36 +242,31 @@ const Explore = () => {
           </button>
         )}
 
-        {/* AI-optimised quick filters */}
-        <div className="flex gap-2 overflow-x-auto scrollbar-hide -mx-5 px-5 mt-4 pb-1">
-          <button
-            onClick={() => setSmart([])}
-            className={cn(
-              "shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold border transition-colors",
-              smart.length === 0
-                ? "bg-primary text-primary-foreground border-primary"
-                : "bg-card text-muted-foreground border-border",
-            )}
-          >
-            <Sparkles className="w-3.5 h-3.5" aria-hidden /> All
+        {/* Filters, quick shortcuts and sort */}
+        <div className="flex flex-wrap items-center gap-2 mt-4">
+          <button type="button" onClick={() => setFiltersOpen(true)}
+            className="shrink-0 inline-flex items-center gap-1.5 min-h-11 px-3.5 rounded-lg border border-border text-[13px] font-semibold">
+            <SlidersHorizontal className="w-4 h-4" aria-hidden /> Filters
+            {nFilters > 0 && <span className="ml-0.5 min-w-5 h-5 px-1 rounded-full bg-foreground text-background text-xs flex items-center justify-center">{nFilters}</span>}
           </button>
-          {SMART_FILTERS.map((f) => (
-            <button
-              key={f.key}
-              onClick={() => toggleSmart(f.key)}
-              title={f.hint}
-              className={cn(
-                "shrink-0 inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-semibold border transition-colors",
-                smart.includes(f.key)
-                  ? "bg-primary text-primary-foreground border-primary"
-                  : "bg-card text-muted-foreground border-border",
-              )}
-            >
-              <f.Icon className="w-3.5 h-3.5" aria-hidden />
-              {f.label}
-            </button>
-          ))}
+          <div className="order-last w-full md:order-none md:w-auto md:flex-1 min-w-0 flex gap-2 overflow-x-auto scrollbar-hide">
+            {QUICK.map((c) => (
+              <button key={c.key} type="button" aria-pressed={c.on(filters)} onClick={() => setFilters(c.flip(filters))}
+                className={cn("shrink-0 inline-flex items-center gap-1.5 min-h-11 px-3.5 rounded-lg border text-[13px] font-medium",
+                  c.on(filters) ? "border-foreground bg-surface" : "border-border text-muted-foreground")}>
+                <c.Icon className="w-3.5 h-3.5" aria-hidden />{c.label}
+              </button>
+            ))}
+          </div>
+          <label className="shrink-0 ml-auto">
+            <span className="sr-only">Sort by</span>
+            <select value={filters.sort} onChange={(e) => setFilters({ ...filters, sort: e.target.value as SortKey })}
+              className="min-h-11 rounded-lg border border-border bg-background px-2.5 text-[13px] font-semibold">
+              {SORTS.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+            </select>
+          </label>
         </div>
+        <FiltersSheet open={filtersOpen} onOpenChange={setFiltersOpen} value={filters} onApply={setFilters} countFor={countFor} />
         {hasSearch && !loading && (
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
             {heading && <h2 className="w-full text-base font-bold text-foreground">{heading}</h2>}
@@ -261,13 +278,6 @@ const Explore = () => {
             <button type="button" onClick={() => setParams(new URLSearchParams())} className="font-semibold text-primary underline">Clear search</button>
           </div>
         )}
-        {smart.length > 0 && (
-          <p className="mt-2 text-xs text-muted-foreground">
-            {SMART_FILTERS.filter((f) => smart.includes(f.key)).map((f) => f.hint).join(" · ")}
-          </p>
-        )}
-
-
         {view === "map" && features.map ? (
           <div className="mt-5 relative">
             <PropertiesMap list={visible} height={520} onSelect={setSelected} />
@@ -302,64 +312,54 @@ const Explore = () => {
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 mt-5">
-            {loading && (
-              <div className="col-span-full text-center py-16 text-muted-foreground text-sm">
-                <div className="w-6 h-6 mx-auto rounded-full border-2 border-primary border-t-transparent animate-spin mb-2" />
-                Loading properties…
-              </div>
-            )}
-            {!loading && visible.map((p) => (
-              <PropertyCard key={p.id} p={p} nights={nights} />
+          <>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-x-4 gap-y-6 mt-5 max-w-[1360px] mx-auto">
+            {loading && Array.from({ length: 8 }).map((_, i) => (
+              <div key={i}><Skeleton className="h-[240px] md:h-[204px] rounded-xl" /><Skeleton className="h-4 w-24 mt-3" /><Skeleton className="h-3 w-40 mt-2" /></div>
             ))}
-            {!loading && visible.length === 0 && (
-              <div className="text-center py-16 text-muted-foreground text-sm">
-                <div className="text-4xl mb-2">🔍</div>
-                No properties match your search.
-                {q && rescueCities(properties, q).length > 0 && (
-                  <div className="mt-4">
-                    <div className="text-xs mb-2">Try these places instead:</div>
-                    <div className="flex flex-wrap justify-center gap-1.5">
-                      {rescueCities(properties, q).map((c) => (
-                        <button
-                          key={c}
-                          type="button"
-                          onClick={() => setQ(c)}
-                          className="text-xs font-semibold px-2.5 py-1 rounded-full bg-secondary hover:bg-primary/10 border border-border"
-                        >
-                          Stays in {c}
-                        </button>
-                      ))}
+            {!loading && visible.map((p) => <PropertyCard key={p.id} p={p} nights={nights} />)}
+          </div>
+          {!loading && visible.length === 0 && (
+            <EmptyState
+              title="No stays match"
+              body={nFilters ? "Try removing a filter or two." : altDates ? "These dates are taken. Stays are free on other dates nearby." : "Try a nearby area or different dates."}
+              action={
+                <div className="flex flex-col items-center gap-3">
+                  {altDates && (
+                    <Button onClick={() => applySearch({ ...search, checkIn: altDates, checkOut: addDays(altDates, nights) })}>
+                      Try {new Date(altDates).toLocaleDateString("en-NG", { day: "numeric", month: "short" })} – {new Date(addDays(altDates, nights)).toLocaleDateString("en-NG", { day: "numeric", month: "short" })}
+                    </Button>
+                  )}
+                  {(nearbyAreas.length > 0 || (q && rescueCities(properties, q).length > 0)) && (
+                    <div className="flex flex-wrap justify-center gap-2">
+                      {nearbyAreas.length > 0
+                        ? nearbyAreas.map((l) => (
+                            <button key={l.id} type="button" onClick={() => applySearch({ ...search, where: l.name, loc: l.slug, locType: l.type } as SearchState)}
+                              className="min-h-11 px-3.5 rounded-lg border border-border text-[13px] font-medium">Stays in {l.name}</button>
+                          ))
+                        : rescueCities(properties, q).map((c) => (
+                            <button key={c} type="button" onClick={() => setQ(c)} className="min-h-11 px-3.5 rounded-lg border border-border text-[13px] font-medium">Stays in {c}</button>
+                          ))}
                     </div>
-                  </div>
-                )}
-                {q && (
-                  <div>
-                    <button type="button" onClick={() => setQ("")} className="mt-3 text-xs font-semibold text-primary underline">Show all stays</button>
-                  </div>
-                )}
-                {smart.length > 0 && (
-                  <div>
-                    <button type="button" onClick={() => setSmart([])} className="mt-3 text-xs font-semibold text-primary underline">Clear filters</button>
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        )}
-
-        {view === "list" && !loading && visible.length > 0 && (
-          <div ref={sentinelRef} className="py-6 text-center">
-            {loadingMore && (
-              <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
-                <span className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" />
-                Loading more stays…
-              </div>
-            )}
-            {!hasMore && !loadingMore && properties.some((p) => p.source === "rayprop") && (
-              <div className="text-xs text-muted-foreground">That's everything ✨</div>
-            )}
-          </div>
+                  )}
+                  {nFilters > 0 && <button type="button" onClick={() => setFilters({ ...emptyFilters(), sort: filters.sort })} className="text-[15px] font-semibold underline min-h-11">Clear filters</button>}
+                  {q && <button type="button" onClick={() => setQ("")} className="text-[13px] font-semibold underline min-h-11">Show all stays</button>}
+                </div>
+              }
+            />
+          )}
+          {!loading && visible.length > 0 && (
+            <div ref={sentinelRef} className="py-6 text-center">
+              {loadingMore ? (
+                <div className="inline-flex items-center gap-2 text-xs text-muted-foreground">
+                  <span className="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin" /> Loading more stays…
+                </div>
+              ) : (moreLocal || hasMore) ? (
+                <Button variant="secondary" onClick={showMore}>More stays</Button>
+              ) : null}
+            </div>
+          )}
+          </>
         )}
       </main>
     </>

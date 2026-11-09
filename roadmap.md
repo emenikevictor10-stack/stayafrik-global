@@ -38,9 +38,9 @@ Keep (clashes): Paystack (not Payaza), Google sign-in + PIN (not email codes), 3
 - [x] P8 Host portal (§3): /host home, listings, calendar, requests, bookings (first name only pre-confirm), payouts; /list-your-place. Reconfirmed: all host pages load signed in with no errors.
 - [x] P9 Admin Hosts + Payouts (§5): host table, approve/suspend, bank verify (audited), payouts due day after check-in, hold with reason, mark paid with ref, CSV. Done: /admin/hosts, staff_host_action/staff_payout_action, payout_block_reason gate, host hold/ref view. Real transfer waits on Paystack test keys.
 - [x] P10 Search & results (§3): /results sort + filters (price, beds, type, power, water, verified, rating 4+) in the link, 12/page auto-load + More stays, no-result nearby areas + nearest dates; PRD card (no title, heart, compare kept on device until P13)
-- [ ] P11 Map & Explore (§3): map with all price pins, approximate circles only
-- [ ] P12 Stay page (§3): factual title + source title, listing ID, nightly breakdown quote, power/water/security, rules, policy, area circle, gallery /stays/:id/media
-- [ ] P13 Saved lists + compare (§3): hearts, wishlists, share links, compare up to 3
+- [x] P11 Map & Explore (§3): /explore opens on a free OSM map, price pins at approximate points (stable ~300–700m offset), nearby pins merge into "N stays" bubbles, PC list beside map with hover highlight, phone list under map. Note: many local stays share near-identical coordinates (data) — pins cluster around Yaba.
+- [x] P12 Stay page (§3): factual title + source title, listing ID, price for searched dates (nightly, discount, cleaning, fee, total), power/water/security, rules, cancellation policy, area-only map, /stays/:id/media gallery
+- [x] P13 Saved lists + compare (§3): hearts sync to account on sign-in, named lists, share links (/saved/shared/:token, read-only), /compare up to 3
 - [ ] P14 Trips (§3): /trips/:id with next-step sentence, cancel preview page, review page, find-booking, guarantee/move request
 - [ ] P15 Invoices (§3): proforma + paid invoice, company name/tax ID, invoice numbers
 - [ ] P16 Split payments (§3): co-travellers, invite links, shares, each pays via Paystack, confirm when fully paid
@@ -49,5 +49,5 @@ Keep (clashes): Paystack (not Payaza), Google sign-in + PIN (not email codes), 3
 - [ ] P19 Admin sections: Payments list (flags, CSV), Messages log + resend, Team, Health (cron runs, webhook errors, RayProp wallet), Reviews reply, Guides CMS, Users pagination/block
 - [ ] P20 Insights dashboard (§5): period compare, funnel, exact earnings, SVG charts with table view
 - [ ] P21 Emails + scheduler (§12): full template set with listing ID, message log, 5-min cron (holds, host deadlines, reminders, thank-yous, payouts, wallet check, overdue problem alerts)
-- [ ] P22 SEO (§10): per-page meta, area pages, sitemap, robots, structured data, WhatsApp link previews, llms.txt, guides pages
+- [x] P22 SEO (§10): per-page meta (client), /stays-in/:slug area pages (135 in sitemap), /guides (placeholder copy to review), robots disallows private pages, structured data, llms.txt, site meta updated. Crawler-visible per-page meta needs server rendering (not in this setup).
 - [ ] P23 Hardening + launch checklist (§14): RLS audit, rate limits, idempotency, 360/1440 checks, Lighthouse, test-mode journeys

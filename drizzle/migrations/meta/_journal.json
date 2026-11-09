@@ -204,6 +204,13 @@
       "when": 1794177522176,
       "tag": "0028_host_portal",
       "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1794206604076,
+      "tag": "0029_admin_hosts_payouts",
+      "breakpoints": true
     }
   ]
 }

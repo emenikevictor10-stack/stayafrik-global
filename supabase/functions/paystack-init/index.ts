@@ -87,6 +87,10 @@ Deno.serve(async (req) => {
       .maybeSingle();
     if (lerr || !listing) return json(404, { error: "Listing not found" });
     if (!listing.is_available) return json(400, { error: "Listing is not available" });
+    {
+      const { data: hs } = await createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!).from("host_status").select("status").eq("host_id", listing.host_id).maybeSingle();
+      if (hs?.status === "suspended") return json(400, { error: "Listing is not available" });
+    }
 
     const ci = new Date(check_in).getTime();
     const co = new Date(check_out).getTime();

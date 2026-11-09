@@ -40,6 +40,8 @@ Deno.serve(async (req) => {
       .from("payouts").select("*").eq("id", payout_id).maybeSingle();
     if (pErr || !payout) return json({ error: "payout_not_found" }, 404);
     if (payout.status !== "pending") return json({ error: `payout_not_pending (${payout.status})` }, 409);
+    const { data: block } = await svc.rpc("payout_block_reason", { _host: payout.host_id });
+    if (block) return json({ error: block }, 409);
 
     // Resolve bank account: use payout.payment_method_id, else host's default
     let pmId = payout.payment_method_id as string | null;

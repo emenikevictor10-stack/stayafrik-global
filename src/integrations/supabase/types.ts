@@ -336,6 +336,33 @@ export type Database = {
         }
         Relationships: []
       }
+      host_status: {
+        Row: {
+          host_id: string
+          paused_listing_ids: string[]
+          reason: string | null
+          status: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          host_id: string
+          paused_listing_ids?: string[]
+          reason?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          host_id?: string
+          paused_listing_ids?: string[]
+          reason?: string | null
+          status?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       kyc_submissions: {
         Row: {
           created_at: string
@@ -894,6 +921,7 @@ export type Database = {
       }
       payment_methods: {
         Row: {
+          account_name: string | null
           account_number: string | null
           bank_code: string | null
           brand: string
@@ -905,8 +933,11 @@ export type Database = {
           is_default: boolean
           last4: string
           user_id: string
+          verified_at: string | null
+          verified_by: string | null
         }
         Insert: {
+          account_name?: string | null
           account_number?: string | null
           bank_code?: string | null
           brand: string
@@ -918,8 +949,11 @@ export type Database = {
           is_default?: boolean
           last4: string
           user_id: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Update: {
+          account_name?: string | null
           account_number?: string | null
           bank_code?: string | null
           brand?: string
@@ -931,6 +965,8 @@ export type Database = {
           is_default?: boolean
           last4?: string
           user_id?: string
+          verified_at?: string | null
+          verified_by?: string | null
         }
         Relationships: []
       }
@@ -941,9 +977,13 @@ export type Database = {
           booking_id: string | null
           created_at: string
           currency: string
+          due_at: string | null
           failure_reason: string | null
+          held_at: string | null
+          hold_reason: string | null
           host_id: string
           id: string
+          paid_reference: string | null
           payment_method_id: string | null
           paystack_transfer_code: string | null
           processed_at: string | null
@@ -957,9 +997,13 @@ export type Database = {
           booking_id?: string | null
           created_at?: string
           currency?: string
+          due_at?: string | null
           failure_reason?: string | null
+          held_at?: string | null
+          hold_reason?: string | null
           host_id: string
           id?: string
+          paid_reference?: string | null
           payment_method_id?: string | null
           paystack_transfer_code?: string | null
           processed_at?: string | null
@@ -973,9 +1017,13 @@ export type Database = {
           booking_id?: string | null
           created_at?: string
           currency?: string
+          due_at?: string | null
           failure_reason?: string | null
+          held_at?: string | null
+          hold_reason?: string | null
           host_id?: string
           id?: string
+          paid_reference?: string | null
           payment_method_id?: string | null
           paystack_transfer_code?: string | null
           processed_at?: string | null
@@ -1582,6 +1630,7 @@ export type Database = {
         Args: { _body: string; _link: string; _title: string }
         Returns: undefined
       }
+      payout_block_reason: { Args: { _host: string }; Returns: string }
       popular_locations: {
         Args: { _limit?: number }
         Returns: {
@@ -1644,6 +1693,10 @@ export type Database = {
         Args: { _action: string; _booking_id: string; _note?: string }
         Returns: undefined
       }
+      staff_host_action: {
+        Args: { _action: string; _host_id: string; _reason?: string }
+        Returns: undefined
+      }
       staff_issue_action: {
         Args: {
           _action: string
@@ -1655,6 +1708,15 @@ export type Database = {
       }
       staff_offer_credit: {
         Args: { _amount: number; _issue_id: string; _reason: string }
+        Returns: undefined
+      }
+      staff_payout_action: {
+        Args: {
+          _action: string
+          _payout_id: string
+          _reason?: string
+          _reference?: string
+        }
         Returns: undefined
       }
       support_issue_tick: { Args: never; Returns: Json }

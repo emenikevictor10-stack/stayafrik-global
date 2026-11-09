@@ -7,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useMyListings } from "@/hooks/useListings";
 import { useHostBookings } from "@/hooks/useHostBookings";
 import { HostBookingCard } from "@/components/host/HostBookingCard";
-import { NextStep, ListSkeleton } from "@/ui/kit";
+import { NextStep, ListSkeleton, Notice } from "@/ui/kit";
 import { groupBookings, payoutTotals, timeLeft } from "@/lib/host-portal";
 
 const fmt = (n: number) => "₦" + Math.round(n).toLocaleString();
@@ -18,6 +18,12 @@ const HostHome = () => {
   const { data: listings } = useMyListings(user?.id);
   const [hasAccount, setHasAccount] = useState<boolean | null>(null);
   const [profileOk, setProfileOk] = useState<boolean | null>(null);
+  const [suspended, setSuspended] = useState<string | null>(null);
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("host_status").select("status, reason").eq("host_id", user.id).maybeSingle()
+      .then(({ data }) => setSuspended(data?.status === "suspended" ? (data.reason || "") : null));
+  }, [user?.id]);
   useEffect(() => {
     if (!user) return;
     supabase.from("payment_methods").select("id").eq("user_id", user.id).not("account_number", "is", null).limit(1)
@@ -38,6 +44,7 @@ const HostHome = () => {
     <>
       <TopBar title="Hosting" />
       <main className="px-4 pt-4 pb-8 max-w-4xl mx-auto space-y-4">
+        {suspended !== null && <Notice tone="danger">Your hosting is paused{suspended ? `: ${suspended}` : ""}. Your stays are hidden and can't take new bookings; existing bookings continue. Contact support@stayglobal.app.</Notice>}
         <div className="space-y-2">
           {requests.length > 0 && <NextStep tone="act" status={`${requests.length} request${requests.length > 1 ? "s" : ""} waiting`} sentence={`Reply before the time runs out (${timeLeft(requests[0].host_respond_by)}) or the guest is refunded.`} action={<Link to="/host/requests" className="underline font-semibold text-sm">Answer</Link>} />}
           {hasAccount === false && <NextStep tone="act" status="No payout account" sentence="Add your bank account so we can pay you after check-in." action={<Link to="/profile/payout" className="underline font-semibold text-sm">Add payout account</Link>} />}

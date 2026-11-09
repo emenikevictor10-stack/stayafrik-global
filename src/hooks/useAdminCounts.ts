@@ -16,7 +16,7 @@ export const useAdminCounts = () => {
       const [l, k, p, v, pb] = await Promise.all([
         db.from("listings").select("id", head).eq("verified", false),
         db.from("kyc_submissions").select("id", head).eq("status", "pending"),
-        db.from("payouts").select("id", head).eq("status", "pending"),
+        db.from("payouts").select("id", head).in("status", ["pending", "failed"]),
         db.from("reservations").select("id", head).eq("status", "pending"),
         db.from("bookings").select("id", head).eq("status", "needs_attention"),
       ]);

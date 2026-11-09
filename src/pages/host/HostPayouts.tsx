@@ -19,6 +19,12 @@ const HostPayouts = () => {
     supabase.from("payment_methods").select("brand, last4").eq("user_id", user.id).not("account_number", "is", null)
       .order("is_default", { ascending: false }).limit(1).maybeSingle().then(({ data }) => setAccount(data ?? null));
   }, [user?.id]);
+  const [held, setHeld] = useState<{ id: string; amount: number; status: string; hold_reason: string | null; paid_reference: string | null; processed_at: string | null }[]>([]);
+  useEffect(() => {
+    if (!user) return;
+    supabase.from("payouts").select("id, amount, status, hold_reason, paid_reference, processed_at").eq("host_id", user.id)
+      .in("status", ["on_hold", "paid"]).order("created_at", { ascending: false }).limit(50).then(({ data }) => setHeld((data as any) || []));
+  }, [user?.id]);
   const money = rows.filter((r) => ["confirmed", "released", "completed"].includes(r.status));
   const t = payoutTotals(money);
   return (
@@ -36,6 +42,15 @@ const HostPayouts = () => {
             </div>
           ))}
         </div>
+        {held.filter((p) => p.status === "on_hold").map((p) => <Notice key={p.id} tone="warn">{fmt(Number(p.amount))} is on hold: {p.hold_reason}</Notice>)}
+        {held.some((p) => p.status === "paid") && (
+          <div className="rounded-xl bg-card border border-border p-3 space-y-1">
+            <p className="text-sm font-bold">Sent to you</p>
+            {held.filter((p) => p.status === "paid").map((p) => (
+              <p key={p.id} className="text-xs text-muted-foreground flex justify-between gap-2"><span>{p.processed_at ? new Date(p.processed_at).toLocaleDateString() : ""}{p.paid_reference ? ` · Ref ${p.paid_reference}` : ""}</span><span className="font-semibold text-foreground">{fmt(Number(p.amount))}</span></p>
+            ))}
+          </div>
+        )}
         <p className="text-xs text-muted-foreground">Your share is released the day after the guest checks in.</p>
         {loading ? <ListSkeleton /> : error ? <ErrorState onRetry={reload} /> : money.length === 0 ? (
           <EmptyState title="No payouts yet" body="Money from confirmed bookings shows here." />

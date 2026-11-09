@@ -1,8 +1,10 @@
 import { Tag } from "@/ui/kit";
 import { ErrorState } from "@/ui/kit";
 import { useEffect, useMemo, useState } from "react";
-import { Link } from "react-router-dom";
-import { Search, ChevronRight, Mail, Phone, MessageCircle, BadgeCheck } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Search, MoreHorizontal, Phone, MessageCircle, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/seo/Seo";
@@ -28,6 +30,7 @@ const FILTERS = ["all", "guests", "hosts"] as const;
 const TEAM = ["admin", "support", "finance", "listings"];
 
 const AdminUsers = () => {
+  const navigate = useNavigate();
   const [rows, setRows] = useState<Row[]>([]);
   const [q, setQ] = useState("");
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
@@ -115,40 +118,69 @@ const AdminUsers = () => {
       ) : shown.length === 0 ? (
         <div className="rounded-xl border border-dashed border-border py-12 text-center text-sm text-muted-foreground">No users match.</div>
       ) : (
-        <div className="space-y-2">
-          {shown.map((r) => {
-            const host = isHost(r);
-            const hostIncomplete = host && (!r.whatsapp || !r.phone);
-            return (
-              <div key={r.user_id} className="rounded-xl border border-border bg-card p-3 md:px-4 flex flex-col md:flex-row md:items-center gap-3">
-                <div className="flex items-center gap-3 flex-1 min-w-0">
-                  {r.avatar_url
-                    ? <img src={r.avatar_url} alt="" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = "none"; }} className="w-10 h-10 rounded-full object-cover shrink-0 bg-secondary" />
-                    : <div className="w-10 h-10 rounded-full bg-secondary flex items-center justify-center font-bold text-sm shrink-0">{(r.full_name || r.email || "?")[0]?.toUpperCase()}</div>}
-                  <div className="min-w-0">
-                    <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-semibold truncate">{r.full_name || "—"}</span>
-                      <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${host ? "bg-accent/20 text-foreground" : "bg-secondary text-muted-foreground"}`}>{host ? "Host" : "Guest"}</span>
-                      {hostIncomplete && <Tag tone="act">Profile incomplete</Tag>}
-                    </div>
-                    <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
-                      {r.email && <span className="flex items-center gap-1 truncate"><Mail className="w-3 h-3" />{r.email}{r.email_verified && <BadgeCheck className="w-3 h-3 text-primary" />}</span>}
-                      {r.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{r.phone}{r.phone_verified && <BadgeCheck className="w-3 h-3 text-primary" />}</span>}
-                      {r.whatsapp && <span className="flex items-center gap-1"><MessageCircle className="w-3 h-3" />{r.whatsapp}</span>}
-                    </div>
-                    <p className="text-xs text-muted-foreground">
-                      Joined {new Date(r.created_at).toLocaleDateString()} · {r.bookings} booking{r.bookings === 1 ? "" : "s"}{host ? ` · ${r.listings} listing${r.listings === 1 ? "" : "s"}` : ""}
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1.5 md:justify-end">
-                  <Link to={`/admin/users/${r.user_id}`} className="text-xs font-semibold inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-border hover:bg-secondary">
-                    View more <ChevronRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            );
-          })}
+        <div className="rounded-xl border border-border overflow-hidden">
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Person</TableHead>
+                <TableHead className="hidden md:table-cell">Email</TableHead>
+                <TableHead className="hidden md:table-cell">Phone / WhatsApp</TableHead>
+                <TableHead className="hidden md:table-cell text-right">Bookings</TableHead>
+                <TableHead className="hidden md:table-cell text-right">Listings</TableHead>
+                <TableHead className="hidden md:table-cell">Profile</TableHead>
+                <TableHead>Joined</TableHead>
+                <TableHead className="w-12"><span className="sr-only">Actions</span></TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {shown.map((r) => {
+                const host = isHost(r);
+                const hostIncomplete = host && (!r.whatsapp || !r.phone);
+                const open = () => navigate(`/admin/users/${r.user_id}`);
+                return (
+                  <TableRow key={r.user_id} onClick={open} className="cursor-pointer">
+                    <TableCell>
+                      <div className="flex items-center gap-3 min-w-0">
+                        {r.avatar_url
+                          ? <img src={r.avatar_url} alt="" referrerPolicy="no-referrer" onError={(e) => { e.currentTarget.style.display = "none"; }} className="w-8 h-8 rounded-full object-cover shrink-0 bg-secondary" />
+                          : <div className="w-8 h-8 rounded-full bg-secondary flex items-center justify-center font-bold text-xs shrink-0">{(r.full_name || r.email || "?")[0]?.toUpperCase()}</div>}
+                        <div className="min-w-0">
+                          <p className="font-semibold truncate max-w-[12rem]">{r.full_name || "—"}</p>
+                          <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${host ? "bg-accent/20 text-foreground" : "bg-secondary text-muted-foreground"}`}>{host ? "Host" : "Guest"}</span>
+                        </div>
+                      </div>
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-xs">
+                      {r.email ? <span className="inline-flex items-center gap-1 break-all">{r.email}{r.email_verified && <BadgeCheck className="w-3 h-3 text-primary shrink-0" aria-label="Checked" />}</span> : "—"}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-xs">
+                      {r.phone && <span className="flex items-center gap-1"><Phone className="w-3 h-3" />{r.phone}{r.phone_verified && <BadgeCheck className="w-3 h-3 text-primary" aria-label="Checked" />}</span>}
+                      {r.whatsapp && <span className="flex items-center gap-1 text-muted-foreground"><MessageCircle className="w-3 h-3" />{r.whatsapp}</span>}
+                      {!r.phone && !r.whatsapp && "—"}
+                    </TableCell>
+                    <TableCell className="hidden md:table-cell text-right tabular-nums">{r.bookings}</TableCell>
+                    <TableCell className="hidden md:table-cell text-right tabular-nums">{host ? r.listings : "—"}</TableCell>
+                    <TableCell className="hidden md:table-cell">{hostIncomplete ? <Tag tone="act">Incomplete</Tag> : <span className="text-muted-foreground">—</span>}</TableCell>
+                    <TableCell className="text-xs whitespace-nowrap">{new Date(r.created_at).toLocaleDateString()}</TableCell>
+                    <TableCell onClick={(e) => e.stopPropagation()}>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <button aria-label={`Actions for ${r.full_name || r.email || "user"}`} className="w-9 h-9 inline-flex items-center justify-center rounded-lg hover:bg-secondary">
+                            <MoreHorizontal className="w-4 h-4" />
+                          </button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={open}>View details</DropdownMenuItem>
+                          {r.email && <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(r.email!); toast.success("Email copied"); }}>Copy email</DropdownMenuItem>}
+                          <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(r.user_id); toast.success("User ID copied"); }}>Copy user ID</DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
         </div>
       )}
     </>

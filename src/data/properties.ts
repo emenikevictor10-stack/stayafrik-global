@@ -47,7 +47,11 @@ export type Property = {
   createdAt?: string;
   /** Trackable listing ID: SG1234AB for local stays, RayProp's own listing ID for partner stays. */
   listingCode?: string;
+  /** Walkthrough videos (partner stays). Loaded only when played. */
+  videos?: StayVideo[];
 };
+
+export type StayVideo = { url?: string; youtube?: string; poster?: string; duration?: number };
 
 
 const baseAmenities = [

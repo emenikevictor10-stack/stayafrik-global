@@ -199,7 +199,9 @@ Deno.serve(async (req) => {
         const map = await loadPlaceMap();
         rows = all.filter((r) => map.get(String(r.id))?.includes(locationId));
       } else rows = q ? all.filter((r) => raypropMatches(r, q)) : all;
-      const slice = rows.slice((page - 1) * limit, page * limit);
+      // Cards need only a few photos; the stay page fetches the full record.
+      const slice = rows.slice((page - 1) * limit, page * limit).map((r) =>
+        Array.isArray(r?.listing_images) && r.listing_images.length > 6 ? { ...r, listing_images: [...r.listing_images].sort((a: any, b: any) => Number(!!b?.is_primary) - Number(!!a?.is_primary)).slice(0, 6) } : r);
       return json(200, { data: slice, meta: { total: rows.length, page, hasMore: page * limit < rows.length } });
     }
 

@@ -241,10 +241,10 @@ export const useListing = (id: string | undefined) => {
       if (id.startsWith("rp_")) {
         try {
           const cached = (() => { try { return JSON.parse(sessionStorage.getItem("stay:rayprop:last-listing") || "null") as Property | null; } catch { return null; } })();
-          if (cached?.id === id) { setData(cached); setLoading(false); return; }
+          if (cached?.id === id) { setData(cached); setLoading(false); }
           const records = await getRayPropListing(id.slice(3));
           const property = records.map((r) => raypropToProperty(r, placeholderImg)).find((item) => item?.id === id) || null;
-          if (active) setData(property);
+          if (active && (property || !cached)) setData(property);
         } catch (error) { console.error("[rayprop] listing unavailable", error); }
         setLoading(false);
         return;

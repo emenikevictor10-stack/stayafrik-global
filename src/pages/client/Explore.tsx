@@ -270,7 +270,7 @@ const Explore = () => {
         {view === "map" && features.map ? (
           <div className="mt-5 relative lg:grid lg:grid-cols-[1fr_minmax(420px,45%)] lg:gap-5 max-w-[1360px] mx-auto">
             <div className="hidden lg:grid grid-cols-2 gap-x-4 gap-y-6 content-start order-1">
-              {listForMap.map((p) => <div key={p.id} onMouseEnter={() => setHoverId(p.id)} onMouseLeave={() => setHoverId(null)}><PropertyCard p={p} nights={nights} /></div>)}
+              {listForMap.map((p, i) => <div key={p.id} onMouseEnter={() => setHoverId(p.id)} onMouseLeave={() => setHoverId(null)}><PropertyCard p={p} nights={nights} priority={i < 4} /></div>)}
               {(moreLocal || hasMore) && <div className="col-span-2 text-center"><Button variant="secondary" onClick={showMore}>More stays</Button></div>}
             </div>
             <div className="lg:order-2 lg:sticky lg:top-24 lg:self-start relative">
@@ -326,7 +326,7 @@ const Explore = () => {
             )}
             </div>
             <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6 mt-5">
-              {listForMap.map((p) => <PropertyCard key={p.id} p={p} nights={nights} />)}
+              {listForMap.map((p, i) => <PropertyCard key={p.id} p={p} nights={nights} priority={i < 4} />)}
             </div>
           </div>
         ) : (
@@ -335,7 +335,7 @@ const Explore = () => {
             {loading && Array.from({ length: 8 }).map((_, i) => (
               <div key={i}><Skeleton className="h-[240px] md:h-[204px] rounded-xl" /><Skeleton className="h-4 w-24 mt-3" /><Skeleton className="h-3 w-40 mt-2" /></div>
             ))}
-            {!loading && visible.map((p) => <PropertyCard key={p.id} p={p} nights={nights} />)}
+            {!loading && visible.map((p, i) => <PropertyCard key={p.id} p={p} nights={nights} priority={i < 4} />)}
           </div>
           {!loading && visible.length === 0 && (
             <EmptyState

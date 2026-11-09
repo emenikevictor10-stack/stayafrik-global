@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { StayImage } from "./StayImage";
 
 export const ImageGallery = ({ images, alt }: { images: string[]; alt: string }) => {
   const [idx, setIdx] = useState(0);
@@ -28,15 +29,16 @@ export const ImageGallery = ({ images, alt }: { images: string[]; alt: string })
         className="flex h-full transition-transform duration-300"
         style={{ transform: `translateX(-${idx * 100}%)` }}
       >
-        {images.map((src, i) => (
-          <img
+        {images.map((src, i) => (Math.abs(i - idx) <= 1 ? (
+          <StayImage
             key={i}
             src={src}
+            width={1280}
             alt={`${alt} — photo ${i + 1}`}
             loading={i === 0 ? "eager" : "lazy"}
             className="w-full h-full object-cover shrink-0"
           />
-        ))}
+        ) : <div key={i} className="w-full h-full shrink-0" />))}
       </div>
 
       {total > 1 && (

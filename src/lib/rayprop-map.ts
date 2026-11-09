@@ -110,7 +110,23 @@ export const raypropToProperty = (raw: Record<string, any>, fallbackImage: strin
     checkOutTime: hhmm(raw.check_out_time) || undefined,
     houseRules: list(raw.house_rules),
     createdAt: str(raw.created_at) || undefined,
+    videos: partnerVideos(raw),
   };
+};
+
+/** RayProp listing_videos → our video list, in RayProp's display order. */
+export const partnerVideos = (raw: Record<string, any>) => {
+  const vids = Array.isArray(raw.listing_videos) ? [...raw.listing_videos] : [];
+  vids.sort((a: any, b: any) => num(a?.display_order) - num(b?.display_order));
+  const out = vids
+    .map((v: any) => ({
+      url: str(v?.video_url) || undefined,
+      youtube: str(v?.youtube_url) || undefined,
+      poster: str(v?.thumbnail_url) || undefined,
+      duration: num(v?.duration_seconds) || undefined,
+    }))
+    .filter((v) => v.url || v.youtube);
+  return out.length ? out : undefined;
 };
 
 /** RayProp's own listing ID, shown as-is, e.g. 1C1F9KRZ. Strips our old rp_/RP- prefixes. */

@@ -4,6 +4,8 @@ import { useListing } from "@/hooks/useListings";
 import { Seo } from "@/components/seo/Seo";
 import { Skeleton, EmptyState } from "@/ui/kit";
 import { factualTitle } from "@/lib/stay-facts";
+import { StayImage } from "@/components/property/StayImage";
+import { StayVideos } from "@/components/property/StayVideos";
 
 /** All photos of a stay, stacked (PRD /stays/:id/media). */
 const StayMedia = () => {
@@ -21,9 +23,10 @@ const StayMedia = () => {
       {p && <Seo title={`Photos · ${factualTitle(p)} | Stay`} description={`All photos of ${factualTitle(p)}.`} />}
       {loading && <div className="space-y-3">{[0, 1, 2].map((i) => <Skeleton key={i} className="h-72 w-full rounded-xl" />)}</div>}
       {!loading && !p && <EmptyState title="Stay not found" />}
+      {p?.videos?.length ? <div className="mb-3"><StayVideos videos={p.videos} /></div> : null}
       <div className="grid gap-3 md:grid-cols-2">
         {photos.map((src, i) => (
-          <img key={src + i} src={src} alt={`Photo ${i + 1}`} loading={i < 2 ? "eager" : "lazy"}
+          <StayImage key={src + i} src={src} width={i % 3 === 0 ? 1280 : 800} alt={`Photo ${i + 1}`} loading={i < 2 ? "eager" : "lazy"}
             className={i % 3 === 0 ? "md:col-span-2 w-full rounded-xl object-cover max-h-[560px]" : "w-full rounded-xl object-cover aspect-[4/3]"} />
         ))}
       </div>

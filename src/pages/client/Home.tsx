@@ -90,7 +90,7 @@ const Home = () => {
           {loading ? (
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{[0, 1, 2, 3].map((i) => <Skeleton key={i} className="aspect-[4/5] rounded-xl" />)}</div>
           ) : (
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{data.slice(0, 8).map((p) => <PropertyCard key={p.id} p={p} />)}</div>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">{data.slice(0, 8).map((p, i) => <PropertyCard key={p.id} p={p} priority={i < 4} />)}</div>
           )}
         </Section>
       </main>

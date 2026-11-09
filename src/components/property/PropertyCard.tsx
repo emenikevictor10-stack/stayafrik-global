@@ -1,7 +1,8 @@
 import { Link } from "react-router-dom";
 import { useRef, useState } from "react";
 import type { Property } from "@/data/properties";
-import { Star, Heart, GitCompare, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, Heart, GitCompare, ChevronLeft, ChevronRight, Play } from "lucide-react";
+import { StayImage } from "./StayImage";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useCompare, COMPARE_MAX } from "@/hooks/useCompare";
 import { cn } from "@/lib/utils";
@@ -12,7 +13,7 @@ import { toast } from "sonner";
 const areaOf = (p: Property) => p.neighborhood || p.city || (p.location || "").split(",")[0].trim() || "Nigeria";
 
 /** PRD stay card: photos, heart, compare, price on top, then "area · N bed · ★ rating". No title. */
-export const PropertyCard = ({ p, nights = 0 }: { p: Property; nights?: number }) => {
+export const PropertyCard = ({ p, nights = 0, priority = false }: { p: Property; nights?: number; priority?: boolean }) => {
   const { has, toggle } = useWishlist();
   const compare = useCompare();
   const saved = has(p.id);
@@ -47,11 +48,17 @@ export const PropertyCard = ({ p, nights = 0 }: { p: Property; nights?: number }
           onScroll={(e) => { const el = e.currentTarget; setIdx(Math.round(el.scrollLeft / Math.max(1, el.clientWidth))); }}
           className="flex h-full overflow-x-auto snap-x snap-mandatory scrollbar-hide"
         >
-          {photos.map((src, i) => (
-            <img key={src + i} src={src} alt="" loading="lazy" decoding="async" width={600} height={400}
+          {photos.map((src, i) => (Math.abs(i - idx) <= 1 ? (
+            <StayImage key={src + i} src={src} width={640} alt="" loading={priority && i === 0 ? "eager" : "lazy"} decoding="async"
+              {...(priority && i === 0 ? { fetchpriority: "high" } : {})} height={400}
               className="w-full h-full object-cover shrink-0 snap-center" />
-          ))}
+          ) : <div key={src + i} className="w-full h-full shrink-0 snap-center bg-surface" />))}
         </div>
+        {!!p.videos?.length && (
+          <span className="absolute bottom-2 left-2 px-2 py-1 rounded-full bg-background/85 backdrop-blur-md text-[12px] font-semibold flex items-center gap-1">
+            <Play className="w-3 h-3 fill-current" aria-hidden /> Video
+          </span>
+        )}
         <div className="absolute top-2 right-2 flex gap-1.5">
           <button type="button" onClick={onCompare} aria-pressed={inCompare} aria-label={inCompare ? "Remove from compare" : "Add to compare"}
             className={cn("w-11 h-11 rounded-full backdrop-blur-md flex items-center justify-center", inCompare ? "bg-primary text-primary-foreground" : "bg-background/80 text-foreground")}>

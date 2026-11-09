@@ -75,7 +75,7 @@ import StayMedia from "./pages/client/StayMedia";
 import SharedList from "./pages/client/SharedList";
 import Compare from "./pages/client/Compare";
 import AreaPage from "./pages/client/AreaPage";
-import { TripDetail, TripCancel, TripReview, TripInvoice, FindBooking } from "./pages/client/TripPages";
+import { TripDetail, TripCancel, TripReview, TripInvoice, FindBooking, TripMove, TripGuests } from "./pages/client/TripPages";
 import GuestDetails from "./pages/client/GuestDetails";
 import { PayShare } from "./pages/client/SplitAddons";
 import { GuidesIndex, GuidePage } from "./pages/client/Guides";
@@ -129,6 +129,7 @@ const App = () => (
                   <Route path="/stays-in/:slug" element={<AreaPage />} />
                   <Route path="/guides" element={<GuidesIndex />} />
                   <Route path="/find-booking" element={<FindBooking />} />
+                  <Route path="/help/find-booking" element={<FindBooking />} />
                   <Route path="/pay/share/:token" element={<PayShare />} />
                   <Route path="/guides/:slug" element={<GuidePage />} />
                   <Route path="/property/:id" element={<PropertyDetail />} />
@@ -178,6 +179,8 @@ const App = () => (
                     <Route path="/trips/:id" element={<TripDetail />} />
                     <Route path="/trips/:id/cancel" element={<TripCancel />} />
                     <Route path="/trips/:id/review" element={<TripReview />} />
+                    <Route path="/trips/:id/move" element={<TripMove />} />
+                    <Route path="/trips/:id/guests" element={<TripGuests />} />
                     <Route path="/trips/:id/invoice" element={<TripInvoice />} />
                     <Route path="/details" element={<GuestDetails />} />
                     <Route path="/issues" element={<MyIssues />} />

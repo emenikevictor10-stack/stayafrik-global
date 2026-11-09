@@ -288,6 +288,13 @@
       "when": 1794217051068,
       "tag": "0040_team_invites_and_scoped_roles",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "7",
+      "when": 1794219564311,
+      "tag": "0041_trips_close_out",
+      "breakpoints": true
     }
   ]
 }

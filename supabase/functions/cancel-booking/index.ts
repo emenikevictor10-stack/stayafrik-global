@@ -39,7 +39,7 @@ Deno.serve(async (req) => {
 
     const reason = typeof body.reason === "string" ? body.reason.slice(0, 500) : null;
     // Lock: only one cancellation wins
-    const { data: locked } = await admin.from("bookings").update({ status: "cancelled" })
+    const { data: locked } = await admin.from("bookings").update({ status: "cancelled", cancelled_reason: reason })
       .eq("id", b.id).eq("status", "confirmed").select("id").maybeSingle();
     if (!locked) return json({ error: "This booking can no longer be cancelled" }, 409);
 

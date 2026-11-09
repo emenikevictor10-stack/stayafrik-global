@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { logAdminAction } from "@/lib/admin-audit";
 
 type Row = {
-  id: string; rating: number; comment: string | null; created_at: string; hidden: boolean;
+  id: string; rating: number; comment: string | null; tags: string[] | null; created_at: string; hidden: boolean;
   guest_id: string; listing_id: string; booking_id: string;
   listings: { title: string; listing_code: string | null } | null;
 };
@@ -25,7 +25,7 @@ const AdminReviews = () => {
   const load = async () => {
     setBusy(true);
     const { data, error } = await supabase.from("reviews")
-      .select("id,rating,comment,created_at,hidden,guest_id,listing_id,booking_id,listings(title,listing_code)")
+      .select("id,rating,comment,tags,created_at,hidden,guest_id,listing_id,booking_id,listings(title,listing_code)")
       .order("created_at", { ascending: false }).limit(500);
     setLoadError(!!error);
     const list = (data as any as Row[]) || [];
@@ -92,6 +92,7 @@ const AdminReviews = () => {
                     <span className="text-xs font-mono text-muted-foreground">{r.listings?.listing_code}</span>
                     {r.hidden && <Tag tone="broken">Hidden</Tag>}
                   </div>
+                  {!!r.tags?.length && <p className="text-xs mt-1">{r.tags.join(" · ")}</p>}
                   {r.comment && <p className="text-xs text-muted-foreground mt-1">{r.comment}</p>}
                   <p className="text-xs text-muted-foreground mt-1">{names[r.guest_id] || "Guest"} · {new Date(r.created_at).toLocaleDateString()}</p>
                 </div>

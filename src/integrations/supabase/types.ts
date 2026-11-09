@@ -262,6 +262,7 @@ export type Database = {
         Row: {
           attention_reason: string | null
           cancelled_at: string | null
+          cancelled_reason: string | null
           check_in_date: string
           check_in_time: string | null
           check_out_date: string
@@ -307,6 +308,7 @@ export type Database = {
         Insert: {
           attention_reason?: string | null
           cancelled_at?: string | null
+          cancelled_reason?: string | null
           check_in_date: string
           check_in_time?: string | null
           check_out_date: string
@@ -352,6 +354,7 @@ export type Database = {
         Update: {
           attention_reason?: string | null
           cancelled_at?: string | null
+          cancelled_reason?: string | null
           check_in_date?: string
           check_in_time?: string | null
           check_out_date?: string
@@ -663,6 +666,32 @@ export type Database = {
             foreignKeyName: "listing_date_prices_listing_id_fkey"
             columns: ["listing_id"]
             isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      listing_private: {
+        Row: {
+          access_instructions: string | null
+          listing_id: string
+          updated_at: string
+        }
+        Insert: {
+          access_instructions?: string | null
+          listing_id: string
+          updated_at?: string
+        }
+        Update: {
+          access_instructions?: string | null
+          listing_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "listing_private_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: true
             referencedRelation: "listings"
             referencedColumns: ["id"]
           },
@@ -1482,6 +1511,7 @@ export type Database = {
           id: string
           listing_id: string
           rating: number
+          tags: string[]
         }
         Insert: {
           booking_id: string
@@ -1492,6 +1522,7 @@ export type Database = {
           id?: string
           listing_id: string
           rating: number
+          tags?: string[]
         }
         Update: {
           booking_id?: string
@@ -1502,6 +1533,7 @@ export type Database = {
           id?: string
           listing_id?: string
           rating?: number
+          tags?: string[]
         }
         Relationships: [
           {
@@ -1847,6 +1879,7 @@ export type Database = {
         Returns: {
           attention_reason: string | null
           cancelled_at: string | null
+          cancelled_reason: string | null
           check_in_date: string
           check_in_time: string | null
           check_out_date: string
@@ -2112,6 +2145,7 @@ export type Database = {
         Returns: {
           attention_reason: string | null
           cancelled_at: string | null
+          cancelled_reason: string | null
           check_in_date: string
           check_in_time: string | null
           check_out_date: string
@@ -2269,6 +2303,7 @@ export type Database = {
         Args: { _force?: boolean; _rows: Json }
         Returns: number
       }
+      trip_access: { Args: { _booking_id: string }; Returns: string }
     }
     Enums: {
       app_role:

@@ -122,6 +122,8 @@ export const RateCalendar = ({ listingId }: { listingId: string }) => {
           : plan.ical_synced_at ? <span className="text-xs text-muted-foreground">Last imported {new Date(plan.ical_synced_at).toLocaleString()} · updates every hour</span> : null}
       </label>
       <button onClick={saveRules} disabled={saving} className="w-full min-h-11 rounded-xl bg-primary text-primary-foreground text-sm font-bold disabled:opacity-50">{saving ? "Saving…" : "Save price rules"}</button>
+      <AccessInstructions listingId={listingId} />
+
 
       <div className="border-t border-border pt-4 space-y-3">
         <p className="text-sm font-semibold">Pick dates to block them or set a special price</p>
@@ -157,5 +159,29 @@ export const RateCalendar = ({ listingId }: { listingId: string }) => {
         )}
       </div>
     </section>
+  );
+};
+
+/** Gate code, key pickup etc. Guests see it only once their booking is confirmed. */
+const AccessInstructions = ({ listingId }: { listingId: string }) => {
+  const [text, setText] = useState("");
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    supabase.from("listing_private").select("access_instructions").eq("listing_id", listingId).maybeSingle()
+      .then(({ data }) => setText(data?.access_instructions ?? ""));
+  }, [listingId]);
+  const save = async () => {
+    setBusy(true);
+    const { error } = await supabase.from("listing_private").upsert({ listing_id: listingId, access_instructions: text.trim().slice(0, 2000) || null, updated_at: new Date().toISOString() });
+    setBusy(false);
+    if (error) toast.error("Could not save"); else toast.success("Check-in details saved");
+  };
+  return (
+    <div className="border-t border-border pt-4 space-y-2">
+      <label className="block"><span className="text-sm font-semibold">How guests get in</span>
+        <span className="block text-xs text-muted-foreground">Gate code, key pickup, parking, Wi-Fi. Guests see this only after their booking is confirmed.</span>
+        <textarea value={text} onChange={(e) => setText(e.target.value)} maxLength={2000} rows={4} className="mt-1 w-full rounded-xl border border-border bg-background p-3 text-sm" /></label>
+      <button onClick={save} disabled={busy} className="w-full min-h-11 rounded-xl border border-border text-sm font-semibold disabled:opacity-50">{busy ? "Saving…" : "Save check-in details"}</button>
+    </div>
   );
 };

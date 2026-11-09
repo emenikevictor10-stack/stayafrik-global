@@ -6,7 +6,9 @@ import { Button, EmptyState, ErrorState, ListSkeleton, Notice, Tag } from "@/ui/
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { toneFor, statusLabel } from "@/lib/status-tone";
-import { tripNextStep, canCancel, canReview, canMoveDates, hasInvoice } from "@/lib/trip-next-step";
+import { tripNextStep, canCancel, canReview, canMoveDates, hasInvoice, canAskGuarantee } from "@/lib/trip-next-step";
+import { koboToNaira } from "@/lib/rayprop-map";
+import { uploadIssuePhotos } from "@/components/support/SupportBits";
 import { ReviewForm, type BookingRow } from "./Bookings";
 import { toast } from "sonner";
 import { SplitPanel, AddonsPanel } from "./SplitAddons";
@@ -20,6 +22,7 @@ const useTrip = (id?: string) => {
   const [trip, setTrip] = useState<Trip | null | undefined>(undefined);
   const [events, setEvents] = useState<Event[]>([]);
   const [reviewed, setReviewed] = useState(false);
+  const [access, setAccess] = useState<string | null>(null);
   const [err, setErr] = useState(false);
   const load = useCallback(async () => {
     if (!id) return;
@@ -27,14 +30,15 @@ const useTrip = (id?: string) => {
     const { data, error } = await supabase.from("bookings").select("*, listings(id,title,location,city,images,address,neighborhood,state)").eq("id", id).maybeSingle();
     if (error) { setErr(true); return; }
     setTrip((data as unknown as Trip) || null);
-    const [{ data: ev }, { data: rv }] = await Promise.all([
+    const [{ data: ev }, { data: rv }, { data: ac }] = await Promise.all([
       supabase.from("booking_events").select("id,type,created_at").eq("booking_id", id).order("created_at"),
       supabase.from("reviews").select("id").eq("booking_id", id).limit(1),
+      supabase.rpc("trip_access", { _booking_id: id }),
     ]);
-    setEvents((ev as Event[]) || []); setReviewed(!!rv?.length);
+    setEvents((ev as Event[]) || []); setReviewed(!!rv?.length); setAccess((ac as string | null) || null);
   }, [id]);
   useEffect(() => { void load(); }, [load]);
-  return { trip, events, reviewed, err, load, setReviewed };
+  return { trip, events, reviewed, access, err, load, setReviewed };
 };
 
 const titleOf = (t: Trip) => (t.source === "rayprop" ? t.partner_title : t.listings?.title) || "Stay";
@@ -58,7 +62,7 @@ const Gate = ({ state, err, retry, children }: { state: unknown; err: boolean; r
 /** /trips/:id — one trip with its next step and every action in one place. */
 export const TripDetail = () => {
   const { id } = useParams();
-  const { trip, events, reviewed, err, load } = useTrip(id);
+  const { trip, events, reviewed, access, err, load } = useTrip(id);
   const [move, setMove] = useState({ open: false, ci: "", co: "", note: "", busy: false });
   const { user } = useAuth();
   const d = today();
@@ -90,9 +94,12 @@ export const TripDetail = () => {
               {t.payment_reference && <div className="p-3 flex justify-between gap-3"><dt className="text-muted-foreground">Reference</dt><dd className="font-mono break-all">{t.payment_reference}</dd></div>}
               {t.check_in_time && <div className="p-3 flex justify-between"><dt className="text-muted-foreground">Check-in time</dt><dd>{t.check_in_time}</dd></div>}
               <div className="p-3 flex justify-between gap-3"><dt className="text-muted-foreground">Address</dt><dd className="text-right">{paid && addr ? addr : "Shown once your booking is confirmed"}</dd></div>
+              {paid && access && <div className="p-3"><dt className="text-muted-foreground mb-1">Getting in</dt><dd className="whitespace-pre-line">{access}</dd></div>}
             </dl>
             <div className="grid gap-2 sm:grid-cols-2">
               {hasInvoice(t.status) && <Link to={`/trips/${t.id}/invoice`} className="min-h-11 rounded-lg border border-border flex items-center justify-center text-[13px] font-semibold">Invoice</Link>}
+              {canAskGuarantee(t.status, d, t.check_in_date, t.check_out_date) && <Link to={`/trips/${t.id}/move`} className="min-h-11 rounded-lg border border-border flex items-center justify-center text-[13px] font-semibold">Not as described? Ask to move</Link>}
+              {(t as any).is_split && <Link to={`/trips/${t.id}/guests`} className="min-h-11 rounded-lg border border-border flex items-center justify-center text-[13px] font-semibold">Travelling together</Link>}
               {paid && <Link to={`/trips/${t.id}/report`} className="min-h-11 rounded-lg border border-border flex items-center justify-center text-[13px] font-semibold">Report a problem</Link>}
               {canReview(t.status, d, t.check_out_date) && !reviewed && <Link to={`/trips/${t.id}/review`} className="min-h-11 rounded-lg border border-border flex items-center justify-center text-[13px] font-semibold">Leave a review</Link>}
               {canMoveDates(t.status, d, t.check_in_date) && <button type="button" onClick={() => setMove((m) => ({ ...m, open: !m.open }))} className="min-h-11 rounded-lg border border-border text-[13px] font-semibold">Ask to move dates</button>}
@@ -132,6 +139,7 @@ export const TripCancel = () => {
   const { trip, err, load } = useTrip(id);
   const [preview, setPreview] = useState<{ amount: number; percent: number } | null>(null);
   const [busy, setBusy] = useState(false);
+  const [reason, setReason] = useState("");
   const partner = trip?.source === "rayprop";
   useEffect(() => {
     if (!trip || partner) return;
@@ -144,9 +152,9 @@ export const TripCancel = () => {
     try {
       if (partner) {
         const { cancelRayPropBooking } = await import("@/lib/rayprop");
-        await cancelRayPropBooking(trip.id);
+        await cancelRayPropBooking(trip.id, reason.trim() || undefined);
       } else {
-        const { data, error } = await supabase.functions.invoke("cancel-booking", { body: { booking_id: trip.id } });
+        const { data, error } = await supabase.functions.invoke("cancel-booking", { body: { booking_id: trip.id, reason: reason.trim() || undefined } });
         if (error || data?.error) throw new Error(data?.error || "Could not cancel right now");
       }
       toast.success("Booking cancelled.");
@@ -164,6 +172,8 @@ export const TripCancel = () => {
           <ul className="text-[13px] text-muted-foreground space-y-1">
             <li>• Full refund 48 hours or more before check-in.</li><li>• 50% refund less than 48 hours before check-in.</li><li>• No refund after check-in.</li>
           </ul>
+          <label className="block"><span className="text-[13px] font-semibold">Why are you cancelling? (optional)</span>
+            <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background p-2 text-[13px]" /></label>
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => navigate(-1)}>Keep booking</Button>
             <Button variant="danger" loading={busy} onClick={confirm} disabled={!partner && !preview}>Cancel booking</Button>
@@ -272,6 +282,128 @@ export const FindBooking = () => {
           <Link to="/trips" className="mt-3 inline-block underline font-semibold">Sign in to manage it</Link>
         </div>
       )}
+    </Shell>
+  );
+};
+
+const GUARANTEE_REASONS = ["Photos don't match", "No power or water as promised", "Not clean or unsafe", "Missing amenities", "Wrong location", "Other"];
+type Similar = { id: string; title: string; city: string | null; price_per_night: number; images: string[] };
+
+/** /trips/:id/move — StayGlobal guarantee: place not as described, ask to move. Staff arrange it. */
+export const TripMove = () => {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  const { trip, err, load } = useTrip(id);
+  const [why, setWhy] = useState("");
+  const [note, setNote] = useState("");
+  const [files, setFiles] = useState<File[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [similar, setSimilar] = useState<Similar[] | null>(null);
+  useEffect(() => {
+    if (!trip) return;
+    const city = trip.source === "rayprop" ? trip.partner_city : trip.listings?.city;
+    const price = Number(trip.total_price) / Math.max(1, (Date.parse(trip.check_out_date) - Date.parse(trip.check_in_date)) / 864e5);
+    (async () => {
+      let q = supabase.from("listings").select("id,title,city,price_per_night,images").eq("is_available", true).eq("verified", true)
+        .gte("price_per_night", price * 0.6).lte("price_per_night", price * 1.4).limit(18);
+      if (city) q = q.ilike("city", city);
+      if (trip.listing_id) q = q.neq("id", trip.listing_id);
+      const { data } = await q;
+      const free: Similar[] = [];
+      for (const l of (data as Similar[]) || []) {
+        const { data: r } = await supabase.rpc("listing_booked_ranges", { _listing_id: l.id });
+        const clash = (r || []).some((x: { check_in: string; check_out: string }) => x.check_in < trip.check_out_date && x.check_out > trip.check_in_date);
+        if (!clash) free.push(l);
+        if (free.length >= 6) break;
+      }
+      setSimilar(free);
+    })();
+  }, [trip]);
+  const send = async () => {
+    if (!trip || !user) return;
+    if (!why) return toast.error("Pick what's wrong");
+    setBusy(true);
+    try {
+      const media = files.length ? await uploadIssuePhotos(user.id, files.slice(0, 3)) : [];
+      const { error } = await supabase.rpc("create_support_issue", { _booking_id: trip.id, _category: "guarantee_move", _urgent: true, _note: `${why}. ${note.trim()}`.trim(), _media: media });
+      if (error) throw error;
+      toast.success("Request sent. Our team will call you shortly to arrange the move.");
+      navigate(`/trips/${trip.id}`, { replace: true });
+    } catch (e) { toast.error((e as Error).message || "Could not send"); } finally { setBusy(false); }
+  };
+  return (
+    <Shell title="StayGlobal guarantee">
+      <Gate state={trip} err={err} retry={load}>{() => {
+        const t = trip!;
+        if (!canAskGuarantee(t.status, today(), t.check_in_date, t.check_out_date)) return <EmptyState title="You can ask to move only during your stay" action={<Link to={`/trips/${t.id}`} className="underline">Back to trip</Link>} />;
+        return (
+          <div className="space-y-4">
+            <h1 className="text-xl font-semibold">Not as described?</h1>
+            <p className="text-[13px] text-muted-foreground">If {titleOf(t)} isn't what the listing promised, tell us. We'll move you to a similar stay at no extra cost.</p>
+            <div className="flex flex-wrap gap-2">
+              {GUARANTEE_REASONS.map((r) => (
+                <button key={r} type="button" aria-pressed={why === r} onClick={() => setWhy(r)} className={`min-h-11 px-3 rounded-full border text-[13px] ${why === r ? "border-foreground bg-foreground text-background" : "border-border"}`}>{r}</button>
+              ))}
+            </div>
+            <textarea value={note} onChange={(e) => setNote(e.target.value)} maxLength={1000} rows={3} placeholder="Tell us what you found" className="w-full rounded-lg border border-border bg-background p-2 text-[13px]" />
+            <label className="block text-[13px]"><span className="font-semibold">Photos (up to 3, optional)</span>
+              <input type="file" accept="image/*" multiple onChange={(e) => setFiles(Array.from(e.target.files || []).slice(0, 3))} className="mt-1 block" /></label>
+            <Button loading={busy} onClick={send}>Ask to move</Button>
+            <section>
+              <h2 className="text-base font-semibold mb-2">Similar stays free for your dates</h2>
+              {similar === null ? <ListSkeleton rows={2} /> : similar.length === 0 ? <p className="text-[13px] text-muted-foreground">We'll find options for you when we call.</p> : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                  {similar.map((s) => (
+                    <Link key={s.id} to={`/stays/${s.id}`} className="block rounded-xl border border-border overflow-hidden">
+                      <img src={s.images?.[0] || "/placeholder.svg"} alt="" className="aspect-[4/3] w-full object-cover" loading="lazy" />
+                      <div className="p-2"><p className="text-[13px] font-semibold line-clamp-1">{s.title}</p><p className="text-xs text-muted-foreground">{fmt(s.price_per_night)} / night</p></div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+              <p className="text-xs text-muted-foreground mt-2">Our team confirms the new stay with you before anything changes.</p>
+            </section>
+          </div>
+        );
+      }}</Gate>
+    </Shell>
+  );
+};
+
+type Share = { id: string; share_no: number; amount_kobo: number; status: string; label: string | null; paid_at: string | null };
+/** /trips/:id/guests — who is travelling together and who has paid. */
+export const TripGuests = () => {
+  const { id } = useParams();
+  const { trip, err, load } = useTrip(id);
+  const [shares, setShares] = useState<Share[] | null>(null);
+  useEffect(() => {
+    if (!id) return;
+    supabase.from("payment_shares").select("id,share_no,amount_kobo,status,label,paid_at").eq("booking_id", id).order("share_no").then(({ data }) => setShares((data as Share[]) || []));
+  }, [id]);
+  return (
+    <Shell title="Travelling together">
+      <Gate state={trip} err={err} retry={load}>{() => {
+        const t = trip!;
+        if (shares === null) return <ListSkeleton rows={3} />;
+        if (!shares.length) return <EmptyState title="This trip isn't split" action={<Link to={`/trips/${t.id}`} className="underline">Back to trip</Link>} />;
+        const paidN = shares.filter((s) => s.status === "paid").length;
+        return (
+          <div className="space-y-4">
+            <h1 className="text-xl font-semibold">{titleOf(t)}</h1>
+            <Notice>{paidN} of {shares.length} paid{t.status === "held" ? ". The booking confirms once everyone has paid." : "."}</Notice>
+            <ul className="rounded-xl border border-border divide-y divide-border text-[13px]">
+              {shares.map((s) => (
+                <li key={s.id} className="p-3 flex items-center justify-between gap-3">
+                  <span>{s.label || (s.share_no === 1 ? "You" : `Person ${s.share_no}`)}</span>
+                  <span className="flex items-center gap-2"><b>{fmt(koboToNaira(s.amount_kobo))}</b><Tag tone={s.status === "paid" ? "done" : s.status === "refunded" ? "fact" : "act"}>{s.status === "paid" ? "Paid" : s.status === "refunded" ? "Refunded" : "Not paid"}</Tag></span>
+                </li>
+              ))}
+            </ul>
+            {t.status === "held" && <SplitPanel bookingId={t.id} onChange={load} />}
+          </div>
+        );
+      }}</Gate>
     </Shell>
   );
 };

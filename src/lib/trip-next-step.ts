@@ -24,4 +24,14 @@ export const tripNextStep = (status: string, checkIn: string, checkOut: string, 
 export const canCancel = (status: string, today: string, checkIn: string) => ["confirmed", "awaiting_host"].includes(status) && today < checkIn;
 export const canReview = (status: string, today: string, checkOut: string) => ["confirmed", "released", "completed"].includes(status) && today >= checkOut;
 export const canMoveDates = (status: string, today: string, checkIn: string) => ["confirmed", "awaiting_host"].includes(status) && today < checkIn;
+/** Which Trips tab a booking belongs to. */
+export type TripTab = "upcoming" | "past" | "cancelled";
+export const tripTab = (status: string, checkOut: string, today: string): TripTab => {
+  if (["cancelled", "refunded", "declined", "expired", "failed"].includes(status)) return "cancelled";
+  if (["completed"].includes(status) || today >= checkOut) return "past";
+  return "upcoming";
+};
+/** StayGlobal guarantee: ask to move only during the stay, on a paid booking. */
+export const canAskGuarantee = (status: string, today: string, checkIn: string, checkOut: string) =>
+  ["confirmed", "released"].includes(status) && today >= checkIn && today < checkOut;
 export const hasInvoice = (status: string) => ["held", "pending", "processing", "awaiting_host", "confirmed", "released", "completed", "needs_attention"].includes(status);

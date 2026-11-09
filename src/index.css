@@ -129,3 +129,14 @@
     box-shadow: 0 0 0 1px hsl(var(--primary) / 0.3), 0 8px 24px hsl(var(--primary) / 0.18);
   }
 }
+
+/* Explore map price pins */
+.sg-pin-wrap { background: none; border: 0; }
+.sg-pin {
+  display: inline-block; transform: translate(-50%, -50%); white-space: nowrap;
+  padding: 4px 8px; border-radius: 999px; font: 600 13px/1.2 inherit;
+  background: hsl(var(--background)); color: hsl(var(--foreground));
+  box-shadow: 0 1px 4px hsl(var(--foreground) / 0.25); border: 1px solid hsl(var(--border));
+  transition: transform .15s;
+}
+.sg-pin-active { background: hsl(var(--foreground)); color: hsl(var(--background)); transform: translate(-50%, -50%) scale(1.12); }

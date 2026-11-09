@@ -1437,6 +1437,59 @@ export type Database = {
         }
         Relationships: []
       }
+      wishlist_items: {
+        Row: {
+          added_at: string
+          listing_ref: string
+          wishlist_id: string
+        }
+        Insert: {
+          added_at?: string
+          listing_ref: string
+          wishlist_id: string
+        }
+        Update: {
+          added_at?: string
+          listing_ref?: string
+          wishlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_items_wishlist_id_fkey"
+            columns: ["wishlist_id"]
+            isOneToOne: false
+            referencedRelation: "wishlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      wishlists: {
+        Row: {
+          created_at: string
+          id: string
+          is_default: boolean
+          name: string
+          share_token: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name: string
+          share_token?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_default?: boolean
+          name?: string
+          share_token?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -1528,6 +1581,13 @@ export type Database = {
           is_host: boolean
           user_id: string
           whatsapp: string
+        }[]
+      }
+      get_shared_wishlist: {
+        Args: { _token: string }
+        Returns: {
+          listing_refs: string[]
+          name: string
         }[]
       }
       guest_confirm_checkin: {

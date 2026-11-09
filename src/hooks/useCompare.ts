@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 
 const KEY = "sg-compare";
-export const COMPARE_MAX = 4;
+export const COMPARE_MAX = 3;
 const read = (): string[] => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; } };
 
-/** Device-local compare picks (max 4) until the compare page lands. */
+/** Device-local compare picks (max 3), shown on /compare. */
 export const useCompare = () => {
   const [ids, setIds] = useState<string[]>(read);
   useEffect(() => {

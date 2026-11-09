@@ -1,15 +1,19 @@
-# Stay
+# StayGlobal
 
-> Africa's verified property platform. Verified shortlets, homes and land across Africa with escrow-protected payments.
+> Book verified shortlet apartments across Nigeria. Guests see power, water and security up front, and payment is held until check-in.
 
-Stay independently inspects every shortlet, home and plot listed on the platform. Payments are held in PropertyEscrow™ and only released to the host or seller after the buyer confirms check-in or receipt of documents.
+StayGlobal (Stay) lists local hosts' shortlets and partner stays in one search. Prices are per night in naira. The exact address is shared after payment.
 
 ## Pages
 
-- [Home](/): Overview of Stay, featured verified properties and trust pillars.
-- [Explore](/explore): Search and filter verified shortlets across African cities.
-- [Help](/profile/help): Frequently asked questions on escrow, verification, bookings and payouts.
+- [Stays](/): Search and browse shortlets by place, dates and guests.
+- [Map](/explore): Every stay as a price pin on a map (approximate areas only).
+- [Shortlets in Lekki](/stays-in/lekki): Example area page.
+- [Guides](/guides): Simple guides to picking and booking a shortlet.
+- [List your place](/list-your-place): How hosts list a shortlet.
+- [Terms](/terms): Terms and conditions.
+- [Privacy](/privacy-policy): Privacy policy.
 
 ## Optional
 
-- [Sign in](/auth): Account access for travellers and verified agents.
+- [How Stay protects your payment](/guides/how-stay-protects-your-payment): Payment hold and refund rules.

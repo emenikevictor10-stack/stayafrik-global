@@ -184,6 +184,24 @@ export type Database = {
         }
         Relationships: []
       }
+      aria_usage: {
+        Row: {
+          actor: string
+          created_at: string
+          id: number
+        }
+        Insert: {
+          actor: string
+          created_at?: string
+          id?: number
+        }
+        Update: {
+          actor?: string
+          created_at?: string
+          id?: number
+        }
+        Relationships: []
+      }
       bank_transfers: {
         Row: {
           amount_kobo: number

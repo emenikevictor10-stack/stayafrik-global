@@ -32,3 +32,4 @@
 - Blocks: `user_status` via `staff_user_action`; `private.is_blocked` gates inserts, `paystack-init` refuses. Why: one switch.
 - Guides: `help_guides`; replies: `staff_review_reply`. Why: no code change.
 - Emails only via SQL `send_branded_email`/`email_layout`; ticks via `run_scheduled_ticks` (logs `cron_runs`). Why: one look, visible runs.
+- Aria assistant lives only in the `aria-chat` edge function (tools: search_stays via `search_locations` + listings + `partner_location_map`/`partner_catalogue`, quote via `quoteLocalStay`, my_trips for the verified user only), pure rules in `_shared/aria-core.ts` (tested), 30 messages/hour per user/device via `aria_usage`. Why: answers use the same places, prices and policies as the app.

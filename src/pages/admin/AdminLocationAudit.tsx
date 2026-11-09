@@ -64,7 +64,7 @@ const AdminLocationAudit = () => {
         suggestion_id: r.location_suggestion_id, confidence: r.location_confidence, reason: reason(r.location_confidence, r.location_suggestion_id),
       })),
       ...((partner.data as any[]) || []).map((r) => ({
-        kind: "partner" as const, id: r.rayprop_listing_id, code: `RP·${r.rayprop_listing_id}`, title: r.title || "Partner stay",
+        kind: "partner" as const, id: r.rayprop_listing_id, code: String(r.rayprop_listing_id).replace(/^rp_/, ""), title: r.title || "Partner stay",
         raw: [r.raw_neighbourhood, r.raw_city, r.raw_state, r.raw_address].filter(Boolean).join(", ") || "(no address given)",
         suggestion_id: r.suggestion_id, confidence: r.confidence, reason: reason(r.confidence, r.suggestion_id),
       })),

@@ -45,7 +45,7 @@ export type Property = {
   checkOutTime?: string;
   houseRules?: string[];
   createdAt?: string;
-  /** Trackable listing ID: SG1234AB for local stays, RP-<id> for partner stays. */
+  /** Trackable listing ID: SG1234AB for local stays, RayProp's own listing ID for partner stays. */
   listingCode?: string;
 };
 

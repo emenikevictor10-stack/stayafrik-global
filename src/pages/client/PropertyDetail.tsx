@@ -298,8 +298,8 @@ const PropertyDetail = () => {
             onClick={() => { navigator.clipboard?.writeText(p.listingCode!); toast.success("Listing ID copied"); }}
             className="mt-4 inline-flex items-center gap-2 rounded-lg bg-card border border-border px-3 py-1.5 text-xs"
           >
-            <span className="text-muted-foreground">Listing ID</span>
-            <span className="font-mono font-bold">{p.listingCode.replace(/^RP-/, "RP·")}</span>
+            <span className="text-muted-foreground">{p.source === "rayprop" ? "RayProp listing ID" : "Listing ID"}</span>
+            <span className="font-mono font-bold">{p.listingCode.replace(/^RP[-·]/, "")}</span>
           </button>
         )}
 

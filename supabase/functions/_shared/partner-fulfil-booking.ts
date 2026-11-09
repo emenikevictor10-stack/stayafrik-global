@@ -74,7 +74,7 @@ export const notifyPartnerBooking = async (admin: any, b: any, userId: string) =
   if (b.status === "confirmed") {
     await admin.from("notifications").insert({ user_id: userId, type: "booking", title: "Booking confirmed", body: `${title} · ${dates}`, link: "/bookings" });
     await admin.rpc("send_alert_email", { _user_id: userId, _subject: "Your StayGlobal booking is confirmed", _heading: "Booking confirmed",
-      _body: `<strong>${esc(title)}</strong> (Listing ID RP-${esc(b.rayprop_listing_id)})<br/><br/>`
+      _body: `<strong>${esc(title)}</strong> (RayProp listing ID ${esc(String(b.rayprop_listing_id).replace(/^rp_/, ""))})<br/><br/>`
         + `<strong>Address:</strong> ${b.partner_address ? `${esc(b.partner_address)}<br/><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(b.partner_address)}" style="color:#e0b64c">Get directions</a>` : "Will be sent before check-in"}<br/><br/>`
         + `<strong>Check-in:</strong> ${esc(b.check_in_date)}${b.check_in_time ? ` (from ${esc(b.check_in_time)})` : ""}<br/><strong>Check-out:</strong> ${esc(b.check_out_date)}<br/>`
         + `<strong>Guests:</strong> ${b.guest_count || 1} · <strong>Paid:</strong> ₦${Number(b.total_price).toLocaleString("en-NG")} · <strong>Ref:</strong> ${esc(b.payment_reference)}<br/><br/>`

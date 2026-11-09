@@ -67,7 +67,7 @@ const partnerAmenities = (raw: Record<string, any>) => {
 };
 
 export const raypropToProperty = (raw: Record<string, any>, fallbackImage: string): Property | null => {
-  const rawId = str(raw.id || raw.unique_listing_id || raw.listing_id);
+  const rawId = str(raw.unique_listing_id || raw.id || raw.listing_id);
   if (!rawId) return null;
   const imgs = Array.isArray(raw.listing_images) ? [...raw.listing_images] : [];
   imgs.sort((a: any, b: any) => Number(!!b?.is_primary) - Number(!!a?.is_primary));
@@ -113,11 +113,11 @@ export const raypropToProperty = (raw: Record<string, any>, fallbackImage: strin
   };
 };
 
-/** Trackable partner listing code stored on bookings, e.g. RP-1C1F9KRZ. */
-export const partnerListingCode = (rawId: string) => `RP-${String(rawId).replace(/^rp_/, "")}`;
+/** RayProp's own listing ID, shown as-is, e.g. 1C1F9KRZ. Strips our old rp_/RP- prefixes. */
+export const partnerListingCode = (rawId: string) => String(rawId).replace(/^(rp_|RP[-·])/, "");
 
 /** Local listing code format: SG + 4 digits + 2 letters, e.g. SG2345LT. */
 export const LOCAL_LISTING_CODE = /^SG[0-9]{4}[A-Z]{2}$/;
 
-/** Display form: RP-XXXX → RP·XXXX, local codes unchanged. */
-export const displayListingCode = (code?: string | null) => (code ? code.replace(/^RP-/, "RP·") : "");
+/** Display form: drops any legacy RP- prefix; codes otherwise shown as stored. */
+export const displayListingCode = (code?: string | null) => (code ? code.replace(/^RP[-·]/, "") : "");

@@ -8,7 +8,7 @@ describe("listing codes", () => {
     expect(LOCAL_LISTING_CODE.test("SG2345L1")).toBe(false);
   });
   it("partner codes use the RayProp listing id", () => {
-    expect(partnerListingCode("rp_1C1F9KRZ")).toBe("RP-1C1F9KRZ");
-    expect(displayListingCode("RP-1C1F9KRZ")).toBe("RP·1C1F9KRZ");
+    expect(partnerListingCode("rp_1C1F9KRZ")).toBe("1C1F9KRZ");
+    expect(displayListingCode("RP-1C1F9KRZ")).toBe("1C1F9KRZ");
   });
 });

@@ -75,7 +75,7 @@ const AdminPartnerBookings = () => {
 
   const attention = rows.filter((r) => r.status === "needs_attention");
   const shown = useMemo(() => {
-    const t = q.trim().toLowerCase().replace(/[·\s]/g, "");
+    const t = q.trim().toLowerCase().replace(/[·\s]/g, "").replace(/^rp-?/, "");
     return rows.filter((r) => {
       if (filter !== "all" && r.status !== filter) return false;
       if (from && r.check_in_date < from) return false;
@@ -160,7 +160,7 @@ const AdminPartnerBookings = () => {
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {r.listing_code && <button onClick={() => copy(r.listing_code!)} className="font-mono text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.listing_code.replace(/^RP-/, "RP·")}</button>}
+                          {r.listing_code && <button onClick={() => copy(r.listing_code!)} className="font-mono text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground"><span className="mr-1 font-sans font-semibold">RayProp</span>{r.listing_code.replace(/^RP[-·]/, "")}</button>}
                           <Tag tone={toneFor(r.status)}>{statusLabel(r.status)}</Tag>
                         </div>
                         {r.rayprop_listing_id

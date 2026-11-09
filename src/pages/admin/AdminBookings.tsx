@@ -93,7 +93,7 @@ const AdminBookings = () => {
   const title = (r: Row) => r.listing?.title || r.partner_title || "Listing";
 
   const shown = useMemo(() => {
-    const t = q.trim().toLowerCase().replace(/[·\s]/g, "");
+    const t = q.trim().toLowerCase().replace(/[·\s]/g, "").replace(/^rp-?/, "");
     return rows.filter((r) => {
       if (source === "local" && r.source === "rayprop") return false;
       if (source === "rayprop" && r.source !== "rayprop") return false;
@@ -203,7 +203,7 @@ const AdminBookings = () => {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold truncate">{title(r)}</span>
-                  {r.listing_code && <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.listing_code.replace(/^RP-/, "RP·")}</span>}
+                  {r.listing_code && <span className="font-mono text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.source === "rayprop" && <span className="mr-1 font-sans font-semibold">RayProp</span>}{r.listing_code.replace(/^RP[-·]/, "")}</span>}
                   {r.source === "rayprop" && <span className="text-xs font-bold text-primary">Partner</span>}
                 </div>
                 <p className="text-xs text-muted-foreground mt-0.5">{people[r.guest_id]?.name || "Guest"} · {day(r.check_in_date)} → {day(r.check_out_date)}</p>
@@ -235,7 +235,7 @@ const AdminBookings = () => {
                     <div className="flex items-start justify-between gap-3 flex-wrap">
                       <div className="min-w-0">
                         <div className="flex items-center gap-2 flex-wrap">
-                          {r.listing_code && <button onClick={() => copy(r.listing_code!)} className="font-mono text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.listing_code.replace(/^RP-/, "RP·")}</button>}
+                          {r.listing_code && <button onClick={() => copy(r.listing_code!)} className="font-mono text-xs px-1.5 py-0.5 rounded bg-secondary text-muted-foreground">{r.source === "rayprop" && <span className="mr-1 font-sans font-semibold">RayProp</span>}{r.listing_code.replace(/^RP[-·]/, "")}</button>}
                           <span className={`text-xs font-bold ${r.source === "rayprop" ? "text-primary" : "text-muted-foreground"}`}>{r.source === "rayprop" ? "Partner stay" : "Your stay"}</span>
                           <Pill s={r.status} />
                         </div>

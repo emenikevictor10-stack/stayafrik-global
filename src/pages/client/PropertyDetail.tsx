@@ -472,7 +472,7 @@ const PropertyDetail = () => {
 
       {/* Sticky CTA */}
       <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
-        <div className="max-w-md mx-auto px-5 py-3 pb-20 md:pb-3 flex items-center gap-3">
+        <div className="max-w-md mx-auto px-5 py-3 pb-20 xl:pb-3 flex items-center gap-3">
           <div className="flex-1">
             <div className="text-primary font-extrabold text-lg leading-none">{p.price}</div>
             <div className="text-xs text-muted-foreground mt-1">

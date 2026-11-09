@@ -59,7 +59,7 @@ export const MobileSearchModal = ({ open, onOpenChange }: { open: boolean; onOpe
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="p-0 gap-0 border-0 max-w-none w-screen h-[100dvh] rounded-none bg-search-muted/95 backdrop-blur-md flex flex-col [&>button]:hidden">
+      <DialogContent className="p-0 gap-0 border-0 fixed inset-0 left-0 top-0 translate-x-0 translate-y-0 max-w-none w-full h-[100dvh] rounded-none overflow-x-hidden overscroll-contain touch-manipulation data-[state=open]:zoom-in-100 data-[state=closed]:zoom-out-100 data-[state=open]:slide-in-from-left-0 data-[state=open]:slide-in-from-top-0 data-[state=closed]:slide-out-to-left-0 data-[state=closed]:slide-out-to-top-0 bg-search-muted/95 backdrop-blur-md flex flex-col [&>button]:hidden">
         <DialogTitle className="sr-only">Search stays</DialogTitle>
         <div className="relative flex items-center justify-center px-5 pt-5 pb-4">
           <div className="flex flex-col items-center gap-1 text-sm font-semibold border-b-2 border-foreground pb-1.5">
@@ -71,7 +71,7 @@ export const MobileSearchModal = ({ open, onOpenChange }: { open: boolean; onOpe
           </button>
         </div>
 
-        <div className="flex-1 overflow-y-auto px-3 space-y-3 pb-4">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden overscroll-contain px-3 space-y-3 pb-4">
           {card("where", "Where?", "Where", draft.where || "I'm flexible", (
             <>
               <label className="flex items-center gap-3 h-14 px-4 rounded-xl border border-muted-foreground focus-within:border-foreground">
@@ -81,7 +81,7 @@ export const MobileSearchModal = ({ open, onOpenChange }: { open: boolean; onOpe
                 <input autoFocus value={draft.where} onChange={(e) => patch({ where: e.target.value, loc: undefined, locType: undefined })}
                   onKeyDown={(e) => { if (e.key === "Enter") { const it = where.typing ? where.items[0] : undefined; if (it) pick(it); else toWhen(); } }}
                   role="combobox" aria-expanded aria-controls="m-where-list"
-                  placeholder="Search destinations" className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted-foreground" />
+                  placeholder="Search destinations" className="flex-1 bg-transparent text-base outline-none placeholder:text-muted-foreground" />
                 {draft.where && <button type="button" aria-label="Clear place" onClick={() => patch({ where: "", loc: undefined, locType: undefined })}><X className="w-4 h-4" /></button>}
               </label>
               <div className="mt-4 max-h-[42vh] overflow-y-auto -mx-2">

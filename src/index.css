@@ -143,3 +143,9 @@
 
 /* Approximate area circle on the Explore map */
 .sg-area-circle { stroke: hsl(var(--primary)); fill: hsl(var(--primary)); }
+
+/* iPhone: stop tap-zoom on form fields (needs >=16px) and double-tap zoom on buttons. */
+@media (max-width: 767px) {
+  input, select, textarea { font-size: 16px !important; }
+}
+button, [role="button"], a { touch-action: manipulation; }

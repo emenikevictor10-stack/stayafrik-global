@@ -14,7 +14,7 @@ const json = (status: number, body: unknown) =>
   new Response(JSON.stringify(body), { status, headers: { ...corsHeaders, "Content-Type": "application/json" } });
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
-const TTL = 10 * 60_000;
+const TTL = 30 * 60_000;
 
 /** Whole RayProp catalogue: memory (10 min) → saved DB copy → paced RayProp refresh at most every 6 hours. */
 let catalogue: { at: number; rows: any[] } | null = null;
@@ -22,12 +22,15 @@ let inflight: Promise<any[]> | null = null;
 const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 const readSavedCatalogue = async (): Promise<any[]> => {
+  const db = admin();
+  const { count } = await db.from("partner_catalogue").select("rayprop_listing_id", { count: "exact", head: true });
+  const n = Math.max(1, Math.ceil((count || 0) / 500));
+  const parts = await Promise.all(Array.from({ length: n }, (_, i) =>
+    db.from("partner_catalogue").select("record").order("rayprop_listing_id").range(i * 500, i * 500 + 499)));
   const rows: any[] = [];
-  for (let from = 0; ; from += 1000) {
-    const { data, error } = await admin().from("partner_catalogue").select("record").range(from, from + 999);
-    if (error) { console.error("[rayprop-api] saved catalogue read failed", error); break; }
+  for (const { data, error } of parts) {
+    if (error) { console.error("[rayprop-api] saved catalogue read failed", error); continue; }
     rows.push(...(data || []).map((d: any) => d.record));
-    if (!data || data.length < 1000) break;
   }
   return rows;
 };
@@ -61,7 +64,8 @@ const loadCatalogue = async (): Promise<any[]> => {
   inflight = (async () => {
     const { data: state } = await admin().from("partner_sync_state").select("last_full_refresh_at, blocked_until").eq("id", 1).maybeSingle();
     let rows = await readSavedCatalogue();
-    if (catalogueRefreshDue(state?.last_full_refresh_at, state?.blocked_until)) {
+    const due = catalogueRefreshDue(state?.last_full_refresh_at, state?.blocked_until);
+    const refresh = async () => {
       try {
         const fresh = await refreshFromRayProp();
         if (fresh.length) {
@@ -72,6 +76,14 @@ const loadCatalogue = async (): Promise<any[]> => {
       } catch (e) {
         console.error("[rayprop-api] catalogue refresh failed; using saved copy", e);
       }
+      return rows;
+    };
+    if (due && rows.length) {
+      // Serve the saved copy now; refresh in the background so no searcher waits.
+      const bg = refresh().then((r) => { catalogue = { at: Date.now(), rows: r }; });
+      (globalThis as any).EdgeRuntime?.waitUntil?.(bg);
+    } else if (due) {
+      rows = await refresh();
     }
     catalogue = { at: Date.now(), rows };
     return rows;

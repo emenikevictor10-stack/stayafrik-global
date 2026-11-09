@@ -169,7 +169,6 @@ const Bookings = () => {
           const img = (partner ? b.partner_image : b.listings?.images?.[0]) || "/placeholder.svg";
           const title = (partner ? b.partner_title : b.listings?.title) || "Listing";
           const place = partner ? b.partner_city : b.listings?.location || b.listings?.city;
-          const href = partner ? `/stays/rp_${b.rayprop_listing_id}` : `/stays/${b.listing_id}`;
           const createdMs = new Date(b.created_at).getTime();
           const holdEnds = createdMs + HOLD_MIN * 60_000;
           const canRelease = b.status === "confirmed" && now >= holdEnds;

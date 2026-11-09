@@ -23,7 +23,7 @@
 - Sign-in is asked only at the point it is needed: browsing, stay pages and checkout (`/property/:id/book`) are public; Pay/hold opens `SignInSheet` and returns with `?resume=1`, restoring the draft from sessionStorage. No splash screens; `/` is the stays list. PIN gate wraps only checkout and signed-in routes. Why: Airbnb-style browse-first; `paystack-init` still requires a session.
 
 - Split payments (local, 2–6): `payment_shares`, amounts via `splitShares`/`validateCustomShares`; card or transfer (`bank_transfers.meta.share_id`) → `record_share_payment` → `confirm_local_payment`; `split_share_action`, `split_reminders_tick`. Why: one confirm path.
-- Add-ons: `addons`/`addon_orders`, paid via `paystack-init` mode `addon`, confirmed by `confirm_addon_payment`; staff use `staff_addon_action`. Metadata `kind` routes verify+webhook. Why: server price, one webhook.
+- Add-ons: `addons`/`addon_orders`, paid via `paystack-init` mode `addon` (card or `bank_transfers.meta.addon_order_id`), confirmed by `confirm_addon_payment`; stages via `staff_addon_action`/`guest_addon_cancel` (mirror `src/lib/addons.ts`). Why: server price, one confirm path.
 - Bank transfer: `paystack-init` method `bank_transfer` → `bank_transfers`; guest `submit_bank_transfer`, staff `staff_bank_transfer_action` (local → `confirm_local_payment`) or `bank-transfer-approve` (partner). Why: one confirm path.
 - Email-sending and queue database functions are service-role only; never grant them to anon/authenticated. Why: otherwise anyone could send email as us.
 - Maps use Leaflet + OSM (not MapLibre); pins/circles use `approxPoint`/`AREA_CIRCLE_M` from `src/lib/map-pins.ts`, never exact coords. Why: free; privacy in one place.

@@ -5,8 +5,8 @@ import { useTheme } from "@/lib/theme";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerTitle } from "@/components/ui/drawer";
-import logoLight from "@/assets/stay-logo-light.png";
-import logoDark from "@/assets/stay-logo-2.png";
+import logoLight from "@/assets/stayglobal-logo-light.png";
+import logoDark from "@/assets/stayglobal-logo-dark.png";
 import { StatusDot } from "@/components/support/SupportBits";
 import type { DotTone } from "@/lib/support";
 export { StatusDot as Tag, UnderlineTabs as Tabs } from "@/components/support/SupportBits";
@@ -14,7 +14,7 @@ export { StatusDot as Tag, UnderlineTabs as Tabs } from "@/components/support/Su
 /** StayGlobal wordmark image — never typed text. */
 export const Logo = ({ className }: { className?: string }) => {
   const [theme] = useTheme();
-  return <img src={theme === "dark" ? logoDark : logoLight} alt="Stay" className={cn("h-7 w-auto object-contain", className)} />;
+  return <img src={theme === "dark" ? logoDark : logoLight} alt="StayGlobal" className={cn("h-6 w-auto object-contain", className)} />;
 };
 
 type BtnVariant = "primary" | "secondary" | "text" | "danger";

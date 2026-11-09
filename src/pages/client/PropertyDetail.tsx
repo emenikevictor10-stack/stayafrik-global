@@ -489,7 +489,7 @@ const PropertyDetail = () => {
           ) : p.type === "Shortlet" ? (
             <Button
               onClick={handleBook}
-              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 h-12 font-bold"
+              className="bg-primary text-primary-foreground hover:bg-primary/90 rounded-full px-6 h-12 font-bold whitespace-nowrap"
             >
               Book stay
             </Button>

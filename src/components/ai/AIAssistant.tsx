@@ -5,11 +5,15 @@ import { supabase } from "@/integrations/supabase/client";
 import { useRole } from "@/contexts/RoleContext";
 import { X, Send, Sparkles } from "lucide-react";
 import { toast } from "sonner";
+import { useLocation } from "react-router-dom";
+import { cn } from "@/lib/utils";
 
 type Msg = { role: "user" | "assistant"; content: string };
 
 export const AIAssistant = () => {
   const { role } = useRole();
+  const { pathname } = useLocation();
+  const raised = /^\/(stays|property)\/[^/]+/.test(pathname);
   const [open, setOpen] = useState(false);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
@@ -68,7 +72,7 @@ export const AIAssistant = () => {
       {/* FAB - smaller */}
       <button
         onClick={() => setOpen(true)}
-        className="fixed bottom-20 right-4 z-40 w-11 h-11 rounded-full bg-primary text-primary-foreground shadow-glow flex items-center justify-center active:scale-95 transition-transform"
+        className={cn("fixed right-4 z-40", raised ? "bottom-40 lg:bottom-20" : "bottom-20", " w-11 h-11 rounded-full bg-primary text-primary-foreground shadow-glow flex items-center justify-center active:scale-95 transition-transform")}
         aria-label="Open Aria AI assistant"
       >
         <Sparkles className="w-[18px] h-[18px]" />

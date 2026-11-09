@@ -4,7 +4,6 @@ import { supabase } from "@/integrations/supabase/client";
 import { EmptyState, ErrorState, ListSkeleton, Notice, Tabs, Tag } from "@/ui/kit";
 
 const naira = (n: number) => "₦" + Math.round(Number(n || 0)).toLocaleString();
-const isoDay = (d: Date) => d.toISOString().slice(0, 10);
 const csv = (name: string, rows: (string | number | null)[][]) => {
   const body = rows.map((r) => r.map((c) => `"${String(c ?? "").replace(/"/g, '""')}"`).join(",")).join("\n");
   const a = document.createElement("a");
@@ -149,74 +148,6 @@ export const AdminHealth = () => {
           ))}
         </div>
       </section>
-    </div>
-  );
-};
-
-type Ins = { current: Totals; previous: Totals; funnel: { started: number; paid: number; cancelled: number; abandoned: number }; by_day: { day: string; bookings: number; gross: number }[]; by_source: Record<string, number> };
-type Totals = { bookings: number; gross: number; fees: number; addons?: number; host_payouts: number; nights: number };
-
-/** /admin/insights — period totals vs the period before, funnel, daily chart with a table view. */
-export const AdminInsights = () => {
-  const [days, setDays] = useState(30);
-  const [d, setD] = useState<Ins | null>(null);
-  const [err, setErr] = useState(false);
-  const [asTable, setAsTable] = useState(false);
-  const load = useCallback(async () => {
-    setErr(false); setD(null);
-    const to = new Date(); const from = new Date(Date.now() - (days - 1) * 864e5);
-    const { data, error } = await supabase.rpc("admin_insights", { _from: isoDay(from), _to: isoDay(to) });
-    if (error) return setErr(true);
-    setD(data as unknown as Ins);
-  }, [days]);
-  useEffect(() => { void load(); }, [load]);
-  const delta = (a: number, b: number) => (b === 0 ? (a ? "new" : "—") : `${a >= b ? "+" : ""}${Math.round(((a - b) / b) * 100)}%`);
-  const max = Math.max(1, ...(d?.by_day.map((x) => x.gross) || [1]));
-  return (
-    <div className="space-y-4">
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h1 className="text-xl font-semibold">Insights</h1>
-        <Tabs value={String(days)} onChange={(v) => setDays(Number(v))} tabs={[{ value: "7", label: "7 days" }, { value: "30", label: "30 days" }, { value: "90", label: "90 days" }]} />
-      </div>
-      {err ? <ErrorState onRetry={load} /> : !d ? <ListSkeleton /> : (
-        <>
-          <div className="grid gap-2 grid-cols-2 lg:grid-cols-6">
-            {([["Paid bookings", "bookings", false], ["Guest payments", "gross", true], ["Our earnings", "fees", true], ["Extras income", "addons", true], ["Host payouts", "host_payouts", true], ["Nights", "nights", false]] as const).map(([label, k, money]) => (
-              <div key={k} className="rounded-xl border border-border p-3">
-                <p className="text-xs text-muted-foreground">{label}</p>
-                <p className="text-xl font-semibold">{money ? naira(d.current[k]) : d.current[k]}</p>
-                <p className="text-xs text-muted-foreground">{delta(Number(d.current[k]), Number(d.previous[k]))} vs previous {days} days</p>
-              </div>
-            ))}
-          </div>
-          <p className="text-xs text-muted-foreground">Our earnings = service fees on local stays plus our markup on partner stays, as saved on each booking. Extras income = paid extras (airport pickup etc.) by payment date.</p>
-          <section className="rounded-xl border border-border p-3">
-            <h2 className="text-[15px] font-semibold mb-2">From checkout to paid</h2>
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[13px]">
-              <div><p className="text-muted-foreground">Started checkout</p><p className="text-lg font-semibold">{d.funnel.started}</p></div>
-              <div><p className="text-muted-foreground">Paid</p><p className="text-lg font-semibold">{d.funnel.paid}{d.funnel.started ? ` (${Math.round((d.funnel.paid / d.funnel.started) * 100)}%)` : ""}</p></div>
-              <div><p className="text-muted-foreground">Didn't finish paying</p><p className="text-lg font-semibold">{d.funnel.abandoned}</p></div>
-              <div><p className="text-muted-foreground">Cancelled / refunded</p><p className="text-lg font-semibold">{d.funnel.cancelled}</p></div>
-            </div>
-          </section>
-          <section className="rounded-xl border border-border p-3">
-            <div className="flex justify-between items-center mb-2">
-              <h2 className="text-[15px] font-semibold">Guest payments by day</h2>
-              <button type="button" className={btn} onClick={() => setAsTable((v) => !v)}>{asTable ? "Show chart" : "Show table"}</button>
-            </div>
-            {asTable ? (
-              <table className="w-full text-[13px]"><thead><tr className="text-left text-muted-foreground"><th className="py-1">Day</th><th>Bookings</th><th className="text-right">Payments</th></tr></thead>
-                <tbody>{d.by_day.filter((x) => x.bookings).map((x) => <tr key={x.day} className="border-t border-border"><td className="py-1">{x.day}</td><td>{x.bookings}</td><td className="text-right">{naira(x.gross)}</td></tr>)}</tbody></table>
-            ) : (
-              <svg viewBox={`0 0 ${d.by_day.length * 10} 100`} preserveAspectRatio="none" className="w-full h-40" role="img" aria-label="Guest payments per day">
-                {d.by_day.map((x, i) => <rect key={x.day} x={i * 10 + 1} width={8} y={100 - (x.gross / max) * 100} height={(x.gross / max) * 100} className="fill-primary"><title>{x.day}: {naira(x.gross)}</title></rect>)}
-              </svg>
-            )}
-            {!d.current.bookings && <p className="text-[13px] text-muted-foreground mt-2">No paid bookings in this period yet.</p>}
-          </section>
-          {Object.keys(d.by_source).length > 0 && <p className="text-[13px]">By source: {Object.entries(d.by_source).map(([k, v]) => `${k === "rayprop" ? "Partner" : "Our stays"} ${v}`).join(" · ")}</p>}
-        </>
-      )}
     </div>
   );
 };

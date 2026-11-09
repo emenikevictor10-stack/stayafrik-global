@@ -344,6 +344,20 @@
       "when": 1794235972846,
       "tag": "0048_phase19_replies_guides_blocking",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1794236517615,
+      "tag": "0049_admin_insights_full",
+      "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1794236537211,
+      "tag": "0050_admin_insights_refund_status",
+      "breakpoints": true
     }
   ]
 }

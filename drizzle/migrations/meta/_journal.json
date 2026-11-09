@@ -218,6 +218,13 @@
       "when": 1794208114349,
       "tag": "0030_wishlists",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1794208542705,
+      "tag": "0031_trips_invoices_changes",
+      "breakpoints": true
     }
   ]
 }

@@ -68,6 +68,56 @@ export type Database = {
         }
         Relationships: []
       }
+      booking_change_requests: {
+        Row: {
+          booking_id: string
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          guest_id: string
+          id: string
+          new_check_in: string
+          new_check_out: string
+          note: string | null
+          staff_note: string | null
+          status: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          guest_id: string
+          id?: string
+          new_check_in: string
+          new_check_out: string
+          note?: string | null
+          staff_note?: string | null
+          status?: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          guest_id?: string
+          id?: string
+          new_check_in?: string
+          new_check_out?: string
+          note?: string | null
+          staff_note?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "booking_change_requests_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_events: {
         Row: {
           actor: string
@@ -362,6 +412,53 @@ export type Database = {
           updated_by?: string | null
         }
         Relationships: []
+      }
+      invoices: {
+        Row: {
+          amount: number
+          booking_id: string
+          company_name: string | null
+          guest_id: string
+          id: string
+          issued_at: string
+          kind: string
+          lines: Json
+          number: string
+          tax_id: string | null
+        }
+        Insert: {
+          amount: number
+          booking_id: string
+          company_name?: string | null
+          guest_id: string
+          id?: string
+          issued_at?: string
+          kind: string
+          lines?: Json
+          number: string
+          tax_id?: string | null
+        }
+        Update: {
+          amount?: number
+          booking_id?: string
+          company_name?: string | null
+          guest_id?: string
+          id?: string
+          issued_at?: string
+          kind?: string
+          lines?: Json
+          number?: string
+          tax_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "invoices_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       kyc_submissions: {
         Row: {
@@ -1572,6 +1669,17 @@ export type Database = {
       }
       expire_reservations: { Args: never; Returns: number }
       expire_stale_holds: { Args: { _listing_id: string }; Returns: number }
+      find_booking: {
+        Args: { _email: string; _reference: string }
+        Returns: {
+          check_in: string
+          check_out: string
+          city: string
+          listing_code: string
+          status: string
+          title: string
+        }[]
+      }
       generate_listing_code: { Args: never; Returns: string }
       get_public_profiles: {
         Args: { _user_ids: string[] }
@@ -1622,6 +1730,27 @@ export type Database = {
           guest_name: string
           guest_phone: string
         }[]
+      }
+      issue_invoice: {
+        Args: { _booking_id: string; _company: string; _tax_id: string }
+        Returns: {
+          amount: number
+          booking_id: string
+          company_name: string | null
+          guest_id: string
+          id: string
+          issued_at: string
+          kind: string
+          lines: Json
+          number: string
+          tax_id: string | null
+        }
+        SetofOptions: {
+          from: "*"
+          to: "invoices"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       listing_booked_ranges: {
         Args: { _listing_id: string }
@@ -1751,6 +1880,10 @@ export type Database = {
       setting_int: { Args: { _default: number; _key: string }; Returns: number }
       staff_booking_action: {
         Args: { _action: string; _booking_id: string; _note?: string }
+        Returns: undefined
+      }
+      staff_change_request_action: {
+        Args: { _action: string; _id: string; _note: string }
         Returns: undefined
       }
       staff_host_action: {

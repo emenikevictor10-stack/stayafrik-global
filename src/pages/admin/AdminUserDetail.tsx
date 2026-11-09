@@ -2,7 +2,9 @@ import { toneFor, statusLabel } from "@/lib/status-tone";
 import { Tag, NextStep } from "@/ui/kit";
 import { userNextStep } from "@/lib/next-step";
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
 import {
   ChevronLeft, ShieldCheck, ShieldOff, Mail, Phone, BadgeCheck, Building2,
   CalendarDays, Banknote, CreditCard, ScrollText, ChevronDown, ChevronUp,
@@ -67,6 +69,8 @@ const AdminUserDetail = () => {
   const [pms, setPms] = useState<Pm[]>([]);
   const [counts, setCounts] = useState<Counts>({ listings: 0, bookings: 0, payouts: 0, messages: 0 });
   const [audit, setAudit] = useState<any[]>([]);
+  const [hostListings, setHostListings] = useState<any[]>([]);
+  const navigate = useNavigate();
 
   const load = async () => {
     if (!id) return;
@@ -76,7 +80,7 @@ const AdminUserDetail = () => {
       supabase.from("user_roles").select("role").eq("user_id", id),
       supabase.from("kyc_submissions").select("*").eq("user_id", id).order("created_at", { ascending: false }),
       supabase.from("payment_methods").select("*").eq("user_id", id).order("created_at", { ascending: false }),
-      supabase.from("listings").select("id", { count: "exact", head: true }).eq("host_id", id),
+      supabase.from("listings").select("id,title,listing_code,images,city,neighborhood,price_per_night,verified,is_available,created_at", { count: "exact" }).eq("host_id", id).order("created_at", { ascending: false }),
       supabase.from("bookings").select("id", { count: "exact", head: true }).eq("guest_id", id),
       supabase.from("payouts").select("id", { count: "exact", head: true }).eq("host_id", id),
       supabase.from("messages").select("id", { count: "exact", head: true }).or(`sender_id.eq.${id},receiver_id.eq.${id}`),
@@ -93,7 +97,9 @@ const AdminUserDetail = () => {
       messages: m.count ?? 0,
     });
     setAudit((a.data as any) || []);
+    setHostListings((l.data as any) || []);
     setLoading(false);
+    if (window.location.hash === "#listings") setTimeout(() => document.getElementById("listings")?.scrollIntoView({ behavior: "smooth" }), 50);
   };
 
   useEffect(() => { load(); }, [id]);
@@ -188,6 +194,39 @@ const AdminUserDetail = () => {
           </div>
         ))}
       </div>
+
+      {hostListings.length > 0 && (
+        <section id="listings" className="rounded-xl border border-border bg-card mb-3 overflow-hidden">
+          <h2 className="px-4 py-3 text-sm font-bold border-b border-border">Listings ({hostListings.length})</h2>
+          <ul className="divide-y divide-border">
+            {hostListings.map((x) => {
+              const st = !x.verified ? "Pending" : x.is_available ? "Approved" : "Paused";
+              return (
+                <li key={x.id} className="flex items-center gap-3 px-4 py-3 cursor-pointer hover:bg-muted/50"
+                  onClick={() => navigate(`/admin/listings?host=${id}&q=${encodeURIComponent(x.listing_code || x.title)}&tab=${x.verified ? "approved" : "pending"}`)}>
+                  {x.images?.[0] ? <img src={x.images[0]} alt="" loading="lazy" className="w-14 h-10 rounded-md object-cover bg-muted" /> : <div className="w-14 h-10 rounded-md bg-muted" />}
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold truncate">{x.title}</p>
+                    <p className="text-xs text-muted-foreground truncate">{x.listing_code || "—"} · {[x.neighborhood, x.city].filter(Boolean).join(", ") || "No place"}</p>
+                  </div>
+                  <span className="hidden sm:block text-sm tabular-nums">₦{Number(x.price_per_night).toLocaleString()}</span>
+                  <Tag tone={toneFor(st === "Approved" ? "confirmed" : st === "Pending" ? "pending" : "cancelled")}>{st}</Tag>
+                  <span className="hidden md:block text-xs text-muted-foreground">{new Date(x.created_at).toLocaleDateString()}</span>
+                  <div onClick={(e) => e.stopPropagation()}>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild><button aria-label="More" className="p-1.5 rounded-full hover:bg-muted"><MoreHorizontal className="w-4 h-4" /></button></DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => window.open(`/property/${x.id}`, "_blank")}>Open stay page</DropdownMenuItem>
+                        {x.listing_code && <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(x.listing_code); toast.success("Listing ID copied"); }}>Copy listing ID</DropdownMenuItem>}
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </li>
+              );
+            })}
+          </ul>
+        </section>
+      )}
 
       {/* Collapsible "view more" sections */}
       <div className="space-y-3">

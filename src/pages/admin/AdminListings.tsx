@@ -1,7 +1,7 @@
 import { Tag as StatusTag, NextStep, Button, Tabs, ErrorState } from "@/ui/kit";
 import { listingNextStep } from "@/lib/next-step";
 import { useEffect, useState } from "react";
-import { Link, Navigate } from "react-router-dom";
+import { Link, Navigate, useSearchParams } from "react-router-dom";
 import { CheckCircle2, ShieldX, Loader2, ChevronLeft, MapPin, BedDouble, Bath, Ruler, Tag, User2, Mail, Phone, X, ChevronRight, Search, List, LayoutGrid, MoreHorizontal } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { toast } from "sonner";
@@ -86,7 +86,10 @@ const AdminListings = () => {
   const [confirmAction, setConfirmAction] = useState<{ kind: "approve" | "reject" | "revoke"; row: ListingRow } | null>(null);
   const [rejectReason, setRejectReason] = useState("");
   const [submitting, setSubmitting] = useState(false);
-  const [q, setQ] = useState("");
+  const [params, setParams] = useSearchParams();
+  const hostFilter = params.get("host") || "";
+  const [q, setQ] = useState(params.get("q") || "");
+  useEffect(() => { const t = params.get("tab"); if (t === "approved" || t === "pending") setTab(t); }, []);
   const [stateFilter, setStateFilter] = useState("");
   const [view, setView] = useState<"detail" | "grid">("detail");
   const [expanded, setExpanded] = useState<string | null>(null);
@@ -133,6 +136,7 @@ const AdminListings = () => {
   const term = q.trim().toLowerCase();
   const states = Array.from(new Set(rows.map((r) => r.state).filter(Boolean) as string[])).sort();
   const shown = rows
+    .filter((r) => !hostFilter || r.host_id === hostFilter)
     .filter((r) => !stateFilter || r.state === stateFilter)
     .filter((r) => !term || [r.listing_code, r.title, r.city, r.state, r.neighborhood, r.location, r.address].some((v) => (v || "").toLowerCase().includes(term)));
 
@@ -237,6 +241,12 @@ const AdminListings = () => {
       </header>
 
       <div className="max-w-5xl mx-auto px-4 md:px-6 pt-4">
+        {hostFilter && (
+          <button onClick={() => { const n = new URLSearchParams(params); n.delete("host"); setParams(n); }}
+            className="mb-3 inline-flex items-center gap-1 rounded-full border border-border bg-card px-3 py-1 text-xs">
+            Host: {hosts[hostFilter]?.full_name || hosts[hostFilter]?.email || "selected"} <X className="w-3 h-3" />
+          </button>
+        )}
         <Tabs<Tab> value={tab} onChange={setTab} tabs={[{ value: "pending", label: "Pending" }, { value: "approved", label: "Approved" }]} />
         <div className="inline-flex p-1 rounded-xl bg-secondary border border-border ml-2 align-top" role="group" aria-label="View">
           {([["detail", List, "Detail"], ["grid", LayoutGrid, "Grid"]] as const).map(([v, Icon, label]) => (

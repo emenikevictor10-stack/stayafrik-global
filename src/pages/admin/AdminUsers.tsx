@@ -1,7 +1,7 @@
 import { Tag } from "@/ui/kit";
 import { ErrorState } from "@/ui/kit";
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { Search, MoreHorizontal, Phone, MessageCircle, BadgeCheck } from "lucide-react";
@@ -159,7 +159,7 @@ const AdminUsers = () => {
                       {!r.phone && !r.whatsapp && "—"}
                     </TableCell>
                     <TableCell className="hidden md:table-cell text-right tabular-nums">{r.bookings}</TableCell>
-                    <TableCell className="hidden md:table-cell text-right tabular-nums">{host ? r.listings : "—"}</TableCell>
+                    <TableCell className="hidden md:table-cell text-right tabular-nums">{host ? <Link to={`/admin/users/${r.user_id}#listings`} onClick={(e) => e.stopPropagation()} className="text-primary hover:underline">{r.listings}</Link> : "—"}</TableCell>
                     <TableCell className="hidden md:table-cell">{hostIncomplete ? <Tag tone="act">Incomplete</Tag> : <span className="text-muted-foreground">—</span>}</TableCell>
                     <TableCell className="text-xs whitespace-nowrap">{new Date(r.created_at).toLocaleDateString()}</TableCell>
                     <TableCell onClick={(e) => e.stopPropagation()}>
@@ -171,6 +171,7 @@ const AdminUsers = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={open}>View details</DropdownMenuItem>
+                          {host && <DropdownMenuItem onClick={() => navigate(`/admin/users/${r.user_id}#listings`)}>View listings</DropdownMenuItem>}
                           {r.email && <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(r.email!); toast.success("Email copied"); }}>Copy email</DropdownMenuItem>}
                           <DropdownMenuItem onClick={() => { navigator.clipboard.writeText(r.user_id); toast.success("User ID copied"); }}>Copy user ID</DropdownMenuItem>
                         </DropdownMenuContent>

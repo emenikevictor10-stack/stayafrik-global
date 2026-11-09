@@ -1,8 +1,10 @@
 import { useEffect, useState } from "react";
+import { COMPARE_MAX, parseCompareIds } from "@/lib/compare";
 
+export { COMPARE_MAX };
 const KEY = "sg-compare";
-export const COMPARE_MAX = 3;
 const read = (): string[] => { try { return JSON.parse(localStorage.getItem(KEY) || "[]"); } catch { return []; } };
+const write = (next: string[]) => { localStorage.setItem(KEY, JSON.stringify(next)); window.dispatchEvent(new Event("sg-compare")); };
 
 /** Device-local compare picks (max 3), shown on /compare. */
 export const useCompare = () => {
@@ -15,13 +17,11 @@ export const useCompare = () => {
   }, []);
   const toggle = (id: string): boolean => {
     const cur = read();
-    let next: string[];
-    if (cur.includes(id)) next = cur.filter((x) => x !== id);
+    if (cur.includes(id)) write(cur.filter((x) => x !== id));
     else if (cur.length >= COMPARE_MAX) return false;
-    else next = [...cur, id];
-    localStorage.setItem(KEY, JSON.stringify(next));
-    window.dispatchEvent(new Event("sg-compare"));
+    else write([...cur, id]);
     return true;
   };
-  return { ids, has: (id: string) => ids.includes(id), toggle };
+  const setAll = (list: string[]) => write(parseCompareIds(list.join(",")));
+  return { ids, has: (id: string) => ids.includes(id), toggle, setAll, clear: () => write([]) };
 };

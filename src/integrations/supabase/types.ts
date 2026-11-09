@@ -1718,6 +1718,32 @@ export type Database = {
           },
         ]
       }
+      wishlist_members: {
+        Row: {
+          joined_at: string
+          user_id: string
+          wishlist_id: string
+        }
+        Insert: {
+          joined_at?: string
+          user_id: string
+          wishlist_id: string
+        }
+        Update: {
+          joined_at?: string
+          user_id?: string
+          wishlist_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "wishlist_members_wishlist_id_fkey"
+            columns: ["wishlist_id"]
+            isOneToOne: false
+            referencedRelation: "wishlists"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wishlists: {
         Row: {
           created_at: string
@@ -1958,6 +1984,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      join_wishlist: { Args: { _token: string }; Returns: string }
       listing_booked_ranges: {
         Args: { _listing_id: string }
         Returns: {

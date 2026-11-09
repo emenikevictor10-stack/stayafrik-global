@@ -1,5 +1,8 @@
-import { Link } from "react-router-dom";
-import { X } from "lucide-react";
+import { useEffect } from "react";
+import { Link, useSearchParams } from "react-router-dom";
+import { X, Link as LinkIcon } from "lucide-react";
+import { toast } from "sonner";
+import { parseCompareIds, compareLink } from "@/lib/compare";
 import { TopBar } from "@/components/shell/TopBar";
 import { Seo } from "@/components/seo/Seo";
 import { EmptyState, Skeleton } from "@/ui/kit";
@@ -42,13 +45,25 @@ const Column = ({ id, onRemove }: { id: string; onRemove: () => void }) => {
 
 /** Side-by-side compare (up to 3 stays picked with the compare button on cards). */
 const Compare = () => {
-  const { ids, toggle } = useCompare();
+  const { ids, toggle, setAll } = useCompare();
+  const [params, setParams] = useSearchParams();
+  useEffect(() => {
+    const fromLink = parseCompareIds(params.get("ids"));
+    if (fromLink.length) setAll(fromLink);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { if (ids.length) setParams({ ids: ids.join(",") }, { replace: true }); }, [ids]); // eslint-disable-line react-hooks/exhaustive-deps
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(window.location.origin + compareLink(ids)); toast.success("Compare link copied"); } catch { toast.error("Couldn't copy the link"); }
+  };
   return (
     <>
       <Seo title="Compare stays · Stay" description="Compare stays side by side." noindex />
       <TopBar title="Compare" />
       <main className="px-4 md:px-0 py-5">
-        <h1 className="text-xl font-semibold mb-4">Compare stays</h1>
+        <div className="flex items-center gap-2 mb-4">
+          <h1 className="text-xl font-semibold mr-auto">Compare stays</h1>
+          {ids.length > 0 && <button type="button" onClick={copy} className="min-h-11 px-3.5 inline-flex items-center gap-1.5 rounded-lg border border-border text-[13px] font-semibold"><LinkIcon className="w-4 h-4" />Copy link</button>}
+        </div>
         {ids.length === 0 ? (
           <EmptyState title="Nothing to compare yet" body="Tap the compare button on up to 3 stays." action={<Link to="/" className="underline font-semibold">Find stays</Link>} />
         ) : (

@@ -267,6 +267,13 @@
       "when": 1794210074734,
       "tag": "0037_lock_down_definer_functions",
       "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1794216223535,
+      "tag": "0038_wishlist_members",
+      "breakpoints": true
     }
   ]
 }

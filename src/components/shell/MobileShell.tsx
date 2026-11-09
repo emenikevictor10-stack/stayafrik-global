@@ -1,6 +1,7 @@
 import { Outlet } from "react-router-dom";
 import { BottomNav } from "./BottomNav";
 import { Dock } from "./Dock";
+import { CompareBar } from "./CompareBar";
 import { AIAssistant } from "@/components/ai/AIAssistant";
 import { useNavPrefs } from "./navPrefs";
 import { cn } from "@/lib/utils";
@@ -17,6 +18,7 @@ export const MobileShell = () => {
       </div>
       <BottomNav />
       <Dock />
+      <CompareBar />
       <AIAssistant />
     </div>
   );

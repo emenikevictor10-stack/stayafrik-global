@@ -123,6 +123,8 @@ const App = () => (
                   <Route path="/stays/:id/media" element={<StayMedia />} />
                   <Route path="/saved" element={<Saved />} />
                   <Route path="/saved/shared/:token" element={<SharedList />} />
+                  <Route path="/w/:token" element={<SharedList />} />
+                  <Route path="/saved/:id" element={<Saved />} />
                   <Route path="/compare" element={<Compare />} />
                   <Route path="/stays-in/:slug" element={<AreaPage />} />
                   <Route path="/guides" element={<GuidesIndex />} />

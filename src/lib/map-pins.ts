@@ -32,3 +32,7 @@ export const sharedLocations = <T extends { id: string; lat?: number | null; lng
   });
   return [...groups.values()].filter((g) => g.length >= minSize).sort((a, b) => b.length - a.length);
 };
+
+/** What the stay page map may show: approximate centre + area circle before payment, exact point after. */
+export const areaView = (id: string, lat: number, lng: number, approximate: boolean): { center: [number, number]; radius: number } =>
+  approximate ? { center: approxPoint(id, lat, lng), radius: AREA_CIRCLE_M } : { center: [lat, lng], radius: 0 };

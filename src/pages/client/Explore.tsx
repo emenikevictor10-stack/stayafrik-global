@@ -4,14 +4,12 @@ import { PropertyCard } from "@/components/property/PropertyCard";
 import { type Property } from "@/data/properties";
 import { hasCoords } from "@/lib/map-pins";
 import { Map as MapIcon, List as ListIcon, X, Wallet, Star, Users, Zap, BadgeCheck, SlidersHorizontal, type LucideIcon } from "lucide-react";
-import { HomeExtras } from "@/components/home/HomeExtras";
 import { FiltersSheet } from "@/components/search/FiltersSheet";
 import { Skeleton, EmptyState, Button } from "@/ui/kit";
 import { supabase } from "@/integrations/supabase/client";
-import { SORTS, PAGE_SIZE, applyFilters, sortStays, parseFilters, writeFilters, activeFilterCount, nearestFreeStart, addDays, emptyFilters, type Filters, type SortKey } from "@/lib/results";
+import { PAGE_SIZE, applyFilters, sortStays, parseFilters, writeFilters, activeFilterCount, nearestFreeStart, addDays, emptyFilters, type Filters } from "@/lib/results";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
-import { cn } from "@/lib/utils";
 import { StayPinMap } from "@/components/map/StayPinMap";
 import { useSettings } from "@/hooks/useSettings";
 import { useListings } from "@/hooks/useListings";
@@ -35,20 +33,12 @@ const distKm = (a: { lat: number; lng: number }, b: { lat: number; lng: number }
   return 2 * R * Math.asin(Math.sqrt(s));
 };
 
-/** Quick chips: shortcuts into the same filters as the Filters sheet. */
-const QUICK: { key: string; label: string; Icon: LucideIcon; on: (f: Filters) => boolean; flip: (f: Filters) => Filters }[] = [
-  { key: "budget", label: "Under ₦100k", Icon: Wallet, on: (f) => f.maxPrice === 100000, flip: (f) => ({ ...f, maxPrice: f.maxPrice === 100000 ? undefined : 100000 }) },
-  { key: "r4", label: "Rated 4+", Icon: Star, on: (f) => f.rating4, flip: (f) => ({ ...f, rating4: !f.rating4 }) },
-  { key: "family", label: "3+ bedrooms", Icon: Users, on: (f) => f.beds === 3, flip: (f) => ({ ...f, beds: f.beds === 3 ? undefined : 3 }) },
-  { key: "power", label: "Backup power", Icon: Zap, on: (f) => f.power.length > 0, flip: (f) => ({ ...f, power: f.power.length ? [] : ["24h", "generator", "inverter", "solar"] }) },
-  { key: "verified", label: "Verified", Icon: BadgeCheck, on: (f) => f.verified, flip: (f) => ({ ...f, verified: !f.verified }) },
-];
 
 const hasAmenity = (p: Property, words: string[]) =>
   p.amenities.some((a) => words.some((w) => a.label.toLowerCase().includes(w)));
 
 /** Search area: desktop pill + compact sticky bar, or phone pill + full-screen sheet. */
-const ExploreSearch = ({ mapToggle }: { mapToggle: React.ReactNode }) => {
+const ExploreSearch = ({ mapToggle, filters }: { mapToggle: React.ReactNode; filters: React.ReactNode }) => {
   const isMobile = useIsMobile();
   const { setActive, active } = useSearch();
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -75,6 +65,7 @@ const ExploreSearch = ({ mapToggle }: { mapToggle: React.ReactNode }) => {
     return (
       <div className="flex items-center gap-2">
         <div className="flex-1 min-w-0"><MobileSearchPill onOpen={() => setMobileOpen(true)} /></div>
+        {filters}
         {mapToggle}
         <MobileSearchModal open={mobileOpen} onOpenChange={setMobileOpen} />
       </div>
@@ -83,9 +74,10 @@ const ExploreSearch = ({ mapToggle }: { mapToggle: React.ReactNode }) => {
   const openFloating = (s: Segment) => { setFloating(true); setActive(s); };
   return (
     <>
-      <div ref={anchor} className="flex items-center gap-3">
-        <SearchBar panels={!floating} className="flex-1" />
-        {mapToggle}
+      <div ref={anchor} className="grid grid-cols-[3.5rem_minmax(0,1fr)_3.5rem] items-center gap-3">
+        <div className="flex justify-start">{filters}</div>
+        <SearchBar panels={!floating} className="min-w-0" />
+        <div className="flex justify-end">{mapToggle}</div>
       </div>
       {scrolled && !floating && (
         <div className="fixed top-[76px] left-0 right-0 z-40 px-4 pointer-events-none">
@@ -230,6 +222,13 @@ const Explore = () => {
       <main className="px-5 pt-5 pb-8">
         <SearchProvider places={places} hints={hints} onLocate={(c) => { setNearMe(c); if (features.map) setView("map"); }}>
           <ExploreSearch
+            filters={
+              <button type="button" onClick={() => setFiltersOpen(true)} aria-label={nFilters ? `Filters, ${nFilters} on` : "Filters"}
+                className="relative shrink-0 w-12 h-12 rounded-full bg-search-surface border border-border shadow-search flex items-center justify-center text-primary">
+                <SlidersHorizontal className="w-4 h-4" aria-hidden />
+                {nFilters > 0 && <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-foreground text-background text-xs flex items-center justify-center">{nFilters}</span>}
+              </button>
+            }
             mapToggle={!features.map ? null :
               <button
                 onClick={() => setView(view === "list" ? "map" : "list")}
@@ -252,32 +251,7 @@ const Explore = () => {
           </button>
         )}
 
-        {!hasSearch && <HomeExtras />}
 
-        {/* Filters, quick shortcuts and sort */}
-        <div className="flex flex-wrap items-center gap-2 mt-4">
-          <button type="button" onClick={() => setFiltersOpen(true)}
-            className="shrink-0 inline-flex items-center gap-1.5 min-h-11 px-3.5 rounded-lg border border-border text-[13px] font-semibold">
-            <SlidersHorizontal className="w-4 h-4" aria-hidden /> Filters
-            {nFilters > 0 && <span className="ml-0.5 min-w-5 h-5 px-1 rounded-full bg-foreground text-background text-xs flex items-center justify-center">{nFilters}</span>}
-          </button>
-          <div className="order-last w-full md:order-none md:w-auto md:flex-1 min-w-0 flex gap-2 overflow-x-auto scrollbar-hide">
-            {QUICK.map((c) => (
-              <button key={c.key} type="button" aria-pressed={c.on(filters)} onClick={() => setFilters(c.flip(filters))}
-                className={cn("shrink-0 inline-flex items-center gap-1.5 min-h-11 px-3.5 rounded-lg border text-[13px] font-medium",
-                  c.on(filters) ? "border-foreground bg-surface" : "border-border text-muted-foreground")}>
-                <c.Icon className="w-3.5 h-3.5" aria-hidden />{c.label}
-              </button>
-            ))}
-          </div>
-          <label className="shrink-0 ml-auto">
-            <span className="sr-only">Sort by</span>
-            <select value={filters.sort} onChange={(e) => setFilters({ ...filters, sort: e.target.value as SortKey })}
-              className="min-h-11 rounded-lg border border-border bg-background px-2.5 text-[13px] font-semibold">
-              {SORTS.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
-            </select>
-          </label>
-        </div>
         <FiltersSheet open={filtersOpen} onOpenChange={setFiltersOpen} value={filters} onApply={setFilters} countFor={countFor} />
         {hasSearch && !loading && (
           <div className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">

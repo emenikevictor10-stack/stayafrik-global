@@ -9,7 +9,8 @@ import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { useRole } from "@/contexts/RoleContext";
 import { useAuth } from "@/contexts/AuthContext";
-import { SinglePropertyMap } from "@/components/map/PropertyMap";
+import { StayAreaMap } from "@/components/map/StayAreaMap";
+import { quoteRayProp } from "@/lib/rayprop";
 import { Seo } from "@/components/seo/Seo";
 import { ImageGallery } from "@/components/property/ImageGallery";
 import { ReviewsSection } from "@/components/property/ReviewsSection";
@@ -32,7 +33,8 @@ import { Images } from "lucide-react";
 const StayQuote = ({ p, feeBps }: { p: import("@/data/properties").Property; feeBps: number }) => {
   const plan = useRatePlan(p.source === "rayprop" ? undefined : p.id, p.source === "rayprop");
   const s = recallSearch();
-  if (p.source === "rayprop" || !s?.checkIn || !s?.checkOut) return null;
+  if (p.source === "rayprop") return s?.checkIn && s?.checkOut ? <PartnerQuote p={p} checkIn={s.checkIn} checkOut={s.checkOut} guests={Math.max(1, (s.adults || 0) + (s.children || 0))} /> : null;
+  if (!s?.checkIn || !s?.checkOut) return null;
   const q = quoteLocalStay(s.checkIn, s.checkOut, plan ?? { price_per_night: p.priceNum }, feeBps);
   if (q.ok === false) return <p className="mt-3 text-[13px] text-muted-foreground">{q.error}</p>;
   const n = (k: number) => "₦" + Math.round(koboToNaira(k)).toLocaleString();
@@ -45,6 +47,28 @@ const StayQuote = ({ p, feeBps }: { p: import("@/data/properties").Property; fee
       {!!q.cleaning_kobo && <div className="flex justify-between"><span>Cleaning fee</span><span>{n(q.cleaning_kobo)}</span></div>}
       <div className="flex justify-between"><span>Service fee</span><span>{n(q.fee_kobo)}</span></div>
       <div className="flex justify-between font-semibold border-t border-border pt-1"><span>Total</span><span>{n(q.total_kobo)}</span></div>
+    </div>
+  );
+};
+
+/** Partner stay price for the searched dates, from the partner's own quote. */
+const PartnerQuote = ({ p, checkIn, checkOut, guests }: { p: import("@/data/properties").Property; checkIn: string; checkOut: string; guests: number }) => {
+  const [q, setQ] = useState<Awaited<ReturnType<typeof quoteRayProp>> | null | "none">(null);
+  useEffect(() => {
+    let off = false;
+    quoteRayProp({ listing_id: p.raypropListingId || p.id, check_in: checkIn, check_out: checkOut, guests })
+      .then((r) => { if (!off) setQ(r); }).catch(() => { if (!off) setQ("none"); });
+    return () => { off = true; };
+  }, [p.id, p.raypropListingId, checkIn, checkOut, guests]);
+  const n = (k: number) => "₦" + Math.round(koboToNaira(k)).toLocaleString();
+  if (q === null) return <p className="mt-4 text-[13px] text-muted-foreground">Checking the price for {checkIn} → {checkOut}…</p>;
+  if (q === "none") return <p className="mt-4 text-[13px] text-muted-foreground">Your dates: {checkIn} → {checkOut}. Price confirmed at checkout.</p>;
+  return (
+    <div className="mt-4 rounded-xl border border-border p-3 text-[13px] space-y-1">
+      <p className="font-semibold">Your dates: {checkIn} → {checkOut}</p>
+      <div className="flex justify-between"><span>{q.nights} night{q.nights === 1 ? "" : "s"}</span><span>{n(q.subtotalKobo || q.totalKobo - q.vatKobo)}</span></div>
+      {!!q.vatKobo && <div className="flex justify-between"><span>VAT</span><span>{n(q.vatKobo)}</span></div>}
+      <div className="flex justify-between font-semibold border-t border-border pt-1"><span>Total</span><span>{n(q.totalKobo)}</span></div>
     </div>
   );
 };
@@ -318,6 +342,8 @@ const PropertyDetail = () => {
 
         <ReviewsSection listingId={p.id} rating={p.rating} reviewsCount={p.reviews} />
 
+        <div className="lg:hidden"><StayQuote p={p} feeBps={serviceFeeBps} /></div>
+
         <section className="mt-6">
           <div className="flex items-center justify-between mb-3">
             <h2 className="font-bold text-sm">Location & neighbourhood</h2>
@@ -332,7 +358,7 @@ const PropertyDetail = () => {
               </a>
             )}
           </div>
-          {features.map && <SinglePropertyMap p={p} height={220} approximate={!unlocked} />}
+          {features.map && <StayAreaMap p={p} height={220} approximate={!unlocked} />}
           <p className="text-xs text-muted-foreground mt-2">📍 {shownLocation}</p>
           {!unlocked && (
             <div className="mt-2 rounded-xl bg-card border border-border p-3 text-xs text-muted-foreground flex items-start gap-2">
@@ -380,10 +406,10 @@ const PropertyDetail = () => {
         <section className="mt-6 rounded-2xl bg-card border border-border p-4">
           <div className="flex items-center gap-2 mb-2">
             <span className="text-xl">🔐</span>
-            <h3 className="font-bold text-sm">Secured by PropertyEscrow™</h3>
+            <h3 className="font-bold text-sm">Secure Escrow</h3>
           </div>
           <p className="text-xs text-muted-foreground leading-relaxed">
-            Your payment is held safely. {p.type === "Shortlet" ? "Released to the host 24h after check-in." : "Released only when you confirm receipt of original title documents."}
+            Your payment is held safely until 24h after check-in.
           </p>
         </section>
         </div>
@@ -426,7 +452,7 @@ const PropertyDetail = () => {
               </Button>
             )}
             <p className="mt-3 text-xs text-muted-foreground text-center">
-              🔐 Secured by PropertyEscrow™ — payment held safely until after check-in.
+              🔐 Secure Escrow — payment held safely until 24h after check-in.
             </p>
           </div>
         </aside>
@@ -445,7 +471,7 @@ const PropertyDetail = () => {
 
 
       {/* Sticky CTA */}
-      <div className="lg:hidden fixed bottom-0 inset-x-0 md:left-60 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
+      <div className="lg:hidden fixed bottom-0 inset-x-0 z-30 bg-background/95 backdrop-blur-xl border-t border-border safe-bottom">
         <div className="max-w-md mx-auto px-5 py-3 pb-20 md:pb-3 flex items-center gap-3">
           <div className="flex-1">
             <div className="text-primary font-extrabold text-lg leading-none">{p.price}</div>

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Sheet, Button } from "@/ui/kit";
 import { cn } from "@/lib/utils";
-import { KINDS, POWER, emptyFilters, type Filters } from "@/lib/results";
+import { KINDS, POWER, SORTS, emptyFilters, type Filters } from "@/lib/results";
 
 const Chip = ({ on, onClick, children }: { on: boolean; onClick: () => void; children: React.ReactNode }) => (
   <button type="button" aria-pressed={on} onClick={onClick}
@@ -30,6 +30,9 @@ export const FiltersSheet = ({ open, onOpenChange, value, onApply, countFor }: {
   return (
     <Sheet open={open} onOpenChange={onOpenChange} title="Filters">
       <div className="max-h-[65vh] overflow-y-auto -mx-1 px-1">
+        <Section title="Sort by">
+          {SORTS.map((o) => <Chip key={o.key} on={f.sort === o.key} onClick={() => setF({ ...f, sort: o.key })}>{o.label}</Chip>)}
+        </Section>
         <section className="py-3 border-b border-border">
           <h3 className="text-[13px] font-semibold mb-2">Price per night (₦)</h3>
           <div className="flex items-center gap-2">

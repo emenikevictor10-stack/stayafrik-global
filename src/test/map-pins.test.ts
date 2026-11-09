@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { approxPoint, AREA_CIRCLE_M, hasCoords, sharedLocations } from "@/lib/map-pins";
+import { approxPoint, AREA_CIRCLE_M, hasCoords, sharedLocations, areaView as _areaView } from "@/lib/map-pins";
 
 const metres = (a: [number, number], b: [number, number]) => Math.hypot((a[0] - b[0]) * 111_000, (a[1] - b[1]) * 111_000 * Math.cos((a[0] * Math.PI) / 180));
 
@@ -22,5 +22,19 @@ describe("map privacy", () => {
     ]);
     expect(g).toHaveLength(1);
     expect(g[0].map((x) => x.id).sort()).toEqual(["a", "b", "c"]);
+  });
+});
+
+describe("stay page area map", () => {
+  it("before payment never centres on the exact spot, but the circle contains it", () => {
+    for (const id of ["a", "SG2345LT", "rp_316281JR", "xyz-123"]) {
+      const v = _areaView(id, 6.45, 3.47, true);
+      const d = metres(v.center, [6.45, 3.47]);
+      expect(d).toBeGreaterThan(200);
+      expect(d).toBeLessThan(v.radius);
+    }
+  });
+  it("after payment shows the exact spot with no circle", () => {
+    expect(_areaView("a", 6.45, 3.47, false)).toEqual({ center: [6.45, 3.47], radius: 0 });
   });
 });

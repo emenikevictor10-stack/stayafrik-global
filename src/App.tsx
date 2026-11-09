@@ -73,6 +73,8 @@ import StayMedia from "./pages/client/StayMedia";
 import SharedList from "./pages/client/SharedList";
 import Compare from "./pages/client/Compare";
 import AreaPage from "./pages/client/AreaPage";
+import { TripDetail, TripCancel, TripReview, TripInvoice, FindBooking } from "./pages/client/TripPages";
+import GuestDetails from "./pages/client/GuestDetails";
 import { GuidesIndex, GuidePage } from "./pages/client/Guides";
 import { syncWishlist } from "@/hooks/useWishlist";
 import { useAuth } from "@/contexts/AuthContext";
@@ -121,6 +123,7 @@ const App = () => (
                   <Route path="/compare" element={<Compare />} />
                   <Route path="/stays-in/:slug" element={<AreaPage />} />
                   <Route path="/guides" element={<GuidesIndex />} />
+                  <Route path="/find-booking" element={<FindBooking />} />
                   <Route path="/guides/:slug" element={<GuidePage />} />
                   <Route path="/property/:id" element={<PropertyDetail />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -166,6 +169,11 @@ const App = () => (
                     <Route path="/reservations" element={<Reservations />} />
                     <Route path="/profile/delete" element={<DeleteAccount />} />
                     <Route path="/trips/:id/report" element={<ReportProblem />} />
+                    <Route path="/trips/:id" element={<TripDetail />} />
+                    <Route path="/trips/:id/cancel" element={<TripCancel />} />
+                    <Route path="/trips/:id/review" element={<TripReview />} />
+                    <Route path="/trips/:id/invoice" element={<TripInvoice />} />
+                    <Route path="/details" element={<GuestDetails />} />
                     <Route path="/issues" element={<MyIssues />} />
                     <Route path="/issues/:id" element={<IssueThread />} />
                     

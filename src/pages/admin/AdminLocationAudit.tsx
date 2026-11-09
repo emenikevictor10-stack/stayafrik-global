@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/seo/Seo";
 import { useLocations } from "@/hooks/useLocations";
 import { LocationCombobox } from "@/components/location/LocationCombobox";
+import { sharedLocations } from "@/lib/map-pins";
 import { breadcrumb, type Location, type LocationType } from "@/lib/locations";
 
 type Totals = { total: number; with_state: number; with_city: number; with_neighbourhood: number; neighbourhood_applicable_missing: number; complete: number; review: number };
@@ -166,6 +167,7 @@ const AdminLocationAudit = () => {
         )}
       </section>
 
+      <SharedLocations />
       <section className="mb-8">
         <h2 className="text-base font-bold mb-2">Add a missing place</h2>
         <div className="rounded-xl border border-border bg-card p-3 grid gap-3 md:grid-cols-4 md:items-end">
@@ -219,3 +221,38 @@ const AdminLocationAudit = () => {
 };
 
 export default AdminLocationAudit;
+
+type Pt = { id: string; listing_code: string | null; title: string; lat: number | null; lng: number | null; neighborhood: string | null; city: string | null };
+
+/** Our stays saved at (almost) the same map point — usually copied or default locations. Shown for admins to fix; never moved automatically. */
+const SharedLocations = () => {
+  const [groups, setGroups] = useState<Pt[][] | null>(null);
+  useEffect(() => {
+    supabase.from("listings").select("id,listing_code,title,lat,lng,neighborhood,city").not("lat", "is", null).limit(2000)
+      .then(({ data }) => setGroups(sharedLocations((data as Pt[]) || [])));
+  }, []);
+  if (!groups) return null;
+  return (
+    <section className="mb-8">
+      <h2 className="text-base font-bold mb-1">Stays sharing one map spot ({groups.reduce((n, g) => n + g.length, 0)})</h2>
+      <p className="text-xs text-muted-foreground mb-2">These stays are saved within about 30 m of each other, so they bunch together on the map. Ask the host for the right area, or fix it on the listing.</p>
+      {!groups.length ? <p className="text-sm text-muted-foreground">None — every stay has its own spot.</p> : (
+        <div className="space-y-2">
+          {groups.map((g) => (
+            <details key={g[0].id} className="rounded-xl border border-border p-3">
+              <summary className="cursor-pointer text-sm font-semibold min-h-11 flex items-center">{g.length} stays at {g[0].lat?.toFixed(4)}, {g[0].lng?.toFixed(4)}</summary>
+              <ul className="mt-2 space-y-1 text-[13px]">
+                {g.map((x) => (
+                  <li key={x.id} className="flex justify-between gap-2">
+                    <span className="truncate">{x.title} <span className="text-muted-foreground">· {[x.neighborhood, x.city].filter(Boolean).join(", ")}</span></span>
+                    <a href={`/admin/listings?q=${encodeURIComponent(x.listing_code || x.id)}`} className="underline shrink-0">{x.listing_code || "Open"}</a>
+                  </li>
+                ))}
+              </ul>
+            </details>
+          ))}
+        </div>
+      )}
+    </section>
+  );
+};

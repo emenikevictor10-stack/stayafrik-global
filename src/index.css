@@ -140,3 +140,6 @@
   transition: transform .15s;
 }
 .sg-pin-active { background: hsl(var(--foreground)); color: hsl(var(--background)); transform: translate(-50%, -50%) scale(1.12); }
+
+/* Approximate area circle on the Explore map */
+.sg-area-circle { stroke: hsl(var(--primary)); fill: hsl(var(--primary)); }

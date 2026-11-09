@@ -14,3 +14,21 @@ export const shortPrice = (n: number) => {
   if (n >= 1000) return `₦${Math.round(n / 1000)}k`;
   return `₦${n}`;
 };
+
+/** Radius (metres) of the area circle drawn for a picked stay. Covers the max pin offset (~700 m) so the real spot is always inside. */
+export const AREA_CIRCLE_M = 800;
+
+/** Has a usable map location (not missing, not 0,0). */
+export const hasCoords = (p: { lat?: number | null; lng?: number | null }) =>
+  typeof p.lat === "number" && typeof p.lng === "number" && !(p.lat === 0 && p.lng === 0) && Number.isFinite(p.lat) && Number.isFinite(p.lng);
+
+/** Groups of stays whose saved locations are within ~`metres` of each other (likely copied/default coordinates). Groups of 3+ only. */
+export const sharedLocations = <T extends { id: string; lat?: number | null; lng?: number | null }>(items: T[], metres = 30, minSize = 3): T[][] => {
+  const cell = metres / 111_000; // degrees
+  const groups = new Map<string, T[]>();
+  items.filter(hasCoords).forEach((p) => {
+    const k = `${Math.round(p.lat! / cell)}:${Math.round(p.lng! / cell)}`;
+    groups.set(k, [...(groups.get(k) || []), p]);
+  });
+  return [...groups.values()].filter((g) => g.length >= minSize).sort((a, b) => b.length - a.length);
+};

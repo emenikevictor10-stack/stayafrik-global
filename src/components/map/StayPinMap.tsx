@@ -2,15 +2,18 @@ import { useEffect, useRef } from "react";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
 import type { Property } from "@/data/properties";
-import { approxPoint, shortPrice } from "@/lib/map-pins";
+import { approxPoint, shortPrice, hasCoords, AREA_CIRCLE_M } from "@/lib/map-pins";
 
 /**
  * Explore map: every stay as a price pin at an approximate point (never the building).
  * Free OpenStreetMap tiles; loads only when rendered. `activeId` highlights a pin (card hover).
  */
-export const StayPinMap = ({ list, activeId, onSelect, height = 520 }: {
-  list: Property[]; activeId?: string | null; onSelect?: (p: Property) => void; height?: number | string;
+export const StayPinMap = ({ list, activeId, onSelect, onCluster, height = 520 }: {
+  list: Property[]; activeId?: string | null; onSelect?: (p: Property) => void;
+  /** Stays that still overlap at full zoom — show them as a list to pick from. */
+  onCluster?: (items: Property[]) => void; height?: number | string;
 }) => {
+  const circle = useRef<L.Circle | null>(null);
   const box = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layer = useRef<L.LayerGroup | null>(null);
@@ -31,7 +34,7 @@ export const StayPinMap = ({ list, activeId, onSelect, height = 520 }: {
     g.clearLayers(); markers.current.clear();
     const cells = new Map<string, { pts: [number, number][]; items: Property[] }>();
     list.forEach((p) => {
-      if (!p.lat || !p.lng) return;
+      if (!hasCoords(p)) return;
       const ll = approxPoint(p.id, p.lat, p.lng);
       const pt = m.latLngToLayerPoint(ll);
       const key = `${Math.round(pt.x / 56)}:${Math.round(pt.y / 32)}`;
@@ -48,14 +51,16 @@ export const StayPinMap = ({ list, activeId, onSelect, height = 520 }: {
         mk.addTo(g); markers.current.set(p.id, mk);
       } else {
         const bounds = L.latLngBounds(c.pts);
-        L.marker(bounds.getCenter(), {
+        const bub = L.marker(bounds.getCenter(), {
           icon: L.divIcon({ className: "sg-pin-wrap", html: `<span class="sg-pin">${c.items.length} stays</span>` }),
           keyboard: true, title: `${c.items.length} stays here — zoom in`,
         }).on("click", () => {
-          if (m.getZoom() >= 16) onSelect?.(c.items[0]);
+          const tiny = bounds.getNorthEast().distanceTo(bounds.getSouthWest()) < 150;
+          if (m.getZoom() >= 16 || tiny) (onCluster ? onCluster(c.items) : onSelect?.(c.items[0]));
           else m.flyToBounds(bounds.pad(0.5), { maxZoom: Math.min(17, m.getZoom() + 3) });
         }).addTo(g);
-        c.items.forEach((p) => markers.current.set(p.id, null as unknown as L.Marker));
+        // A stay inside a bubble highlights the bubble.
+        c.items.forEach((p) => markers.current.set(p.id, bub));
       }
     });
   };
@@ -64,7 +69,7 @@ export const StayPinMap = ({ list, activeId, onSelect, height = 520 }: {
   useEffect(() => {
     const m = map.current;
     if (!m) return;
-    const pts = list.filter((p) => p.lat && p.lng).map((p) => approxPoint(p.id, p.lat, p.lng));
+    const pts = list.filter(hasCoords).map((p) => approxPoint(p.id, p.lat, p.lng));
     if (pts.length) m.fitBounds(L.latLngBounds(pts), { padding: [30, 30], maxZoom: 14 });
     drawRef.current();
     const on = () => drawRef.current();
@@ -73,12 +78,21 @@ export const StayPinMap = ({ list, activeId, onSelect, height = 520 }: {
   }, [list]);
 
   useEffect(() => {
-    markers.current.forEach((mk, id) => {
-      if (!mk) return;
-      const el = mk.getElement()?.querySelector(".sg-pin");
-      el?.classList.toggle("sg-pin-active", id === activeId);
-      if (id === activeId) mk.setZIndexOffset(1000); else mk.setZIndexOffset(0);
+    const active = activeId ? markers.current.get(activeId) : undefined;
+    new Set(markers.current.values()).forEach((mk) => {
+      const on = mk === active;
+      mk.getElement()?.querySelector(".sg-pin")?.classList.toggle("sg-pin-active", on);
+      mk.setZIndexOffset(on ? 1000 : 0);
     });
+    // Soft area circle around the picked stay's approximate point (never the building).
+    const m = map.current;
+    circle.current?.remove(); circle.current = null;
+    const p = activeId ? list.find((x) => x.id === activeId) : null;
+    if (m && p && hasCoords(p)) {
+      circle.current = L.circle(approxPoint(p.id, p.lat, p.lng), {
+        radius: AREA_CIRCLE_M, className: "sg-area-circle", interactive: false, weight: 1.5, fillOpacity: 0.12,
+      }).addTo(m);
+    }
   }, [activeId, list]);
 
   return <div ref={box} style={{ height }} className="w-full rounded-xl overflow-hidden border border-border z-0" aria-label="Map of stays (approximate areas)" role="region" />;

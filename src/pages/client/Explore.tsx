@@ -2,6 +2,7 @@ import { useLocations } from "@/hooks/useLocations";
 import { TopBar } from "@/components/shell/TopBar";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { type Property } from "@/data/properties";
+import { hasCoords } from "@/lib/map-pins";
 import { Map as MapIcon, List as ListIcon, X, Wallet, Star, Users, Zap, BadgeCheck, SlidersHorizontal, type LucideIcon } from "lucide-react";
 import { HomeExtras } from "@/components/home/HomeExtras";
 import { FiltersSheet } from "@/components/search/FiltersSheet";
@@ -120,6 +121,8 @@ const Explore = () => {
   const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
   const [selected, setSelected] = useState<Property | null>(null);
   const [hoverId, setHoverId] = useState<string | null>(null);
+  const [picker, setPicker] = useState<Property[] | null>(null);
+  const [onlyUnmapped, setOnlyUnmapped] = useState(false);
   const { data: properties, loading: listLoading, loadingMore, hasMore, loadMore, searchPartner, searching } = useListings();
   const { all: allPlaces, byId: placeById } = useLocations();
   const picked = useMemo(() => (search.loc ? allPlaces.find((l) => l.slug === search.loc) : undefined), [allPlaces, search.loc]);
@@ -185,6 +188,9 @@ const Explore = () => {
   const hints = usePriceHints(useMemo(() => (q ? list.filter((p) => p.source === "rayprop") : []), [list, q]), q);
   const available = useMemo(() => list.filter((p) => !unavailable.has(p.id)), [list, unavailable]);
   const visible = useMemo(() => available.slice(0, shown), [available, shown]);
+  const mapList = useMemo(() => available.filter(hasCoords), [available]);
+  const unmapped = useMemo(() => available.filter((p) => !hasCoords(p)), [available]);
+  const listForMap = onlyUnmapped ? unmapped : visible;
   const moreLocal = available.length > shown;
   const showMore = () => { if (moreLocal) setShown((n) => n + PAGE_SIZE); else if (hasMore) loadMore(); };
   const nFilters = activeFilterCount(filters);
@@ -287,11 +293,31 @@ const Explore = () => {
         {view === "map" && features.map ? (
           <div className="mt-5 relative lg:grid lg:grid-cols-[1fr_minmax(420px,45%)] lg:gap-5 max-w-[1360px] mx-auto">
             <div className="hidden lg:grid grid-cols-2 gap-x-4 gap-y-6 content-start order-1">
-              {visible.map((p) => <div key={p.id} onMouseEnter={() => setHoverId(p.id)} onMouseLeave={() => setHoverId(null)}><PropertyCard p={p} nights={nights} /></div>)}
+              {listForMap.map((p) => <div key={p.id} onMouseEnter={() => setHoverId(p.id)} onMouseLeave={() => setHoverId(null)}><PropertyCard p={p} nights={nights} /></div>)}
               {(moreLocal || hasMore) && <div className="col-span-2 text-center"><Button variant="secondary" onClick={showMore}>More stays</Button></div>}
             </div>
             <div className="lg:order-2 lg:sticky lg:top-24 lg:self-start relative">
-            <StayPinMap list={available} height={520} activeId={hoverId || selected?.id} onSelect={setSelected} />
+            <StayPinMap list={mapList} height={520} activeId={hoverId || selected?.id} onSelect={(p) => { setPicker(null); setSelected(p); }} onCluster={(items) => { setSelected(null); setPicker(items); }} />
+            {unmapped.length > 0 && (
+              <button type="button" onClick={() => setOnlyUnmapped((v) => !v)} className="mt-2 min-h-11 text-[13px] text-muted-foreground underline">
+                {onlyUnmapped ? "Show all stays in the list" : `${unmapped.length} ${unmapped.length === 1 ? "stay isn't" : "stays aren't"} on the map yet — show ${unmapped.length === 1 ? "it" : "them"}`}
+              </button>
+            )}
+            {picker && (
+              <div className="absolute left-3 right-3 top-3 z-10 rounded-2xl bg-card border border-border shadow-xl p-2 max-h-[300px] overflow-auto" role="dialog" aria-label={`${picker.length} stays in this area`}>
+                <div className="flex items-center justify-between px-1 pb-1">
+                  <p className="text-[13px] font-semibold">{picker.length} stays in this area</p>
+                  <button type="button" onClick={() => setPicker(null)} aria-label="Close list" className="w-11 h-11 flex items-center justify-center"><X className="w-4 h-4" /></button>
+                </div>
+                {picker.map((p) => (
+                  <button key={p.id} type="button" onClick={() => { setPicker(null); setSelected(p); }} className="w-full min-h-11 flex items-center gap-2 rounded-lg px-1 py-1 hover:bg-surface text-left">
+                    <img src={p.image} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" />
+                    <span className="flex-1 min-w-0 text-[13px] truncate">{p.title}</span>
+                    <span className="text-[13px] font-semibold">{p.price}</span>
+                  </button>
+                ))}
+              </div>
+            )}
             {selected && (
               <div className="absolute left-3 right-3 bottom-3 z-10">
                 <div className="rounded-2xl bg-card border border-border shadow-xl p-3 flex gap-3 items-center">
@@ -323,7 +349,7 @@ const Explore = () => {
             )}
             </div>
             <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6 mt-5">
-              {visible.map((p) => <PropertyCard key={p.id} p={p} nights={nights} />)}
+              {listForMap.map((p) => <PropertyCard key={p.id} p={p} nights={nights} />)}
             </div>
           </div>
         ) : (

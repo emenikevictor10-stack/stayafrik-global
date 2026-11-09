@@ -43,7 +43,7 @@ Keep (clashes): Paystack (not Payaza), Google sign-in + PIN (not email codes), 3
 - [x] Search page clean-up: centred search, only Filters + Map beside it; sort/shortcuts moved into Filters
 - [x] P13 Saved lists + compare (§3): hearts sync on sign-in, named lists (create/rename/delete), share /w/:token (+ old /saved/shared), join/leave/remove members, /saved/:id, /compare?ids= link + copy, floating Compare (N) bar. Closed 2026-11-09.
 - [x] P14 Trips (§3): /trips tabs Upcoming/Past/Cancelled, /trips/:id next step + check-in details (host "How guests get in", shown only once confirmed), cancel with refund preview + reason, review with stars/tags/note, /trips/:id/move StayGlobal guarantee (during stay, similar free stays, goes to support queue), /trips/:id/guests, /help/find-booking, move-dates request (+ /admin/date-changes)
-- [x] P15 Invoices (§3): proforma + paid invoice, company name/tax ID, invoice numbers (SG-INV-YYYY-NNNNNN), print/save as PDF
+- [x] P15 Invoices (§3): proforma + paid, numbers SG-INV-YYYY-NNNNNN, company/tax ID (clearable), billed-to guest, paid extras as lines, company details from Settings, Invoices switch, staff Issue invoice, print shows invoice only.
 - [x] P16 Split payments (§3): local stays, 2–6 people, /pay/share/:token links, confirm when all paid, hourly refund of paid shares if time runs out. Real Paystack payment untested.
 - [x] P17 Add-ons (§5): catalogue (3 starter extras, placeholder prices) + orders + Paystack pay + /admin/addons arrange. Real payment untested.
 - [x] P18 Guest details & ID (§3): /details name/phone, optional NIN last-4 / passport, id_required switch, admin ID review w/ signed URLs

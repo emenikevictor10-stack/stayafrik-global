@@ -22,5 +22,6 @@ export const useSettings = () => {
     features: features(s),
     serviceFeeBps: num(s, "service_fee_bps", DEFAULTS.service_fee_bps),
     supportEmail: str(s, "support_email", DEFAULTS.support_email),
+    company: str(s, "company", DEFAULTS.company),
   };
 };

@@ -11,6 +11,8 @@ import { Seo } from "@/components/seo/Seo";
 import { logAdminAction } from "@/lib/admin-audit";
 import { Input } from "@/components/ui/input";
 import { BookingTimeline } from "@/components/admin/BookingTimeline";
+import { useSettings } from "@/hooks/useSettings";
+import { showInvoice } from "@/lib/settings";
 
 type Row = {
   id: string;
@@ -126,8 +128,12 @@ const AdminBookings = () => {
     load();
   };
 
+  const invoicesOn = useSettings().features.invoices;
   const Actions = ({ r }: { r: Row }) => (
     <div className="flex gap-1">
+      {showInvoice(invoicesOn, r.status) && (
+        <Link to={`/trips/${r.id}/invoice?staff=1`} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-border hover:bg-secondary">Issue invoice</Link>
+      )}
       {r.status === "confirmed" && r.source !== "rayprop" && (
         <button onClick={() => release(r)} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-success/40 text-success hover:bg-success/10">Release</button>
       )}

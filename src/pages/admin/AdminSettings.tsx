@@ -21,6 +21,7 @@ const FEATURE_LABELS: Record<FeatureKey, [string, string]> = {
   mapbox: ["Mapbox tiles", "Off uses free map tiles"],
   split_payments: ["Split payments", "Guests can split a local stay's cost with friends"],
   addons: ["Add-ons", "Guests can buy extras (airport pickup, groceries…) for confirmed trips"],
+  invoices: ["Invoices", "Guests and staff can make and print invoices"],
   bank_transfer: ["Bank transfer", "Guests can pay by bank transfer; staff approve each one"],
 };
 

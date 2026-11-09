@@ -12,6 +12,7 @@ import { koboToNaira } from "@/lib/rayprop-map";
 import { uploadIssuePhotos } from "@/components/support/SupportBits";
 import { ReviewForm, type BookingRow } from "./Bookings";
 import { toast } from "sonner";
+import { useSettings } from "@/hooks/useSettings";
 import { SplitPanel, AddonsPanel } from "./SplitAddons";
 
 const fmt = (n: number) => "₦" + Math.round(Number(n || 0)).toLocaleString();
@@ -66,6 +67,7 @@ export const TripDetail = () => {
   const { trip, events, reviewed, access, err, load } = useTrip(id);
   const [move, setMove] = useState({ open: false, ci: "", co: "", note: "", busy: false });
   const { user } = useAuth();
+  const invoicesOn = useSettings().features.invoices;
   const d = today();
   const askMove = async () => {
     if (!trip || !user) return;
@@ -98,7 +100,7 @@ export const TripDetail = () => {
               {paid && access && <div className="p-3"><dt className="text-muted-foreground mb-1">Getting in</dt><dd className="whitespace-pre-line">{access}</dd></div>}
             </dl>
             <div className="grid gap-2 sm:grid-cols-2">
-              {hasInvoice(t.status) && <Link to={`/trips/${t.id}/invoice`} className="min-h-11 rounded-lg border border-border flex items-center justify-center text-[13px] font-semibold">Invoice</Link>}
+              {hasInvoice(t.status) && invoicesOn && <Link to={`/trips/${t.id}/invoice`} className="min-h-11 rounded-lg border border-border flex items-center justify-center text-[13px] font-semibold">Invoice</Link>}
               {canAskGuarantee(t.status, d, t.check_in_date, t.check_out_date) && <Link to={`/trips/${t.id}/move`} className="min-h-11 rounded-lg border border-border flex items-center justify-center text-[13px] font-semibold">Not as described? Ask to move</Link>}
               {(t as any).is_split && <Link to={`/trips/${t.id}/guests`} className="min-h-11 rounded-lg border border-border flex items-center justify-center text-[13px] font-semibold">Travelling together</Link>}
               {paid && <Link to={`/trips/${t.id}/report`} className="min-h-11 rounded-lg border border-border flex items-center justify-center text-[13px] font-semibold">Report a problem</Link>}
@@ -201,7 +203,7 @@ export const TripReview = () => {
   );
 };
 
-type Invoice = { number: string; kind: string; company_name: string | null; tax_id: string | null; amount: number; lines: { label: string; kobo: number }[]; issued_at: string };
+type Invoice = { number: string; kind: string; billed_name: string | null; billed_email: string | null; company_name: string | null; tax_id: string | null; amount: number; lines: { label: string; kobo: number }[]; issued_at: string };
 
 /** /trips/:id/invoice — proforma before paying, paid invoice after; print to PDF. */
 export const TripInvoice = () => {
@@ -210,27 +212,32 @@ export const TripInvoice = () => {
   const [inv, setInv] = useState<Invoice | null>(null);
   const [co, setCo] = useState({ name: "", tax: "" });
   const [busy, setBusy] = useState(false);
-  const issue = useCallback(async (name = "", tax = "") => {
+  const { company, supportEmail, features: feats } = useSettings();
+  const issue = useCallback(async (name: string | null = null, tax: string | null = null) => {
     if (!id) return;
     setBusy(true);
-    const { data, error } = await supabase.rpc("issue_invoice", { _booking_id: id, _company: name, _tax_id: tax });
+    const { data, error } = await supabase.rpc("issue_invoice", { _booking_id: id, _company: name as string, _tax_id: tax as string });
     setBusy(false);
     if (error) return toast.error(error.message.includes("status") ? "No invoice for this booking yet" : "Couldn't make the invoice");
-    setInv(data as unknown as Invoice);
+    const v = data as unknown as Invoice;
+    setInv(v);
+    setCo({ name: v.company_name || "", tax: v.tax_id || "" });
   }, [id]);
   useEffect(() => { if (trip) void issue(); }, [trip, issue]);
   return (
     <Shell title="Invoice">
-      <Gate state={trip} err={err} retry={load}>{() => !inv ? <ListSkeleton rows={2} /> : (
+      <Gate state={trip} err={err} retry={load}>{() => !feats.invoices ? <EmptyState title="Invoices are switched off" /> : !inv ? <ListSkeleton rows={2} /> : (
         <div className="space-y-4">
           <article className="rounded-xl border border-border p-5 print:border-0" id="invoice">
             <div className="flex justify-between gap-3">
               <div><p className="text-xl font-semibold">{inv.kind === "paid" ? "Invoice" : "Proforma invoice"}</p><p className="text-[13px] text-muted-foreground">{inv.number} · {new Date(inv.issued_at).toLocaleDateString("en-NG")}</p></div>
-              <div className="text-right text-[13px]"><p className="font-semibold">StayGlobal</p><p className="text-muted-foreground">support@stayglobal.app</p></div>
+              <div className="text-right text-[13px] whitespace-pre-line"><p className="font-semibold">{company}</p><p className="text-muted-foreground">{supportEmail}</p></div>
             </div>
             <div className="mt-4 text-[13px]">
               <p className="text-muted-foreground">Billed to</p>
-              <p className="font-semibold">{inv.company_name || "Guest"}</p>
+              <p className="font-semibold">{inv.billed_name || "Guest"}</p>
+              {inv.billed_email && <p className="text-muted-foreground">{inv.billed_email}</p>}
+              {inv.company_name && <p className="font-semibold mt-1">{inv.company_name}</p>}
               {inv.tax_id && <p>Tax ID: {inv.tax_id}</p>}
             </div>
             <p className="mt-4 text-[13px]">{titleOf(trip!)} · {trip!.check_in_date} → {trip!.check_out_date}{trip!.listing_code ? ` · ${trip!.listing_code}` : ""}</p>

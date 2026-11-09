@@ -598,6 +598,8 @@ export type Database = {
       invoices: {
         Row: {
           amount: number
+          billed_email: string | null
+          billed_name: string | null
           booking_id: string
           company_name: string | null
           guest_id: string
@@ -610,6 +612,8 @@ export type Database = {
         }
         Insert: {
           amount: number
+          billed_email?: string | null
+          billed_name?: string | null
           booking_id: string
           company_name?: string | null
           guest_id: string
@@ -622,6 +626,8 @@ export type Database = {
         }
         Update: {
           amount?: number
+          billed_email?: string | null
+          billed_name?: string | null
           booking_id?: string
           company_name?: string | null
           guest_id?: string
@@ -2108,6 +2114,8 @@ export type Database = {
         Args: { _booking_id: string; _company: string; _tax_id: string }
         Returns: {
           amount: number
+          billed_email: string | null
+          billed_name: string | null
           booking_id: string
           company_name: string | null
           guest_id: string

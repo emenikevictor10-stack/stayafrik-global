@@ -1,10 +1,10 @@
 /** App settings (admin-editable). Defaults apply when a key is missing or the wrong type. */
-export const FEATURE_KEYS = ["search_fields", "card_payments", "holds", "report_problem", "id_required", "map", "whatsapp", "phone_signin", "mapbox", "split_payments", "addons", "bank_transfer"] as const;
+export const FEATURE_KEYS = ["search_fields", "card_payments", "holds", "report_problem", "id_required", "map", "whatsapp", "phone_signin", "mapbox", "split_payments", "addons", "bank_transfer", "invoices"] as const;
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 
 export const DEFAULT_FEATURES: Record<FeatureKey, boolean> = {
   search_fields: true, card_payments: true, holds: true, report_problem: true, id_required: false,
-  map: true, whatsapp: false, phone_signin: false, mapbox: false, split_payments: true, addons: true, bank_transfer: true,
+  map: true, whatsapp: false, phone_signin: false, mapbox: false, split_payments: true, addons: true, bank_transfer: true, invoices: true,
 };
 
 export const DEFAULTS = {
@@ -35,3 +35,12 @@ export const features = (s: SettingsMap): Record<FeatureKey, boolean> => {
 
 /** Service fee on local stays, in naira, from a subtotal. */
 export const serviceFee = (subtotal: number, bps: number) => Math.round((subtotal * bps) / 10000);
+
+/** Invoice kind for a booking status (mirrors issue_invoice); null = no invoice. */
+export const invoiceKind = (status: string, paid = false): "paid" | "proforma" | null =>
+  paid || ["confirmed", "released", "completed", "awaiting_host", "needs_attention", "processing"].includes(status) ? "paid"
+  : ["held", "pending"].includes(status) ? "proforma" : null;
+/** Invoice total in kobo: booking total plus paid extras. */
+export const invoiceTotalKobo = (bookingKobo: number, extrasKobo: number[]) => bookingKobo + extrasKobo.reduce((a, b) => a + b, 0);
+/** Whether the Invoice button shows. */
+export const showInvoice = (enabled: boolean, status: string, paid = false) => enabled && invoiceKind(status, paid) !== null;

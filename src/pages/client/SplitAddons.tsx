@@ -9,6 +9,7 @@ import { loadPaystackInline } from "@/lib/paystack-inline";
 import { SignInSheet } from "@/components/auth/SignInSheet";
 import { toast } from "sonner";
 import { useSettings } from "@/hooks/useSettings";
+import { ADDON_STATUS_LABEL, addonsForCity, canBuyAddon, guestAddonCancelNext, type AddonStatus } from "@/lib/addons";
 
 const fmtK = (k: number) => "₦" + Math.round(Number(k || 0) / 100).toLocaleString();
 
@@ -80,51 +81,85 @@ export const SplitPanel = ({ bookingId, onChange }: { bookingId: string; onChang
   );
 };
 
-type Addon = { id: string; name: string; description: string | null; price_kobo: number; unit: string };
-type Order = { id: string; addon_name: string; qty: number; amount_kobo: number; status: string };
+type Addon = { id: string; name: string; description: string | null; price_kobo: number; unit: string; city_id: string | null };
+type Order = { id: string; addon_name: string; qty: number; amount_kobo: number; status: string; staff_note: string | null };
 
-/** Extras for a confirmed trip, plus the guest's orders. */
+/** Extras for a confirmed trip (filtered by the stay's city), plus the guest's orders. */
 export const AddonsPanel = ({ bookingId }: { bookingId: string }) => {
   const { features } = useSettings();
+  const navigate = useNavigate();
   const [addons, setAddons] = useState<Addon[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [canBuy, setCanBuy] = useState(false);
   const [busy, setBusy] = useState<string | null>(null);
   const [qty, setQty] = useState<Record<string, number>>({});
   const load = useCallback(async () => {
-    const [a, o] = await Promise.all([
-      supabase.from("addons").select("id,name,description,price_kobo,unit").eq("active", true).order("sort"),
-      supabase.from("addon_orders").select("id,addon_name,qty,amount_kobo,status").eq("booking_id", bookingId).neq("status", "cancelled").order("created_at"),
+    const [a, o, b] = await Promise.all([
+      supabase.from("addons").select("id,name,description,price_kobo,unit,city_id").eq("active", true).order("sort"),
+      supabase.from("addon_orders").select("id,addon_name,qty,amount_kobo,status,staff_note").eq("booking_id", bookingId).neq("status", "cancelled").order("created_at"),
+      supabase.from("bookings").select("status,check_in_date,rayprop_listing_id,listings(city_id)").eq("id", bookingId).maybeSingle(),
     ]);
-    setAddons((a.data as Addon[]) || []); setOrders((o.data as Order[]) || []);
+    let cityId: string | null = (b.data as any)?.listings?.city_id ?? null;
+    if (!cityId && b.data?.rayprop_listing_id) {
+      const { data: m } = await supabase.from("partner_location_map").select("city_id").eq("rayprop_listing_id", b.data.rayprop_listing_id).maybeSingle();
+      cityId = m?.city_id ?? null;
+    }
+    const today = new Date(Date.now() + 3600_000).toISOString().slice(0, 10);
+    setCanBuy(!!b.data && canBuyAddon(b.data.status, b.data.check_in_date, today));
+    setAddons(addonsForCity((a.data as Addon[]) || [], cityId)); setOrders((o.data as Order[]) || []);
   }, [bookingId]);
   useEffect(() => { void load(); }, [load]);
-  if (!features.addons || (!addons.length && !orders.length)) return null;
-  const buy = async (a: Addon) => {
-    setBusy(a.id);
-    try { await payViaPaystack({ mode: "addon", booking_id: bookingId, addon_id: a.id, qty: qty[a.id] || 1 }); toast.success(`${a.name} ordered — we'll arrange it`); }
+  if (!features.addons || ((!canBuy || !addons.length) && !orders.length)) return null;
+  const buy = async (a: Addon, method: "card" | "bank") => {
+    setBusy(a.id + method);
+    try {
+      if (method === "bank") {
+        const { data, error } = await supabase.functions.invoke("paystack-init", { body: { mode: "addon", booking_id: bookingId, addon_id: a.id, qty: qty[a.id] || 1, method: "bank_transfer" } });
+        if (error || !data?.bank_transfer?.id) {
+          const ctx: any = (error as any)?.context; const msg = ctx?.json ? (await ctx.json().catch(() => null))?.error : null;
+          throw new Error(msg || data?.error || "Could not start the bank transfer");
+        }
+        navigate(`/pay/transfer/${data.bank_transfer.id}`); return;
+      }
+      await payViaPaystack({ mode: "addon", booking_id: bookingId, addon_id: a.id, qty: qty[a.id] || 1 }); toast.success(`${a.name} ordered — we'll arrange it`);
+    }
     catch (e) { toast.error((e as Error).message); }
     finally { setBusy(null); load(); }
+  };
+  const cancel = async (o: Order) => {
+    if (!window.confirm(o.status === "pending_payment" ? `Cancel ${o.addon_name}?` : `Cancel ${o.addon_name}? We'll refund ${fmtK(o.amount_kobo)}.`)) return;
+    setBusy(o.id);
+    const { error } = await supabase.rpc("guest_addon_cancel", { _order_id: o.id });
+    setBusy(null);
+    if (error) toast.error(error.message); else { toast.success("Extra cancelled"); load(); }
   };
   return (
     <section className="space-y-2">
       <h2 className="text-[15px] font-semibold">Add to your stay</h2>
-      {orders.filter((o) => o.status !== "pending_payment").map((o) => (
-        <div key={o.id} className="flex justify-between text-[13px]"><span>{o.addon_name} × {o.qty} · {fmtK(o.amount_kobo)}</span><Tag tone={o.status === "arranged" ? "done" : "act"}>{o.status === "paid" ? "Being arranged" : o.status.replace(/_/g, " ")}</Tag></div>
+      {orders.map((o) => (
+        <div key={o.id} className="flex flex-wrap items-center justify-between gap-2 text-[13px]">
+          <span>{o.addon_name} × {o.qty} · {fmtK(o.amount_kobo)}{o.staff_note && ["confirmed", "done"].includes(o.status) ? <span className="block text-xs text-muted-foreground">{o.staff_note}</span> : null}</span>
+          <span className="flex items-center gap-2">
+            <Tag tone={["confirmed", "done", "refunded"].includes(o.status) ? "done" : "act"}>{ADDON_STATUS_LABEL[o.status] ?? o.status}</Tag>
+            {guestAddonCancelNext(o.status as AddonStatus) && <button type="button" disabled={busy === o.id} onClick={() => cancel(o)} className="min-h-11 px-2 text-[13px] font-semibold underline">Cancel</button>}
+          </span>
+        </div>
       ))}
-      <div className="grid gap-2 sm:grid-cols-2">
+      {canBuy && <div className="grid gap-2 sm:grid-cols-2">
         {addons.map((a) => (
           <div key={a.id} className="rounded-xl border border-border p-3 space-y-1">
             <div className="flex justify-between gap-2"><p className="font-semibold text-[15px]">{a.name}</p><p className="text-[13px] font-semibold">{fmtK(a.price_kobo)}<span className="text-muted-foreground font-normal"> / {a.unit}</span></p></div>
             {a.description && <p className="text-xs text-muted-foreground">{a.description}</p>}
-            <div className="flex items-center gap-2 pt-1">
+            <div className="flex flex-wrap items-center gap-2 pt-1">
               <select aria-label={`How many ${a.name}`} value={qty[a.id] || 1} onChange={(e) => setQty({ ...qty, [a.id]: Number(e.target.value) })} className="h-11 rounded-lg border border-border bg-background px-2">
                 {Array.from({ length: 10 }, (_, i) => <option key={i + 1}>{i + 1}</option>)}
               </select>
-              <Button className="h-11 px-3 text-[13px]" loading={busy === a.id} onClick={() => buy(a)}>Add · {fmtK(a.price_kobo * (qty[a.id] || 1))}</Button>
+              {features.card_payments !== false && <Button className="h-11 px-3 text-[13px]" loading={busy === a.id + "card"} onClick={() => buy(a, "card")}>Add · {fmtK(a.price_kobo * (qty[a.id] || 1))}</Button>}
+              {features.bank_transfer && <Button variant="secondary" className="h-11 px-3 text-[13px]" loading={busy === a.id + "bank"} onClick={() => buy(a, "bank")}>Pay by transfer</Button>}
             </div>
           </div>
         ))}
-      </div>
+      </div>}
     </section>
   );
 };

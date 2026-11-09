@@ -20,7 +20,7 @@ import { isBlocked, rangeHitsBlocked, nextBlockedAfter } from "@/lib/blocked-dat
 import { cn } from "@/lib/utils";
 import {
   ChevronLeft, Calendar as CalIcon, Users, ShieldCheck, CreditCard,
-  Minus, Plus, Star, Loader2,
+  Minus, Plus, Star, Loader2, Landmark, type LucideIcon,
 } from "lucide-react";
 import { loadPaystackInline } from "@/lib/paystack-inline";
 import { toast } from "sonner";
@@ -96,6 +96,7 @@ const BookProperty = () => {
   }, [hold]);
 
   const [splitCount, setSplitCount] = useState(0);
+  const [payMethod, setPayMethod] = useState<"card" | "bank">("card");
   const isPartnerListing = p?.source === "rayprop";
   const { blocked, loaded: blockedLoaded } = useBlockedDates(
     isPartnerListing ? p?.raypropListingId || p?.id : p?.id,
@@ -186,6 +187,7 @@ const BookProperty = () => {
     setPaying(true);
     try {
       const callback_url = `${window.location.origin}/booking/confirm`;
+      const useBank = payMethod === "bank" && features.bank_transfer;
       const { data, error } = await supabase.functions.invoke("paystack-init", {
         body: {
           listing_id: p.id,
@@ -193,14 +195,20 @@ const BookProperty = () => {
           check_out: format(checkOut!, "yyyy-MM-dd"),
           guests,
           callback_url,
+          ...(useBank ? { method: "bank_transfer" } : {}),
           ...(isPartner ? {
             source: "rayprop", quote_id: quote!.id, hold_id: hold!.id,
             title: p.title, image: p.image, city: p.city || p.location,
             guest: { name: guestName.trim(), email: guestEmail.trim(), phone: guestPhone.replace(/[\s-]/g, "") },
-          } : splitCount >= 2 ? { split_count: splitCount } : {}),
+          } : splitCount >= 2 && !useBank ? { split_count: splitCount } : {}),
         },
       });
-      if (error) throw new Error(error.message);
+      if (error) {
+        const ctx: any = (error as any).context;
+        const msg = ctx?.json ? (await ctx.json().catch(() => null))?.error : null;
+        throw new Error(msg || error.message);
+      }
+      if (data?.bank_transfer?.id) { try { sessionStorage.removeItem(draftKey); } catch { /* */ } navigate(`/pay/transfer/${data.bank_transfer.id}`); return; }
       if (!data?.access_code || !data?.reference) {
         throw new Error(data?.error || "Could not start payment");
       }
@@ -441,7 +449,7 @@ const BookProperty = () => {
               )}
             </div>
 
-            {!isPartner && features.split_payments && (
+            {!isPartner && features.split_payments && payMethod === "card" && (
               <div className="rounded-2xl bg-card border border-border p-4">
                 <h3 className="font-bold text-sm mb-1">Split the cost</h3>
                 <p className="text-xs text-muted-foreground mb-2">Each person pays their part. Your dates are held for a few hours while everyone pays; if anyone doesn't, everyone is refunded.</p>
@@ -457,15 +465,14 @@ const BookProperty = () => {
               </div>
             )}
 
-            <div className="rounded-2xl bg-card border border-border p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <CreditCard className="w-4 h-4 text-primary" />
-                <h3 className="font-bold text-sm">Pay with Paystack</h3>
-              </div>
-              <p className="text-xs text-muted-foreground">
-                Cards (Visa, Mastercard, Verve), Bank transfer, USSD and more on the next screen.
-              </p>
-              <p className="text-xs text-muted-foreground mt-3">🔒 Secured by Paystack · PCI-DSS Level 1</p>
+            <div className="rounded-2xl bg-card border border-border p-4 space-y-2" role="radiogroup" aria-label="How do you want to pay?">
+              <h3 className="font-bold text-sm">How do you want to pay?</h3>
+              <MethodOption checked={payMethod === "card"} onClick={() => setPayMethod("card")} Icon={CreditCard}
+                title="Pay by card (Paystack)" sub="Cards, USSD and more on the next screen. Confirmed instantly." />
+              {features.bank_transfer && (
+                <MethodOption checked={payMethod === "bank"} onClick={() => setPayMethod("bank")} Icon={Landmark}
+                  title="Pay by bank transfer" sub={isPartner ? "Send to our account, upload the receipt. We confirm after checking — the partner stay is booked then." : "Send to our account and upload the receipt. Dates held 2 hours; we confirm after checking."} />
+              )}
             </div>
           </section>
         )}
@@ -486,7 +493,7 @@ const BookProperty = () => {
             className="bg-primary text-primary-foreground rounded-full px-6 h-12 font-bold text-sm disabled:opacity-60 inline-flex items-center gap-2"
           >
             {step === 3
-              ? (paying ? <><Loader2 className="w-4 h-4 animate-spin" /> Redirecting…</> : "Pay securely")
+              ? (paying ? <><Loader2 className="w-4 h-4 animate-spin" /> {payMethod === "bank" ? "Holding dates…" : "Redirecting…"}</> : payMethod === "bank" && features.bank_transfer ? "Get bank details" : "Pay securely")
               : preparing ? <><Loader2 className="w-4 h-4 animate-spin" /> Getting price…</> : "Continue"}
           </button>
         </div>
@@ -513,6 +520,15 @@ const Field = ({ label, value, onChange, type = "text" }: { label: string; value
     <input type={type} value={value} onChange={(e) => onChange(e.target.value)} maxLength={254}
       className="mt-1 w-full rounded-xl bg-secondary border border-border px-3 py-2.5 text-sm font-semibold outline-none focus:border-primary" />
   </label>
+);
+
+const MethodOption = ({ checked, onClick, Icon, title, sub }: { checked: boolean; onClick: () => void; Icon: LucideIcon; title: string; sub: string }) => (
+  <button type="button" role="radio" aria-checked={checked} onClick={onClick}
+    className={cn("w-full text-left flex gap-3 rounded-xl border p-3 min-h-11", checked ? "border-foreground bg-surface" : "border-border")}>
+    <Icon className="w-4 h-4 text-primary shrink-0 mt-0.5" />
+    <span className="flex-1"><span className="block text-sm font-semibold">{title}</span><span className="block text-xs text-muted-foreground mt-0.5">{sub}</span></span>
+    <span className={cn("w-4 h-4 rounded-full border-2 shrink-0 mt-0.5", checked ? "border-primary bg-primary" : "border-border")} />
+  </button>
 );
 
 const Pill = ({ label, value }: { label: string; value: string }) => (

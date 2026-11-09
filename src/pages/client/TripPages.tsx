@@ -1,3 +1,4 @@
+import { transferState } from "@/lib/bank-transfer";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
 import { TopBar } from "@/components/shell/TopBar";
@@ -106,6 +107,7 @@ export const TripDetail = () => {
               {canCancel(t.status, d, t.check_in_date) && <Link to={`/trips/${t.id}/cancel`} className="min-h-11 rounded-lg border border-destructive/40 text-destructive flex items-center justify-center text-[13px] font-semibold">Cancel booking</Link>}
             </div>
             {(t as any).is_split && t.status === "held" && <SplitPanel bookingId={t.id} onChange={load} />}
+            {t.status === "held" && !(t as any).is_split && <TransferNotice bookingId={t.id} />}
             {["confirmed", "awaiting_host"].includes(t.status) && t.check_in_date >= d && <AddonsPanel bookingId={t.id} />}
             {move.open && (
               <div className="rounded-xl border border-border p-3 space-y-2">
@@ -406,4 +408,15 @@ export const TripGuests = () => {
       }}</Gate>
     </Shell>
   );
+};
+
+/** Shows bank-transfer progress on a held trip (if it was paid that way). */
+const TransferNotice = ({ bookingId }: { bookingId: string }) => {
+  const [bt, setBt] = useState<any>(null);
+  useEffect(() => { (supabase as any).from("bank_transfers").select("id,status,expires_at,amount_kobo").eq("booking_id", bookingId).maybeSingle().then(({ data }: any) => setBt(data)); }, [bookingId]);
+  if (!bt) return null;
+  const st = transferState(bt);
+  if (st === "submitted") return <Notice>Payment being checked. We'll confirm your booking once we see your transfer.</Notice>;
+  if (st === "awaiting_proof") return <Notice tone="warn">Waiting for your bank transfer. <Link to={`/pay/transfer/${bt.id}`} className="underline font-semibold">See bank details</Link></Notice>;
+  return null;
 };

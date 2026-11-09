@@ -170,6 +170,80 @@ export type Database = {
         }
         Relationships: []
       }
+      bank_transfers: {
+        Row: {
+          amount_kobo: number
+          booking_id: string | null
+          check_in: string | null
+          check_out: string | null
+          created_at: string
+          decided_at: string | null
+          decided_by: string | null
+          expires_at: string
+          guest_id: string
+          id: string
+          meta: Json
+          receipt_path: string | null
+          reference: string
+          reject_reason: string | null
+          sender_name: string | null
+          source: string
+          status: string
+          submitted_at: string | null
+          title: string | null
+        }
+        Insert: {
+          amount_kobo: number
+          booking_id?: string | null
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          expires_at: string
+          guest_id: string
+          id?: string
+          meta?: Json
+          receipt_path?: string | null
+          reference: string
+          reject_reason?: string | null
+          sender_name?: string | null
+          source?: string
+          status?: string
+          submitted_at?: string | null
+          title?: string | null
+        }
+        Update: {
+          amount_kobo?: number
+          booking_id?: string | null
+          check_in?: string | null
+          check_out?: string | null
+          created_at?: string
+          decided_at?: string | null
+          decided_by?: string | null
+          expires_at?: string
+          guest_id?: string
+          id?: string
+          meta?: Json
+          receipt_path?: string | null
+          reference?: string
+          reject_reason?: string | null
+          sender_name?: string | null
+          source?: string
+          status?: string
+          submitted_at?: string | null
+          title?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "bank_transfers_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       booking_change_requests: {
         Row: {
           booking_id: string
@@ -2237,6 +2311,10 @@ export type Database = {
         Args: { _action: string; _note: string; _order_id: string }
         Returns: undefined
       }
+      staff_bank_transfer_action: {
+        Args: { _action: string; _id: string; _reason: string }
+        Returns: undefined
+      }
       staff_booking_action: {
         Args: { _action: string; _booking_id: string; _note?: string }
         Returns: undefined
@@ -2296,6 +2374,10 @@ export type Database = {
           _roles: Database["public"]["Enums"]["app_role"][]
           _user_id: string
         }
+        Returns: undefined
+      }
+      submit_bank_transfer: {
+        Args: { _id: string; _receipt_path: string; _sender: string }
         Returns: undefined
       }
       support_issue_tick: { Args: never; Returns: Json }

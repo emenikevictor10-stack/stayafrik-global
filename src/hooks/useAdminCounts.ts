@@ -8,19 +8,20 @@ const head = { count: "exact" as const, head: true };
 /** How many items wait for a person in each admin queue. Refreshes every minute. */
 export const useAdminCounts = () => {
   const support = useSupportQueueCount();
-  const [c, setC] = useState({ listings: 0, kyc: 0, payouts: 0, viewings: 0, partner: 0 });
+  const [c, setC] = useState({ listings: 0, kyc: 0, payouts: 0, viewings: 0, partner: 0, transfers: 0 });
   useEffect(() => {
     let alive = true;
     const load = async () => {
       const db = supabase as any;
-      const [l, k, p, v, pb] = await Promise.all([
+      const [l, k, p, v, pb, bt] = await Promise.all([
         db.from("listings").select("id", head).eq("verified", false),
         db.from("kyc_submissions").select("id", head).eq("status", "pending"),
         db.from("payouts").select("id", head).in("status", ["pending", "failed"]),
         db.from("reservations").select("id", head).eq("status", "pending"),
         db.from("bookings").select("id", head).eq("status", "needs_attention"),
+        db.from("bank_transfers").select("id", head).eq("status", "submitted"),
       ]);
-      if (alive) setC({ listings: l.count || 0, kyc: k.count || 0, payouts: p.count || 0, viewings: v.count || 0, partner: pb.count || 0 });
+      if (alive) setC({ listings: l.count || 0, kyc: k.count || 0, payouts: p.count || 0, viewings: v.count || 0, partner: pb.count || 0, transfers: bt.count || 0 });
     };
     load();
     const t = setInterval(load, 60_000);

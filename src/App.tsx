@@ -43,6 +43,8 @@ import AdminPartnerBookings from "./pages/admin/AdminPartnerBookings";
 import AdminReservations from "./pages/admin/AdminReservations";
 import AdminReviews from "./pages/admin/AdminReviews";
 import { AdminAddons, AdminDateChanges } from "./pages/admin/AdminExtras";
+import AdminBankTransfers from "./pages/admin/AdminBankTransfers";
+import TransferPay from "./pages/client/TransferPay";
 import { AdminPayments, AdminMessages, AdminHealth, AdminInsights, AdminTeam } from "./pages/admin/AdminOps";
 import AdminHosts from "./pages/admin/AdminHosts";
 import AdminPayouts from "./pages/admin/AdminPayouts";
@@ -177,6 +179,7 @@ const App = () => (
                     <Route path="/profile/delete" element={<DeleteAccount />} />
                     <Route path="/trips/:id/report" element={<ReportProblem />} />
                     <Route path="/trips/:id" element={<TripDetail />} />
+                    <Route path="/pay/transfer/:id" element={<TransferPay />} />
                     <Route path="/trips/:id/cancel" element={<TripCancel />} />
                     <Route path="/trips/:id/review" element={<TripReview />} />
                     <Route path="/trips/:id/move" element={<TripMove />} />
@@ -203,6 +206,7 @@ const App = () => (
                     <Route path="/admin/reviews" element={<AdminReviews />} />
                     <Route path="/admin/addons" element={<AdminAddons />} />
                     <Route path="/admin/payments" element={<AdminPayments />} />
+                    <Route path="/admin/bank-transfers" element={<AdminBankTransfers />} />
                     <Route path="/admin/messages" element={<AdminMessages />} />
                     <Route path="/admin/health" element={<AdminHealth />} />
                     <Route path="/admin/insights" element={<AdminInsights />} />

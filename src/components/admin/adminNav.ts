@@ -1,9 +1,10 @@
 import {
   LayoutDashboard, Building2, Users, CalendarDays, Banknote, ShieldCheck, ScrollText,
   Handshake, MapPinned, Star, LifeBuoy, Eye, Settings, Home, Gift, CalendarClock, Wallet, Mail, Activity, BarChart3, UserCog,
+  Landmark,
 } from "lucide-react";
 
-export type AdminCountKey = "support" | "listings" | "kyc" | "payouts" | "viewings" | "partner";
+export type AdminCountKey = "support" | "listings" | "kyc" | "payouts" | "viewings" | "partner" | "transfers";
 
 export type TeamRole = "admin" | "support" | "finance" | "listings";
 export const TEAM_ROLES: { role: TeamRole; label: string; hint: string }[] = [
@@ -42,6 +43,7 @@ export const ADMIN_NAV: { group: string; items: AdminNavItem[] }[] = [
   ] },
   { group: "Money", items: [
     { to: "/admin/payments", label: "Payments", Icon: Wallet, roles: ["finance"] },
+    { to: "/admin/bank-transfers", label: "Bank transfers", Icon: Landmark, count: "transfers", roles: ["finance"] },
     { to: "/admin/payouts", label: "Payouts", Icon: Banknote, count: "payouts", roles: ["finance"] },
     { to: "/admin/insights", label: "Insights", Icon: BarChart3, roles: ["finance"] },
   ] },

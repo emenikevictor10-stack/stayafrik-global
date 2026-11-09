@@ -1,10 +1,10 @@
 /** App settings (admin-editable). Defaults apply when a key is missing or the wrong type. */
-export const FEATURE_KEYS = ["search_fields", "card_payments", "holds", "report_problem", "id_required", "map", "whatsapp", "phone_signin", "mapbox", "split_payments", "addons"] as const;
+export const FEATURE_KEYS = ["search_fields", "card_payments", "holds", "report_problem", "id_required", "map", "whatsapp", "phone_signin", "mapbox", "split_payments", "addons", "bank_transfer"] as const;
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 
 export const DEFAULT_FEATURES: Record<FeatureKey, boolean> = {
   search_fields: true, card_payments: true, holds: true, report_problem: true, id_required: false,
-  map: true, whatsapp: false, phone_signin: false, mapbox: false, split_payments: true, addons: true,
+  map: true, whatsapp: false, phone_signin: false, mapbox: false, split_payments: true, addons: true, bank_transfer: true,
 };
 
 export const DEFAULTS = {

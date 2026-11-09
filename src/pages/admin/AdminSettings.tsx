@@ -21,6 +21,7 @@ const FEATURE_LABELS: Record<FeatureKey, [string, string]> = {
   mapbox: ["Mapbox tiles", "Off uses free map tiles"],
   split_payments: ["Split payments", "Guests can split a local stay's cost with friends"],
   addons: ["Add-ons", "Guests can buy extras (airport pickup, groceries…) for confirmed trips"],
+  bank_transfer: ["Bank transfer", "Guests can pay by bank transfer; staff approve each one"],
 };
 
 type Field = { key: string; label: string; kind: "naira" | "percent" | "int" | "text" | "long" | "bool"; unit?: string; help?: string };
@@ -48,6 +49,10 @@ const SECTIONS: { title: string; fields: Field[] }[] = [
     { key: "staff_alert_phones", label: "Staff alert phones", kind: "text", help: "Separate with commas." },
     { key: "wallet_alert_threshold_kobo", label: "Alert when RayProp wallet is below", kind: "naira" },
     { key: "sg_bank_account", label: "Bank account for transfers", kind: "text" },
+    { key: "bank_transfer_bank", label: "Bank transfer: bank name", kind: "text" },
+    { key: "bank_transfer_number", label: "Bank transfer: account number", kind: "text" },
+    { key: "bank_transfer_name", label: "Bank transfer: account name", kind: "text" },
+    { key: "bank_transfer_hold_minutes", label: "Bank transfer: time to pay", kind: "int", unit: "minutes" },
   ] },
   { title: "Company and guarantee", fields: [
     { key: "company", label: "Company details (on invoices)", kind: "long" },

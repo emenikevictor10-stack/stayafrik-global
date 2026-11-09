@@ -37,6 +37,15 @@ Deno.serve(async (req) => {
       return { access_code: j.data.access_code as string, reference: j.data.reference as string, authorization_url: j.data.authorization_url as string };
     };
     const okCb = (u: unknown) => typeof u === "string" && /^https?:\/\//.test(u);
+    const isBank = body.method === "bank_transfer";
+    const bankDetails = async () => {
+      const f = await getSetting<Record<string, boolean>>("features", {} as any);
+      if (f && (f as any).bank_transfer === false) return null;
+      const number = (await getSetting<string>("bank_transfer_number", "")).trim();
+      if (!number) return null;
+      return { bank: await getSetting<string>("bank_transfer_bank", ""), number, name: await getSetting<string>("bank_transfer_name", "") };
+    };
+    const bankMinutes = async () => Math.max(15, await getSetting<number>("bank_transfer_hold_minutes", 120));
 
     // ---------- Add-on for a confirmed trip (price from the catalogue, never the client) ----------
     if (body.mode === "addon") {
@@ -81,7 +90,7 @@ Deno.serve(async (req) => {
     const guests = Number(body.guests || 1);
     const callback_url = String(body.callback_url || "");
 
-    if (!listing_id || !check_in || !check_out || !callback_url) {
+    if (!listing_id || !check_in || !check_out || (!callback_url && !isBank)) {
       return json(400, { error: "Missing required fields" });
     }
 
@@ -102,6 +111,27 @@ Deno.serve(async (req) => {
       if (hold?.status && hold.status !== "active") return json(409, { error: "Your hold expired. Please get a new price." });
       const amountKobo = Math.round(Number(quote?.pricing?.total_amount || 0));
       if (!amountKobo) return json(400, { error: "Invalid partner price" });
+      if (isBank) {
+        const acct = await bankDetails();
+        if (!acct) return json(400, { error: "Bank transfer is not available right now." });
+        const ref = `STAYBT_${Date.now()}_${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+        const title = String(body.title || quote?.listing?.title || "Partner stay").slice(0, 200);
+        const pN = nightlyBreakdown(check_in, check_out, 0).length || 1;
+        const mN = Math.max(0, await getSetting<number>("markup_per_night_kobo", 0));
+        const expires = expiresAt(new Date(), await bankMinutes()).toISOString();
+        const { data: bt, error: be } = await svcEarly.from("bank_transfers").insert({
+          guest_id: userId, source: "rayprop", amount_kobo: amountKobo, reference: ref, title, check_in, check_out, expires_at: expires,
+          meta: {
+            account: acct,
+            rayprop_listing_id: String(listing_id).replace(/^rp_/, ""), quote_id, hold_id, guests,
+            markup_kobo: Math.round(Number(quote?.pricing?.developer_markup_total ?? mN * pN)) || 0,
+            image: String(body.image || "").slice(0, 500), city: String(body.city || quote?.listing?.city || "").slice(0, 80),
+            guest_name: String(g.name).slice(0, 120), guest_email: String(g.email).slice(0, 254), guest_phone: String(g.phone).slice(0, 20),
+          },
+        }).select("id").single();
+        if (be) return json(500, { error: "Could not start the bank transfer. Please try again." });
+        return json(200, { bank_transfer: { id: bt.id, reference: ref, amount: amountKobo / 100, expires_at: expires, account: acct, partner: true } });
+      }
       const pkey = Deno.env.get("PAYSTACK_SECRET_KEY")?.trim();
       if (!pkey) return json(500, { error: "Paystack is not configured" });
       const reference = `STAYRP_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
@@ -168,6 +198,29 @@ Deno.serve(async (req) => {
     const fees = split.fee_kobo / 100;
     const total = split.total_kobo / 100;
     const amountKobo = split.total_kobo;
+
+    if (isBank) {
+      const acct = await bankDetails();
+      if (!acct) return json(400, { error: "Bank transfer is not available right now." });
+      const svcB = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+      await svcB.rpc("expire_stale_holds", { _listing_id: listing_id });
+      await svcB.from("bookings").update({ status: "cancelled" }).eq("guest_id", userId).eq("listing_id", listing_id).eq("status", "held");
+      const ref = `STAYBT_${Date.now()}_${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+      const expires = expiresAt(new Date(), await bankMinutes()).toISOString();
+      const { data: hb, error: he } = await svcB.from("bookings").insert({
+        guest_id: userId, listing_id, host_id: listing.host_id, source: "stayglobal", status: "held",
+        check_in_date: check_in, check_out_date: check_out, guest_count: guests, total_price: total, payment_reference: ref,
+        hold_expires_at: expires, payment_expires_at: expires,
+        nightly_breakdown: breakdown, subtotal_kobo: split.subtotal_kobo, fee_kobo: split.fee_kobo,
+        host_payout_kobo: split.host_payout_kobo, cleaning_fee_kobo: split.cleaning_kobo, discount_kobo: split.discount_kobo,
+      }).select("id").single();
+      if (he) return json(he.code === "23P01" ? 409 : 500, { error: he.code === "23P01" ? "Those dates were just booked — please pick different dates." : "Could not hold your dates." });
+      const { data: bt, error: be } = await svcB.from("bank_transfers").insert({
+        booking_id: hb.id, guest_id: userId, amount_kobo: amountKobo, reference: ref, title: listing.title, check_in, check_out, expires_at: expires, meta: { account: acct },
+      }).select("id").single();
+      if (be) { await svcB.from("bookings").update({ status: "cancelled" }).eq("id", hb.id); return json(500, { error: "Could not start the bank transfer." }); }
+      return json(200, { bank_transfer: { id: bt.id, reference: ref, amount: total, expires_at: expires, account: acct, booking_id: hb.id } });
+    }
 
     const key = Deno.env.get("PAYSTACK_SECRET_KEY")?.trim();
     if (!key) return json(500, { error: "Paystack is not configured" });

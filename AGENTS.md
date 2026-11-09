@@ -30,4 +30,4 @@
 - Shared lists: `wishlist_members` via `join_wishlist`, checked by `private.is_wishlist_member`; compare links via `src/lib/compare.ts`. Why: no recursive policies.
 - `listing_private` read by guests only via `trip_access`. Why: `listings` is public.
 - Blocks: `user_status` via `staff_user_action`; `private.is_blocked` gates inserts, `paystack-init` refuses. Why: one switch.
-- Guides in `help_guides` (`useGuides`); review replies via `staff_review_reply`. Why: no code change for content.
+- Guides: `help_guides`; replies: `staff_review_reply`. Why: no code change.

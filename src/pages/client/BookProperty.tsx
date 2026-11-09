@@ -96,6 +96,11 @@ const BookProperty = () => {
   }, [hold]);
 
   const [splitCount, setSplitCount] = useState(0);
+  const [splitMode, setSplitMode] = useState<"equal" | "custom">("equal");
+  const [people, setPeople] = useState<{ name: string; phone: string; email: string; amount: string }[]>([]);
+  useEffect(() => {
+    setPeople((prev) => Array.from({ length: splitCount }, (_, i) => prev[i] ?? { name: "", phone: "", email: "", amount: "" }));
+  }, [splitCount]);
   const [payMethod, setPayMethod] = useState<"card" | "bank">("card");
   const isPartnerListing = p?.source === "rayprop";
   const { blocked, loaded: blockedLoaded } = useBlockedDates(
@@ -137,6 +142,8 @@ const BookProperty = () => {
   const subtotal = lq ? koboToNaira(lq.subtotal_kobo) : p.priceNum * nights;
   const fees = isPartner ? 0 : lq ? koboToNaira(lq.fee_kobo) : serviceFee(subtotal, serviceFeeBps);
   const total = isPartner && quote ? koboToNaira(quote.totalKobo) : subtotal + fees;
+  const splitBlocked = splitCount >= 2 && splitMode === "custom" && payMethod === "card" && !isPartnerListing
+    && (people.some((x) => Number(x.amount || 0) < 1000) || people.reduce((a, x) => a + Number(x.amount || 0), 0) !== Math.round(Number(total) || 0));
   const holdSecsLeft = hold ? Math.max(0, Math.floor((new Date(hold.expiresAt).getTime() - nowMs) / 1000)) : 0;
   const holdExpired = isPartner && !!hold && holdSecsLeft === 0;
 
@@ -200,7 +207,9 @@ const BookProperty = () => {
             source: "rayprop", quote_id: quote!.id, hold_id: hold!.id,
             title: p.title, image: p.image, city: p.city || p.location,
             guest: { name: guestName.trim(), email: guestEmail.trim(), phone: guestPhone.replace(/[\s-]/g, "") },
-          } : splitCount >= 2 && !useBank ? { split_count: splitCount } : {}),
+          } : splitCount >= 2 && !useBank ? (splitMode === "custom"
+            ? { shares: people.map((x) => ({ amount_kobo: Math.round(Number(x.amount || 0) * 100), name: x.name, phone: x.phone, email: x.email })) }
+            : { split_count: splitCount, people: people.map((x) => ({ name: x.name, phone: x.phone, email: x.email })) }) : {}),
         },
       });
       if (error) {
@@ -461,7 +470,48 @@ const BookProperty = () => {
                     </button>
                   ))}
                 </div>
-                {splitCount >= 2 && <p className="text-[13px] mt-2">You pay about {fmt(Math.ceil(total / splitCount))} now, then send links to the others.</p>}
+                {splitCount >= 2 && (
+                  <div className="mt-3 space-y-3">
+                    <div className="flex gap-2" role="radiogroup" aria-label="How to split">
+                      {(["equal", "custom"] as const).map((m) => (
+                        <button key={m} type="button" role="radio" aria-checked={splitMode === m} onClick={() => setSplitMode(m)}
+                          className={cn("min-h-11 px-3 rounded-lg border text-[13px] font-semibold", splitMode === m ? "border-foreground bg-surface" : "border-border")}>
+                          {m === "equal" ? "Split equally" : "Set amounts"}
+                        </button>
+                      ))}
+                    </div>
+                    {people.map((x, i) => (
+                      <div key={i} className="rounded-xl border border-border p-3 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-[13px] font-semibold">{i === 0 ? "You" : `Person ${i + 1}`}</span>
+                          {splitMode === "custom"
+                            ? <input inputMode="numeric" aria-label={`Amount for ${i === 0 ? "you" : `person ${i + 1}`}`} placeholder="₦ amount" value={x.amount}
+                                onChange={(e) => setPeople((ps) => ps.map((q, j) => j === i ? { ...q, amount: e.target.value.replace(/[^0-9]/g, "") } : q))}
+                                className="w-32 h-11 rounded-lg border border-border bg-background px-3 text-base text-right" />
+                            : <span className="text-[13px]">{fmt(i === 0 ? total - Math.floor(total / splitCount) * (splitCount - 1) : Math.floor(total / splitCount))}</span>}
+                        </div>
+                        {i > 0 && (
+                          <div className="grid gap-2 sm:grid-cols-3">
+                            {(["name", "phone", "email"] as const).map((f) => (
+                              <input key={f} aria-label={`${f} for person ${i + 1}`} placeholder={f === "name" ? "Name (optional)" : f === "phone" ? "Phone (optional)" : "Email for reminders (optional)"}
+                                type={f === "email" ? "email" : f === "phone" ? "tel" : "text"} value={x[f]}
+                                onChange={(e) => setPeople((ps) => ps.map((q, j) => j === i ? { ...q, [f]: e.target.value } : q))}
+                                className="h-11 rounded-lg border border-border bg-background px-3 text-base" />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                    {splitMode === "custom" && (() => {
+                      const sum = people.reduce((a, x) => a + Number(x.amount || 0), 0);
+                      const left = Math.round(total) - sum;
+                      return <p className={cn("text-[13px]", left === 0 ? "text-muted-foreground" : "text-destructive")}>
+                        {left === 0 ? "Amounts add up to the total." : left > 0 ? `${fmt(left)} still to share out.` : `${fmt(-left)} more than the total.`}
+                      </p>;
+                    })()}
+                    <p className="text-[13px]">You pay your part now, then send links to the others.</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -488,7 +538,7 @@ const BookProperty = () => {
             </div>
           </div>
           <button
-            disabled={paying || preparing || (step === 1 && !datesValid) || (step === 3 && holdExpired)}
+            disabled={paying || preparing || (step === 1 && !datesValid) || (step === 3 && holdExpired) || splitBlocked}
             onClick={step === 3 ? pay : goNext}
             className="bg-primary text-primary-foreground rounded-full px-6 h-12 font-bold text-sm disabled:opacity-60 inline-flex items-center gap-2"
           >

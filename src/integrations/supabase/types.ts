@@ -1286,12 +1286,19 @@ export type Database = {
           amount_kobo: number
           booking_id: string
           created_at: string
+          email: string | null
           id: string
           label: string | null
+          last_reminded_at: string | null
+          name: string | null
           paid_at: string | null
+          pay_method: string | null
           payer_user_id: string | null
+          phone: string | null
           reference: string | null
           refunded_at: string | null
+          reminder_count: number
+          removed_at: string | null
           share_no: number
           status: string
           token: string
@@ -1300,12 +1307,19 @@ export type Database = {
           amount_kobo: number
           booking_id: string
           created_at?: string
+          email?: string | null
           id?: string
           label?: string | null
+          last_reminded_at?: string | null
+          name?: string | null
           paid_at?: string | null
+          pay_method?: string | null
           payer_user_id?: string | null
+          phone?: string | null
           reference?: string | null
           refunded_at?: string | null
+          reminder_count?: number
+          removed_at?: string | null
           share_no: number
           status?: string
           token: string
@@ -1314,12 +1328,19 @@ export type Database = {
           amount_kobo?: number
           booking_id?: string
           created_at?: string
+          email?: string | null
           id?: string
           label?: string | null
+          last_reminded_at?: string | null
+          name?: string | null
           paid_at?: string | null
+          pay_method?: string | null
           payer_user_id?: string | null
+          phone?: string | null
           reference?: string | null
           refunded_at?: string | null
+          reminder_count?: number
+          removed_at?: string | null
           share_no?: number
           status?: string
           token?: string
@@ -2310,11 +2331,26 @@ export type Database = {
         }
         Returns: undefined
       }
+      send_email_to: {
+        Args: {
+          _body: string
+          _heading: string
+          _link: string
+          _subject: string
+          _to: string
+        }
+        Returns: undefined
+      }
       set_listing_location: {
         Args: { _id: string; _kind: string; _location_id: string }
         Returns: undefined
       }
       setting_int: { Args: { _default: number; _key: string }; Returns: number }
+      split_reminders_tick: { Args: never; Returns: number }
+      split_share_action: {
+        Args: { _action: string; _share_id: string }
+        Returns: undefined
+      }
       staff_addon_action: {
         Args: { _action: string; _note: string; _order_id: string }
         Returns: undefined

@@ -119,7 +119,35 @@ export const quoteLocalStay = (checkIn: string, checkOut: string, plan: RatePlan
 
 /** Split a total (kobo) into n shares; any remainder goes on the first (lead) share so shares always add up exactly. */
 export function splitShares(totalKobo: number, n: number): number[] {
-  if (!Number.isInteger(n) || n < 2 || n > 8) throw new Error("Split between 2 and 8 people");
+  if (!Number.isInteger(n) || n < 2 || n > 6) throw new Error("Split between 2 and 6 people");
   const each = Math.floor(totalKobo / n);
   return Array.from({ length: n }, (_, i) => (i === 0 ? totalKobo - each * (n - 1) : each));
+}
+
+export const SPLIT_MIN_PEOPLE = 2;
+export const SPLIT_MAX_PEOPLE = 6;
+export const SPLIT_MIN_SHARE_KOBO = 100_000; // ₦1,000
+
+export type CustomShare = { amount_kobo: number; name?: string | null; phone?: string | null; email?: string | null };
+
+/** Organiser-set amounts: 2–6 people, each at least ₦1,000, adding up exactly to the total. Returns an error message or null. */
+export function validateCustomShares(totalKobo: number, shares: CustomShare[]): string | null {
+  if (!Array.isArray(shares) || shares.length < SPLIT_MIN_PEOPLE || shares.length > SPLIT_MAX_PEOPLE) return "Split between 2 and 6 people";
+  for (const s of shares) {
+    if (!Number.isInteger(s.amount_kobo) || s.amount_kobo < SPLIT_MIN_SHARE_KOBO) return "Each share must be at least ₦1,000";
+    if (s.email && !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(s.email)) return "Check the email addresses";
+  }
+  const sum = shares.reduce((a, s) => a + s.amount_kobo, 0);
+  if (sum !== totalKobo) return "The shares must add up to the total";
+  return null;
+}
+
+/** Mirror of split_reminders_tick: first after 1h, then every 12h, plus one in the last 2h before the hold ends. */
+export function shareReminderDue(now: Date, createdAt: Date, lastRemindedAt: Date | null, holdEndsAt: Date): boolean {
+  const H = 3_600_000, t = now.getTime(), end = holdEndsAt.getTime();
+  if (end <= t) return false;
+  if (!lastRemindedAt) return createdAt.getTime() < t - H || end < t + 2 * H;
+  const last = lastRemindedAt.getTime();
+  if (last < t - 12 * H) return true;
+  return end < t + 2 * H && last < end - 2 * H;
 }

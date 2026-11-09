@@ -26,12 +26,16 @@ export const BookingTimeline = ({ bookingId, money }: { bookingId: string; money
   const [events, setEvents] = useState<Ev[] | null>(null);
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
+  const [shares, setShares] = useState<any[]>([]);
 
   const load = async () => {
     const { data, error } = await supabase.from("booking_events").select("id,type,actor,data,created_at")
       .eq("booking_id", bookingId).order("created_at", { ascending: true });
     if (error) return toast.error("Timeline didn't load");
     setEvents((data as Ev[]) || []);
+    const { data: sh } = await supabase.from("payment_shares").select("id,share_no,amount_kobo,status,label,name,phone,email,pay_method,paid_at,refunded_at,token")
+      .eq("booking_id", bookingId).order("share_no");
+    setShares(sh || []);
   };
   const toggle = () => { setOpen(!open); if (!events) load(); };
   const addNote = async () => {
@@ -53,6 +57,17 @@ export const BookingTimeline = ({ bookingId, money }: { bookingId: string; money
       </button>
       {open && (
         <div className="space-y-3 pb-2">
+          {shares.length > 0 && (
+            <div className="rounded-lg border border-border p-2 text-xs space-y-1">
+              <p className="font-semibold">Split payment · {shares.filter((x) => x.status === "paid").length} of {shares.filter((x) => x.status !== "void").length} paid</p>
+              {shares.map((x) => (
+                <div key={x.id} className="flex flex-wrap justify-between gap-2">
+                  <span>{x.share_no === 1 ? "Organiser" : x.name || x.label || `Person ${x.share_no}`}{x.email ? ` · ${x.email}` : ""}{x.phone ? ` · ${x.phone}` : ""}</span>
+                  <span>{naira(Number(x.amount_kobo))} · {x.pay_method === "bank_transfer" ? "Transfer" : x.pay_method === "card" ? "Card" : "—"} · <b>{x.status === "void" ? "Removed" : statusLabel(x.status)}</b>{x.status === "pending" ? " (link open)" : ""}</span>
+                </div>
+              ))}
+            </div>
+          )}
           {hasMoney && (
             <dl className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
               {money!.subtotal_kobo != null && <div><dt className="text-muted-foreground">Nights</dt><dd className="font-semibold">{naira(money!.subtotal_kobo)}</dd></div>}

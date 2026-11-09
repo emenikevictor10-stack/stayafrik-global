@@ -44,13 +44,18 @@ async function refundDeclined(admin: ReturnType<typeof svc>, onlyId?: string) {
 // Split bookings whose hold ran out (or were cancelled) before everyone paid: refund each paid share in full.
 async function refundOrphanShares(admin: ReturnType<typeof svc>) {
   const { data: rows } = await admin.from("payment_shares")
-    .select("id, reference, amount_kobo, booking_id, bookings!inner(status)")
+    .select("id, reference, amount_kobo, booking_id, pay_method, bookings!inner(status)")
     .eq("status", "paid").in("bookings.status", ["expired", "cancelled"]).limit(50);
   let done = 0;
   for (const s of (rows ?? []) as any[]) {
     const { data: won } = await admin.from("payment_shares").update({ status: "refunded", refunded_at: new Date().toISOString() })
       .eq("id", s.id).eq("status", "paid").select("id");
     if (!won?.length) continue;
+    if (s.pay_method === "bank_transfer") {
+      await admin.from("payment_shares").update({ status: "refund_failed" }).eq("id", s.id);
+      await admin.rpc("notify_admins", { _title: "Send a split share refund", _body: "A share paid by bank transfer on an unfinished split booking must be refunded to the payer's bank account by hand.", _link: "/admin/bookings" });
+      continue;
+    }
     const r = await fetch("https://api.paystack.co/refund", {
       method: "POST", headers: { Authorization: `Bearer ${Deno.env.get("PAYSTACK_SECRET_KEY")}`, "Content-Type": "application/json" },
       body: JSON.stringify({ transaction: s.reference, amount: Number(s.amount_kobo) }),
@@ -70,7 +75,10 @@ Deno.serve(async (req) => {
   try {
     const body = await req.json().catch(() => ({}));
     const admin = svc();
-    if (body.sweep === true) return json({ refunded: await refundDeclined(admin), shares_refunded: await refundOrphanShares(admin) });
+    if (body.sweep === true) {
+      const { data: reminded } = await admin.rpc("split_reminders_tick");
+      return json({ refunded: await refundDeclined(admin), shares_refunded: await refundOrphanShares(admin), split_reminders: reminded ?? 0 });
+    }
 
     const auth = req.headers.get("Authorization") ?? "";
     if (!auth.startsWith("Bearer ")) return json({ error: "Please sign in again" }, 401);

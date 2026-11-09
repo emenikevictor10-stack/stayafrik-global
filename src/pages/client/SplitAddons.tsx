@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { TopBar } from "@/components/shell/TopBar";
 import { Seo } from "@/components/seo/Seo";
 import { Button, ErrorState, ListSkeleton, Notice, Tag } from "@/ui/kit";
@@ -30,13 +30,14 @@ export async function payViaPaystack(body: Record<string, unknown>): Promise<any
   });
 }
 
-type Share = { id: string; share_no: number; amount_kobo: number; status: string; token: string; label: string | null };
+type Share = { id: string; share_no: number; amount_kobo: number; status: string; token: string; label: string | null; name: string | null; email: string | null; pay_method: string | null; last_reminded_at: string | null };
 
-/** Lead guest's view of a split booking: who has paid, and links to send. */
+/** Lead guest's view of a split booking: who has paid, links to send, reminders and removing someone. */
 export const SplitPanel = ({ bookingId, onChange }: { bookingId: string; onChange: () => void }) => {
   const [shares, setShares] = useState<Share[] | null>(null);
+  const [busy, setBusy] = useState<string | null>(null);
   const load = useCallback(async () => {
-    const { data } = await supabase.from("payment_shares").select("id,share_no,amount_kobo,status,token,label").eq("booking_id", bookingId).order("share_no");
+    const { data } = await supabase.from("payment_shares").select("id,share_no,amount_kobo,status,token,label,name,email,pay_method,last_reminded_at").eq("booking_id", bookingId).neq("status", "void").order("share_no");
     setShares((data as Share[]) || []);
   }, [bookingId]);
   useEffect(() => { void load(); }, [load]);
@@ -47,16 +48,32 @@ export const SplitPanel = ({ bookingId, onChange }: { bookingId: string; onChang
     if (navigator.share) navigator.share({ title: "Pay your share on Stay", url }).catch(() => {});
     else navigator.clipboard.writeText(url).then(() => toast.success("Link copied"));
   };
+  const act = async (s: Share, action: "remind" | "remove") => {
+    if (action === "remove" && !window.confirm(`Remove ${s.name || s.label || "this person"}? Their ${fmtK(s.amount_kobo)} moves to your share and their link stops working.`)) return;
+    setBusy(s.id + action);
+    const { error } = await supabase.rpc("split_share_action", { _share_id: s.id, _action: action });
+    setBusy(null);
+    if (error) return toast.error(error.message);
+    toast.success(action === "remind" ? (s.email ? "Reminder sent" : "Reminder noted — share the link with them too") : "Removed");
+    load(); onChange();
+  };
   return (
     <section className="rounded-xl border border-border p-3 space-y-2">
       <div className="flex justify-between items-center"><h2 className="text-[15px] font-semibold">Split payment</h2><span className="text-[13px] text-muted-foreground">{paid} of {shares.length} paid</span></div>
       <p className="text-xs text-muted-foreground">The booking is confirmed when everyone has paid. If the time runs out, everyone who paid gets a full refund.</p>
       {shares.map((s) => (
-        <div key={s.id} className="flex items-center justify-between gap-2 text-[13px]">
-          <span>{s.label || `Person ${s.share_no}`} · {fmtK(s.amount_kobo)}</span>
+        <div key={s.id} className="flex flex-wrap items-center justify-between gap-2 text-[13px] border-t border-border pt-2 first-of-type:border-0">
+          <span className="min-w-0">
+            <span className="font-semibold">{s.share_no === 1 ? "You" : s.name || s.label || `Person ${s.share_no}`}</span> · {fmtK(s.amount_kobo)}
+            {s.pay_method === "bank_transfer" && s.status === "pending" && <span className="block text-xs text-muted-foreground">Paying by bank transfer</span>}
+          </span>
           {s.status === "paid" ? <Tag tone="done">Paid</Tag>
-            : s.share_no === 1 ? <Button className="h-11 px-3 text-[13px]" onClick={() => payViaPaystack({ mode: "share", token: s.token }).then(() => { toast.success("Paid"); load(); onChange(); }, (e) => toast.error(e.message))}>Pay</Button>
-            : <button type="button" onClick={() => copy(s)} className="min-h-11 px-3 rounded-lg border border-border font-semibold">Send link</button>}
+            : s.label?.startsWith("You") ? <Button className="h-11 px-3 text-[13px]" onClick={() => payViaPaystack({ mode: "share", token: s.token }).then(() => { toast.success("Paid"); load(); onChange(); }, (e) => toast.error(e.message))}>Pay</Button>
+            : <div className="flex gap-1">
+                <button type="button" onClick={() => copy(s)} className="min-h-11 px-3 rounded-lg border border-border font-semibold">Send link</button>
+                <button type="button" disabled={busy === s.id + "remind"} onClick={() => act(s, "remind")} className="min-h-11 px-3 rounded-lg border border-border font-semibold">Remind</button>
+                <button type="button" disabled={busy === s.id + "remove"} onClick={() => act(s, "remove")} className="min-h-11 px-3 rounded-lg border border-border font-semibold text-destructive">Remove</button>
+              </div>}
         </div>
       ))}
     </section>
@@ -129,10 +146,22 @@ export const PayShare = () => {
     setInfo(((data as ShareInfo[]) || [])[0] ?? null);
   }, [token]);
   useEffect(() => { void load(); }, [load]);
-  const pay = async () => {
+  const navigate = useNavigate();
+  const { features } = useSettings();
+  const pay = async (method: "card" | "bank") => {
     if (!user) return setSignIn(true);
     setBusy(true);
-    try { await payViaPaystack({ mode: "share", token }); toast.success("Thanks — your share is paid"); }
+    try {
+      if (method === "bank") {
+        const { data, error } = await supabase.functions.invoke("paystack-init", { body: { mode: "share", token, method: "bank_transfer" } });
+        if (error || !data?.bank_transfer?.id) {
+          const ctx: any = (error as any)?.context; const msg = ctx?.json ? (await ctx.json().catch(() => null))?.error : null;
+          throw new Error(msg || data?.error || "Could not start the bank transfer");
+        }
+        navigate(`/pay/transfer/${data.bank_transfer.id}`); return;
+      }
+      await payViaPaystack({ mode: "share", token }); toast.success("Thanks — your share is paid");
+    }
     catch (e) { toast.error((e as Error).message); }
     finally { setBusy(false); load(); }
   };
@@ -155,7 +184,8 @@ export const PayShare = () => {
             </dl>
             {info.status === "paid" ? <Notice>Your share is paid. The booking confirms once everyone has paid.</Notice>
               : open ? <>
-                  <Button className="w-full" loading={busy} onClick={pay}>Pay {fmtK(info.amount_kobo)}</Button>
+                  {features.card_payments !== false && <Button className="w-full" loading={busy} onClick={() => pay("card")}>Pay {fmtK(info.amount_kobo)} by card</Button>}
+                  {features.bank_transfer && <Button variant="secondary" className="w-full" disabled={busy} onClick={() => pay("bank")}>Pay by bank transfer</Button>}
                   <p className="text-xs text-muted-foreground">Everyone must pay by {new Date(info.expires_at).toLocaleString("en-NG")}. If not, every share is refunded in full.</p>
                 </>
               : <Notice tone="warn">This booking is no longer waiting for payment.</Notice>}

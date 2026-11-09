@@ -1,5 +1,5 @@
 import { getSetting } from "../_shared/settings.ts";
-import { expiresAt, nightlyBreakdown, quoteLocalStay, splitShares } from "../_shared/booking-core.ts";
+import { expiresAt, nightlyBreakdown, quoteLocalStay, splitShares, validateCustomShares, SPLIT_MAX_PEOPLE } from "../_shared/booking-core.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { raypropGetHold, raypropGetQuote, unwrapRayProp } from "../_shared/rayprop.ts";
@@ -70,15 +70,36 @@ Deno.serve(async (req) => {
 
     // ---------- A friend paying their share of a split booking ----------
     if (body.mode === "share") {
-      if (!okCb(body.callback_url)) return json(400, { error: "Missing callback" });
-      const { data: s } = await svcEarly.from("payment_shares").select("id,booking_id,amount_kobo,status,payer_user_id").eq("token", String(body.token || "")).maybeSingle();
-      if (!s) return json(404, { error: "This payment link isn't valid" });
+      if (!isBank && !okCb(body.callback_url)) return json(400, { error: "Missing callback" });
+      const { data: s } = await svcEarly.from("payment_shares").select("id,booking_id,amount_kobo,status,payer_user_id,reference").eq("token", String(body.token || "")).maybeSingle();
+      if (!s || s.status === "void") return json(404, { error: "This payment link isn't valid" });
       if (s.status !== "pending") return json(409, { error: "This share is already paid" });
       if (s.payer_user_id && s.payer_user_id !== userId) return json(403, { error: "Someone else is paying this share" });
       const { data: b } = await svcEarly.from("bookings").select("status,hold_expires_at").eq("id", s.booking_id).maybeSingle();
       if (!b || b.status !== "held" || new Date(b.hold_expires_at).getTime() < Date.now()) return json(409, { error: "This booking is no longer waiting for payment" });
+      if (s.reference) {
+        const { data: open } = await svcEarly.from("bank_transfers").select("id,status").eq("reference", s.reference).in("status", ["awaiting_proof", "submitted"]).maybeSingle();
+        if (open?.status === "submitted") return json(409, { error: "A bank transfer for this share is being checked" });
+        if (open && isBank) return json(200, { bank_transfer: { id: open.id } });
+        if (open) await svcEarly.from("bank_transfers").update({ status: "expired" }).eq("id", open.id).eq("status", "awaiting_proof");
+      }
+      if (isBank) {
+        const acct = await bankDetails();
+        if (!acct) return json(400, { error: "Bank transfer is not available right now" });
+        const { data: bk } = await svcEarly.from("bookings").select("listing_id,check_in_date,check_out_date,listings(title)").eq("id", s.booking_id).maybeSingle();
+        const ref = `STAYBT_${Date.now()}_${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
+        const exp = new Date(Math.min(new Date(b.hold_expires_at).getTime(), expiresAt(new Date(), await bankMinutes()).getTime())).toISOString();
+        const { data: bt, error: be } = await svcEarly.from("bank_transfers").insert({
+          booking_id: s.booking_id, guest_id: userId, amount_kobo: Number(s.amount_kobo), reference: ref,
+          title: (bk as any)?.listings?.title ?? "Your share", check_in: bk?.check_in_date, check_out: bk?.check_out_date,
+          expires_at: exp, meta: { account: acct, share_id: s.id },
+        }).select("id").single();
+        if (be) return json(500, { error: "Could not start the bank transfer." });
+        await svcEarly.from("payment_shares").update({ reference: ref, payer_user_id: userId, pay_method: "bank_transfer" }).eq("id", s.id).eq("status", "pending");
+        return json(200, { bank_transfer: { id: bt.id, reference: ref, amount: Number(s.amount_kobo) / 100, expires_at: exp, account: acct } });
+      }
       const reference = `STAYSHR_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
-      await svcEarly.from("payment_shares").update({ reference, payer_user_id: userId }).eq("id", s.id).eq("status", "pending");
+      await svcEarly.from("payment_shares").update({ reference, payer_user_id: userId, pay_method: "card" }).eq("id", s.id).eq("status", "pending");
       const p = await startPaystack(Number(s.amount_kobo), reference, body.callback_url, { kind: "share", booking_id: s.booking_id });
       if ("error" in p) return json(400, p);
       return json(200, { ...p, total: Number(s.amount_kobo) / 100 });
@@ -263,9 +284,14 @@ Deno.serve(async (req) => {
     const now = new Date();
     const holdMin = await getSetting<number>("hold_minutes", 15);
     const payMin = await getSetting<number>("payment_window_minutes", 60);
-    const splitCount = Math.floor(Number(body.split_count) || 0);
-    if (splitCount >= 2) {
-      if (splitCount > 8) return json(400, { error: "Split between at most 8 people" });
+    const custom = Array.isArray(body.shares) ? (body.shares as any[]).map((x) => ({
+      amount_kobo: Math.round(Number(x?.amount_kobo)), name: x?.name ? String(x.name).trim().slice(0, 80) : null,
+      phone: x?.phone ? String(x.phone).trim().slice(0, 30) : null, email: x?.email ? String(x.email).trim().toLowerCase().slice(0, 120) : null,
+    })) : null;
+    const splitCount = custom ? custom.length : Math.floor(Number(body.split_count) || 0);
+    if (splitCount >= 2 || custom) {
+      if (splitCount > SPLIT_MAX_PEOPLE || splitCount < 2) return json(400, { error: "Split between 2 and 6 people" });
+      if (custom) { const err = validateCustomShares(amountKobo, custom); if (err) return json(400, { error: err }); }
       const splitHours = Math.max(1, await getSetting<number>("split_hold_hours", 6));
       const groupRef = `STAYSPLIT_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
       const { data: hb, error: he } = await svc.from("bookings").insert({
@@ -276,9 +302,13 @@ Deno.serve(async (req) => {
         host_payout_kobo: split.host_payout_kobo, cleaning_fee_kobo: split.cleaning_kobo, discount_kobo: split.discount_kobo,
       }).select("id, hold_expires_at").single();
       if (he) return json(he.code === "23P01" ? 409 : 500, { error: he.code === "23P01" ? "Those dates were just booked — please pick different dates." : "Could not hold your dates." });
-      const amounts = splitShares(amountKobo, splitCount);
+      const amounts = custom ? custom.map((c) => c.amount_kobo) : splitShares(amountKobo, splitCount);
+      const people = Array.isArray(body.people) ? body.people as any[] : [];
       const shares = amounts.map((amt, i) => ({
-        booking_id: hb.id, share_no: i + 1, amount_kobo: amt,
+        booking_id: hb.id, share_no: i + 1, amount_kobo: amt, pay_method: i === 0 ? "card" : null,
+        name: i === 0 ? null : (custom?.[i]?.name ?? (people[i]?.name ? String(people[i].name).trim().slice(0, 80) : null)),
+        phone: i === 0 ? null : (custom?.[i]?.phone ?? (people[i]?.phone ? String(people[i].phone).trim().slice(0, 30) : null)),
+        email: i === 0 ? null : (custom?.[i]?.email ?? (people[i]?.email && /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(String(people[i].email)) ? String(people[i].email).trim().toLowerCase().slice(0, 120) : null)),
         token: crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().slice(0, 8),
         payer_user_id: i === 0 ? userId : null, label: i === 0 ? "You" : `Person ${i + 1}`,
       }));

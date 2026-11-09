@@ -20,10 +20,37 @@ import { useEffect, useState } from "react";
 import { useWishlist } from "@/hooks/useWishlist";
 import { useListingAccess, approxLocation } from "@/hooks/useListingAccess";
 import { cn } from "@/lib/utils";
+import { useRatePlan } from "@/hooks/useRatePlan";
+import { recallSearch } from "@/lib/search-state";
+import { quoteLocalStay } from "../../../supabase/functions/_shared/booking-core";
+import { koboToNaira } from "@/lib/rayprop-map";
+import { factualTitle, essentials, cancellationLines } from "@/lib/stay-facts";
+import { Images } from "lucide-react";
 
+
+/** Live price for the searched dates (local stays): nightly breakdown, cleaning, discounts, fee, total. */
+const StayQuote = ({ p, feeBps }: { p: import("@/data/properties").Property; feeBps: number }) => {
+  const plan = useRatePlan(p.source === "rayprop" ? undefined : p.id, p.source === "rayprop");
+  const s = recallSearch();
+  if (p.source === "rayprop" || !s?.checkIn || !s?.checkOut) return null;
+  const q = quoteLocalStay(s.checkIn, s.checkOut, plan ?? { price_per_night: p.priceNum }, feeBps);
+  if (q.ok === false) return <p className="mt-3 text-[13px] text-muted-foreground">{q.error}</p>;
+  const n = (k: number) => "₦" + Math.round(koboToNaira(k)).toLocaleString();
+  const nights = q.nights?.length ?? 0;
+  return (
+    <div className="mt-4 rounded-xl border border-border p-3 text-[13px] space-y-1">
+      <p className="font-semibold">Your dates: {s.checkIn} → {s.checkOut}</p>
+      <div className="flex justify-between"><span>{nights} night{nights === 1 ? "" : "s"}</span><span>{n(q.nights_kobo)}</span></div>
+      {!!q.discount_kobo && <div className="flex justify-between text-muted-foreground"><span>Discount</span><span>−{n(q.discount_kobo)}</span></div>}
+      {!!q.cleaning_kobo && <div className="flex justify-between"><span>Cleaning fee</span><span>{n(q.cleaning_kobo)}</span></div>}
+      <div className="flex justify-between"><span>Service fee</span><span>{n(q.fee_kobo)}</span></div>
+      <div className="flex justify-between font-semibold border-t border-border pt-1"><span>Total</span><span>{n(q.total_kobo)}</span></div>
+    </div>
+  );
+};
 
 const PropertyDetail = () => {
-  const { features } = useSettings();
+  const { features, serviceFeeBps } = useSettings();
   const { id } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
@@ -88,7 +115,7 @@ const PropertyDetail = () => {
 
   return (
     <>
-    <TopBar title={p.title} />
+    <TopBar title={factualTitle(p)} />
     <main className="pb-32">
       <Seo
         title={`${p.title} — ${p.location} | Stay`}
@@ -99,7 +126,12 @@ const PropertyDetail = () => {
       />
       {/* Image header */}
       <div className="relative">
-        <ImageGallery images={p.images && p.images.length ? p.images : [p.image]} alt={p.title} />
+        <ImageGallery images={p.images && p.images.length ? p.images : [p.image]} alt={factualTitle(p)} />
+        {(p.images?.length || 0) > 1 && (
+          <Link to={`/stays/${p.id}/media`} className="absolute bottom-3 right-3 z-10 inline-flex items-center gap-1.5 min-h-11 px-3.5 rounded-lg bg-background/90 border border-border text-[13px] font-semibold">
+            <Images className="w-4 h-4" aria-hidden /> All {p.images!.length} photos
+          </Link>
+        )}
         <div className="absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-background/70 via-transparent to-transparent pointer-events-none" />
         <div className="absolute top-4 left-4 right-4 flex items-center justify-between z-10">
           <button
@@ -145,7 +177,8 @@ const PropertyDetail = () => {
             </span>
           )}
         </div>
-        <h1 className="mt-3 text-2xl font-extrabold tracking-tight leading-tight">{p.title}</h1>
+        <h1 className="mt-3 text-2xl font-extrabold tracking-tight leading-tight">{factualTitle(p)}</h1>
+        {p.title && p.title !== factualTitle(p) && <p className="text-[13px] text-muted-foreground mt-0.5">{p.title}</p>}
         <p className="text-sm text-muted-foreground mt-1">📍 {shownLocation}{!unlocked && <span className="ml-1 text-xs">· exact address after booking</span>}</p>
         <div className="flex items-center gap-2 mt-2 text-sm">
           <Star className="w-4 h-4 fill-primary text-primary" />
@@ -261,6 +294,28 @@ const PropertyDetail = () => {
           </div>
         </section>
 
+        {(() => {
+          const e = essentials(p);
+          return (
+            <section className="mt-6">
+              <h2 className="font-bold text-sm mb-3">Power, water and security</h2>
+              <dl className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                {([["Power", e.power], ["Water", e.water], ["Security", e.security]] as const).map(([k, v]) => (
+                  <div key={k} className="rounded-xl border border-border p-3">
+                    <dt className="text-xs text-muted-foreground">{k}</dt>
+                    <dd className="text-[13px] font-semibold mt-0.5">{v || "Not stated — ask before booking"}</dd>
+                  </div>
+                ))}
+              </dl>
+            </section>
+          );
+        })()}
+
+        <section className="mt-6">
+          <h2 className="font-bold text-sm mb-2">Cancellation policy</h2>
+          <ul className="text-[13px] text-muted-foreground space-y-1">{cancellationLines(p).map((l) => <li key={l}>• {l}</li>)}</ul>
+        </section>
+
         <ReviewsSection listingId={p.id} rating={p.rating} reviewsCount={p.reviews} />
 
         <section className="mt-6">
@@ -353,12 +408,15 @@ const PropertyDetail = () => {
                 ✏️ Edit listing
               </Button>
             ) : p.type === "Shortlet" ? (
+              <>
+              <StayQuote p={p} feeBps={serviceFeeBps} />
               <Button
                 onClick={handleBook}
                 className="mt-4 w-full bg-primary text-primary-foreground hover:bg-primary/90 rounded-xl h-12 font-bold"
               >
                 Book stay
               </Button>
+              </>
             ) : (
               <Button
                 onClick={() => toast.success("✓ Inspection request sent")}

@@ -11,7 +11,7 @@ import { SORTS, PAGE_SIZE, applyFilters, sortStays, parseFilters, writeFilters, 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link, useLocation, useSearchParams } from "react-router-dom";
 import { cn } from "@/lib/utils";
-import { PropertiesMap } from "@/components/map/PropertyMap";
+import { StayPinMap } from "@/components/map/StayPinMap";
 import { useSettings } from "@/hooks/useSettings";
 import { useListings } from "@/hooks/useListings";
 import { Seo } from "@/components/seo/Seo";
@@ -113,10 +113,13 @@ const Explore = () => {
   const [shown, setShown] = useState(PAGE_SIZE);
   const applySearch = (s: SearchState) => setParams(writeFilters(serializeSearch(s), filters));
   const setQ = (where: string) => applySearch({ ...search, where });
-  const [view, setView] = useState<"list" | "map">("list");
+  const { pathname: routePath } = useLocation();
+  // /explore opens on the map (PRD); /, /home and /results open on the list.
+  const [view, setView] = useState<"list" | "map">(() => (routePath === "/explore" ? "map" : "list"));
   const { features } = useSettings();
   const [nearMe, setNearMe] = useState<{ lat: number; lng: number } | null>(null);
   const [selected, setSelected] = useState<Property | null>(null);
+  const [hoverId, setHoverId] = useState<string | null>(null);
   const { data: properties, loading: listLoading, loadingMore, hasMore, loadMore, searchPartner, searching } = useListings();
   const { all: allPlaces, byId: placeById } = useLocations();
   const picked = useMemo(() => (search.loc ? allPlaces.find((l) => l.slug === search.loc) : undefined), [allPlaces, search.loc]);
@@ -282,8 +285,13 @@ const Explore = () => {
           </div>
         )}
         {view === "map" && features.map ? (
-          <div className="mt-5 relative">
-            <PropertiesMap list={visible} height={520} onSelect={setSelected} />
+          <div className="mt-5 relative lg:grid lg:grid-cols-[1fr_minmax(420px,45%)] lg:gap-5 max-w-[1360px] mx-auto">
+            <div className="hidden lg:grid grid-cols-2 gap-x-4 gap-y-6 content-start order-1">
+              {visible.map((p) => <div key={p.id} onMouseEnter={() => setHoverId(p.id)} onMouseLeave={() => setHoverId(null)}><PropertyCard p={p} nights={nights} /></div>)}
+              {(moreLocal || hasMore) && <div className="col-span-2 text-center"><Button variant="secondary" onClick={showMore}>More stays</Button></div>}
+            </div>
+            <div className="lg:order-2 lg:sticky lg:top-24 lg:self-start relative">
+            <StayPinMap list={available} height={520} activeId={hoverId || selected?.id} onSelect={setSelected} />
             {selected && (
               <div className="absolute left-3 right-3 bottom-3 z-10">
                 <div className="rounded-2xl bg-card border border-border shadow-xl p-3 flex gap-3 items-center">
@@ -313,6 +321,10 @@ const Explore = () => {
                 </div>
               </div>
             )}
+            </div>
+            <div className="lg:hidden grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-6 mt-5">
+              {visible.map((p) => <PropertyCard key={p.id} p={p} nights={nights} />)}
+            </div>
           </div>
         ) : (
           <>

@@ -13,7 +13,7 @@ import { cancelRayPropBooking } from "@/lib/rayprop";
 import { guestStatusText, type IssueStatus } from "@/lib/support";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
-type BookingRow = {
+export type BookingRow = {
   id: string;
   listing_id: string;
   check_in_date: string;
@@ -46,7 +46,7 @@ const HOLD_MIN = 10;
 const fmt = (n: number) => "₦" + Math.round(Number(n || 0)).toLocaleString();
 
 
-const ReviewForm = ({ booking, onDone }: { booking: BookingRow; onDone: () => void }) => {
+export const ReviewForm = ({ booking, onDone }: { booking: BookingRow; onDone: () => void }) => {
   const { user } = useAuth();
   const [rating, setRating] = useState(0);
   const [comment, setComment] = useState("");
@@ -169,7 +169,6 @@ const Bookings = () => {
           const img = (partner ? b.partner_image : b.listings?.images?.[0]) || "/placeholder.svg";
           const title = (partner ? b.partner_title : b.listings?.title) || "Listing";
           const place = partner ? b.partner_city : b.listings?.location || b.listings?.city;
-          const href = partner ? `/stays/rp_${b.rayprop_listing_id}` : `/stays/${b.listing_id}`;
           const createdMs = new Date(b.created_at).getTime();
           const holdEnds = createdMs + HOLD_MIN * 60_000;
           const canRelease = b.status === "confirmed" && now >= holdEnds;
@@ -179,7 +178,7 @@ const Bookings = () => {
 
           return (
             <article key={b.id} className="rounded-2xl bg-card border border-border p-3">
-              <Link to={href} className="flex gap-3">
+              <Link to={`/trips/${b.id}`} className="flex gap-3">
                 <img src={img} alt={title} className="w-24 h-24 rounded-xl object-cover" loading="lazy" />
                 <div className="flex-1 min-w-0">
                   <h3 className="font-semibold text-sm truncate">{title}</h3>

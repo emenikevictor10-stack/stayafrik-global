@@ -30,7 +30,7 @@ const fmt = (n: number) => "₦" + Math.round(n).toLocaleString();
 
 const BookProperty = () => {
   const { id } = useParams();
-  const { serviceFeeBps } = useSettings();
+  const { serviceFeeBps, features } = useSettings();
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: p, loading } = useListing(id);
@@ -190,6 +190,10 @@ const BookProperty = () => {
 
   const pay = async () => {
     if (!user) return setSignInOpen(true);
+    if (features.id_required) {
+      const { data: k } = await supabase.from("kyc_submissions").select("status").eq("user_id", user.id).maybeSingle();
+      if (!k) { toast.message("Add your ID to book"); return navigate(`/details?next=${encodeURIComponent(`/property/${id}/book?resume=1`)}`); }
+    }
     if (!datesValid) return toast.error("Pick valid dates");
     if (isPartner && (!quote || !hold)) return toast.error("Get a price first");
     if (holdExpired) return toast.error("Your hold expired — get a new price");

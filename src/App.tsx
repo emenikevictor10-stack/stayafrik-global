@@ -1,6 +1,6 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-import { useState } from "react";
+import { useEffect } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { RoleProvider, useRole } from "@/contexts/RoleContext";
@@ -69,6 +69,15 @@ import DeleteAccount from "./pages/shared/DeleteAccount";
 import { PinGate } from "@/components/auth/PinGate";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
 import NotFound from "./pages/NotFound";
+import StayMedia from "./pages/client/StayMedia";
+import SharedList from "./pages/client/SharedList";
+import Compare from "./pages/client/Compare";
+import AreaPage from "./pages/client/AreaPage";
+import { TripDetail, TripCancel, TripReview, TripInvoice, FindBooking } from "./pages/client/TripPages";
+import GuestDetails from "./pages/client/GuestDetails";
+import { GuidesIndex, GuidePage } from "./pages/client/Guides";
+import { syncWishlist } from "@/hooks/useWishlist";
+import { useAuth } from "@/contexts/AuthContext";
 
 const queryClient = new QueryClient();
 
@@ -78,6 +87,12 @@ const ThirdTab = () => {
 };
 
 const PushBridge = () => { usePushNotifications(); return null; };
+/** Moves device hearts into the account once per sign-in. */
+const WishlistBridge = () => {
+  const { user } = useAuth();
+  useEffect(() => { if (user) void syncWishlist(user.id); }, [user?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+  return null;
+};
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
@@ -86,6 +101,7 @@ const App = () => (
       <AuthProvider>
         <RoleProvider>
           <PushBridge />
+          <WishlistBridge />
           <BrowserRouter>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
@@ -101,7 +117,14 @@ const App = () => (
                   <Route path="/search" element={<Explore />} />
                   <Route path="/home" element={<Index />} />
                   <Route path="/stays/:id" element={<PropertyDetail />} />
+                  <Route path="/stays/:id/media" element={<StayMedia />} />
                   <Route path="/saved" element={<Saved />} />
+                  <Route path="/saved/shared/:token" element={<SharedList />} />
+                  <Route path="/compare" element={<Compare />} />
+                  <Route path="/stays-in/:slug" element={<AreaPage />} />
+                  <Route path="/guides" element={<GuidesIndex />} />
+                  <Route path="/find-booking" element={<FindBooking />} />
+                  <Route path="/guides/:slug" element={<GuidePage />} />
                   <Route path="/property/:id" element={<PropertyDetail />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsConditions />} />
@@ -146,6 +169,11 @@ const App = () => (
                     <Route path="/reservations" element={<Reservations />} />
                     <Route path="/profile/delete" element={<DeleteAccount />} />
                     <Route path="/trips/:id/report" element={<ReportProblem />} />
+                    <Route path="/trips/:id" element={<TripDetail />} />
+                    <Route path="/trips/:id/cancel" element={<TripCancel />} />
+                    <Route path="/trips/:id/review" element={<TripReview />} />
+                    <Route path="/trips/:id/invoice" element={<TripInvoice />} />
+                    <Route path="/details" element={<GuestDetails />} />
                     <Route path="/issues" element={<MyIssues />} />
                     <Route path="/issues/:id" element={<IssueThread />} />
                     

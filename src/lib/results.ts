@@ -47,7 +47,7 @@ const words = (p: Property) => `${p.title} ${p.desc || ""}`.toLowerCase();
 export const powerTags = (p: Property): PowerKey[] => {
   const t = text(p);
   const out: PowerKey[] = [];
-  if (/24\s*\/?\s*7|24h|24 hour|24-hour|constant power|uninterrupted|steady power/.test(t + " " + words(p))) out.push("24h");
+  if (/(24\s*\/?\s*7|24h|24 hours?|24-hour)\s*(power|electricity|light)|constant (power|light)|uninterrupted (power|electricity)|steady power/.test(t + " " + words(p))) out.push("24h");
   if (t.includes("generator")) out.push("generator");
   if (t.includes("inverter")) out.push("inverter");
   if (t.includes("solar")) out.push("solar");

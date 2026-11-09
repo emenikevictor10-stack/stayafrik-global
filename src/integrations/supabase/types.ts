@@ -582,6 +582,45 @@ export type Database = {
         }
         Relationships: []
       }
+      help_guides: {
+        Row: {
+          body: string[]
+          created_at: string
+          id: string
+          published: boolean
+          slug: string
+          sort: number
+          summary: string
+          title: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          body?: string[]
+          created_at?: string
+          id?: string
+          published?: boolean
+          slug: string
+          sort?: number
+          summary?: string
+          title: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          body?: string[]
+          created_at?: string
+          id?: string
+          published?: boolean
+          slug?: string
+          sort?: number
+          summary?: string
+          title?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
       host_status: {
         Row: {
           host_id: string
@@ -1622,6 +1661,38 @@ export type Database = {
           },
         ]
       }
+      review_replies: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          review_id: string
+          updated_at: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          review_id: string
+          updated_at?: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          review_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "review_replies_review_id_fkey"
+            columns: ["review_id"]
+            isOneToOne: true
+            referencedRelation: "reviews"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       reviews: {
         Row: {
           booking_id: string
@@ -1874,6 +1945,30 @@ export type Database = {
           created_at?: string
           id?: string
           role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
+      user_status: {
+        Row: {
+          blocked_at: string | null
+          blocked_reason: string | null
+          updated_at: string
+          updated_by: string | null
+          user_id: string
+        }
+        Insert: {
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
+          user_id: string
+        }
+        Update: {
+          blocked_at?: string | null
+          blocked_reason?: string | null
+          updated_at?: string
+          updated_by?: string | null
           user_id?: string
         }
         Relationships: []
@@ -2419,6 +2514,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      staff_review_reply: {
+        Args: { _body: string; _review_id: string }
+        Returns: undefined
+      }
       staff_team_cancel_invite: { Args: { _id: string }; Returns: undefined }
       staff_team_invite: {
         Args: {
@@ -2444,6 +2543,10 @@ export type Database = {
           _roles: Database["public"]["Enums"]["app_role"][]
           _user_id: string
         }
+        Returns: undefined
+      }
+      staff_user_action: {
+        Args: { _action: string; _reason: string; _user_id: string }
         Returns: undefined
       }
       submit_bank_transfer: {

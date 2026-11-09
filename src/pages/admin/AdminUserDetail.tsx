@@ -104,6 +104,28 @@ const AdminUserDetail = () => {
 
   useEffect(() => { load(); }, [id]);
 
+  const [blocked, setBlocked] = useState<{ blocked_at: string | null; blocked_reason: string | null } | null>(null);
+  const loadBlock = async () => {
+    if (!id) return;
+    const { data } = await supabase.from("user_status").select("blocked_at,blocked_reason").eq("user_id", id).maybeSingle();
+    setBlocked(data ?? null);
+  };
+  useEffect(() => { loadBlock(); }, [id]);
+
+  const blockAction = async (action: "block" | "unblock") => {
+    if (!id) return;
+    let reason = "";
+    if (action === "block") {
+      reason = (window.prompt("Why are you blocking this person? They will not be able to pay, hold a stay, request a viewing or send messages.") || "").trim();
+      if (!reason) return toast.error("Add a reason to block");
+    } else if (!window.confirm("Unblock this person? They will be able to book again.")) return;
+    const { error } = await supabase.rpc("staff_user_action", { _user_id: id, _action: action, _reason: reason });
+    if (error) return toast.error(error.message.includes("Not allowed") ? "Only admins and support can do this." : error.message);
+    toast.success(action === "block" ? "User blocked" : "User unblocked");
+    loadBlock(); load();
+  };
+  const isBlockedNow = !!blocked?.blocked_at;
+
   const toggleAdmin = async () => {
     if (!id) return;
     const isAdmin = roles.includes("admin");
@@ -178,7 +200,21 @@ const AdminUserDetail = () => {
         >
           {isAdmin ? <><ShieldOff className="w-3.5 h-3.5" /> Revoke admin</> : <><ShieldCheck className="w-3.5 h-3.5" /> Make admin</>}
         </button>
+        <DropdownMenu>
+          <DropdownMenuTrigger aria-label="More actions" className="p-1.5 rounded-lg border border-border hover:bg-secondary"><MoreHorizontal className="w-4 h-4" /></DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            {isBlockedNow
+              ? <DropdownMenuItem onClick={() => blockAction("unblock")}>Unblock user</DropdownMenuItem>
+              : <DropdownMenuItem className="text-destructive" onClick={() => blockAction("block")}>Block user</DropdownMenuItem>}
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
+      {isBlockedNow && (
+        <div className="mb-5 rounded-xl border border-destructive/40 bg-destructive/10 p-3 text-sm">
+          <p className="font-semibold text-destructive">Blocked since {new Date(blocked!.blocked_at!).toLocaleDateString()}</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Reason: {blocked?.blocked_reason}</p>
+        </div>
+      )}
 
       {/* Quick stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">

@@ -9,6 +9,8 @@ export type ReviewItem = {
   guest_id: string;
   guest_name: string;
   guest_avatar: string | null;
+  /** Public reply from the Stay team, if any. */
+  reply?: string | null;
 };
 
 export const useReviews = (listingId: string | undefined) => {
@@ -53,8 +55,15 @@ export const useReviews = (listingId: string | undefined) => {
           (profs || []).map((p: any) => [p.user_id, { name: p.full_name || "Guest", avatar: p.avatar_url }]),
         );
       }
+      const replyMap: Record<string, string> = {};
+      if (list.length) {
+        const { data: reps } = await supabase.from("review_replies").select("review_id, body").in("review_id", list.map((r) => r.id));
+        (reps || []).forEach((x) => { replyMap[x.review_id] = x.body; });
+      }
+      if (!active) return;
       setData(
         list.map((r) => ({
+          reply: replyMap[r.id] || null,
           id: r.id,
           rating: r.rating,
           comment: r.comment,

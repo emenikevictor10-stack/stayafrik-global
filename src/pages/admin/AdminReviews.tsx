@@ -2,7 +2,8 @@ import { Tag } from "@/ui/kit";
 import { ErrorState } from "@/ui/kit";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Loader2, Search, Star, EyeOff, Eye } from "lucide-react";
+import { Loader2, Search, Star, EyeOff, Eye, MessageSquare } from "lucide-react";
+import { normaliseReply } from "../../../supabase/functions/_shared/user-block-core";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { logAdminAction } from "@/lib/admin-audit";
@@ -21,6 +22,20 @@ const AdminReviews = () => {
   const [q, setQ] = useState("");
   const [stars, setStars] = useState<number | "all">("all");
   const [show, setShow] = useState<"all" | "visible" | "hidden">("all");
+  const [replies, setReplies] = useState<Record<string, string>>({});
+  const [editing, setEditing] = useState<string | null>(null);
+  const [draft, setDraft] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const saveReply = async (id: string, body: string) => {
+    setSaving(true);
+    const { error } = await supabase.rpc("staff_review_reply", { _review_id: id, _body: normaliseReply(body) ?? "" });
+    setSaving(false);
+    if (error) return toast.error(error.message.includes("Not allowed") ? "Only admins and listings staff can reply." : "Could not save reply");
+    toast.success(normaliseReply(body) ? "Reply saved" : "Reply removed");
+    setEditing(null);
+    load();
+  };
 
   const load = async () => {
     setBusy(true);
@@ -30,6 +45,10 @@ const AdminReviews = () => {
     setLoadError(!!error);
     const list = (data as any as Row[]) || [];
     setRows(list);
+    if (list.length) {
+      const { data: reps } = await supabase.from("review_replies").select("review_id,body").in("review_id", list.map((r) => r.id));
+      setReplies(Object.fromEntries((reps || []).map((x) => [x.review_id, x.body])));
+    }
     const ids = [...new Set(list.map((r) => r.guest_id))];
     if (ids.length) {
       const { data: p } = await supabase.from("profiles").select("user_id,full_name,email").in("user_id", ids);
@@ -95,6 +114,29 @@ const AdminReviews = () => {
                   {!!r.tags?.length && <p className="text-xs mt-1">{r.tags.join(" · ")}</p>}
                   {r.comment && <p className="text-xs text-muted-foreground mt-1">{r.comment}</p>}
                   <p className="text-xs text-muted-foreground mt-1">{names[r.guest_id] || "Guest"} · {new Date(r.created_at).toLocaleDateString()}</p>
+                  {editing === r.id ? (
+                    <div className="mt-2 space-y-2">
+                      <textarea value={draft} onChange={(e) => setDraft(e.target.value)} maxLength={1000} rows={3} aria-label="Reply"
+                        placeholder="Public reply shown under this review" className="w-full rounded-xl bg-background border border-border p-2 text-sm" />
+                      <div className="flex gap-2">
+                        <button disabled={saving} onClick={() => saveReply(r.id, draft)} className="text-xs font-semibold px-3 py-1.5 rounded-lg bg-primary text-primary-foreground">Save reply</button>
+                        <button onClick={() => setEditing(null)} className="text-xs font-semibold px-3 py-1.5 rounded-lg border border-border">Cancel</button>
+                      </div>
+                    </div>
+                  ) : replies[r.id] ? (
+                    <div className="mt-2 rounded-lg bg-secondary/60 p-2">
+                      <p className="text-xs font-semibold">Reply from Stay</p>
+                      <p className="text-xs text-muted-foreground">{replies[r.id]}</p>
+                      <div className="flex gap-3 mt-1">
+                        <button onClick={() => { setEditing(r.id); setDraft(replies[r.id]); }} className="text-xs font-semibold underline">Edit</button>
+                        <button disabled={saving} onClick={() => saveReply(r.id, "")} className="text-xs font-semibold underline text-destructive">Remove</button>
+                      </div>
+                    </div>
+                  ) : (
+                    <button onClick={() => { setEditing(r.id); setDraft(""); }} className="mt-2 text-xs font-semibold inline-flex items-center gap-1 underline">
+                      <MessageSquare className="w-3.5 h-3.5" /> Reply
+                    </button>
+                  )}
                 </div>
                 <button onClick={() => toggle(r)} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-border inline-flex items-center gap-1">
                   {r.hidden ? <><Eye className="w-3.5 h-3.5" /> Restore</> : <><EyeOff className="w-3.5 h-3.5" /> Hide</>}

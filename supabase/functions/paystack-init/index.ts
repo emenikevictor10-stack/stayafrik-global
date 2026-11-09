@@ -1,5 +1,6 @@
 import { getSetting } from "../_shared/settings.ts";
 import { idAllowsPayment } from "../_shared/guest-id-core.ts";
+import { blockedMessage, isBlocked } from "../_shared/user-block-core.ts";
 import { expiresAt, nightlyBreakdown, quoteLocalStay, splitShares, validateCustomShares, SPLIT_MAX_PEOPLE } from "../_shared/booking-core.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -26,6 +27,13 @@ Deno.serve(async (req) => {
 
     const body = await req.json().catch(() => ({}));
     const svcEarly = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    {
+      const { data: us } = await svcEarly.from("user_status").select("blocked_at").eq("user_id", userId).maybeSingle();
+      if (isBlocked(us)) {
+        const support = await getSetting<string>("support_email", "support@stayglobal.app");
+        return json(403, { error: blockedMessage(support), code: "blocked" });
+      }
+    }
     const startPaystack = async (amount: number, reference: string, cb: string, metadata: Record<string, unknown>) => {
       const k = Deno.env.get("PAYSTACK_SECRET_KEY")?.trim();
       if (!k) return { error: "Paystack is not configured" } as const;

@@ -77,6 +77,12 @@ export const ReviewsSection = ({
                   {r.comment}
                 </p>
               )}
+              {r.reply && (
+                <div className="mt-2 rounded-lg bg-secondary/60 p-2">
+                  <p className="text-xs font-semibold">Reply from Stay</p>
+                  <p className="text-xs text-muted-foreground leading-relaxed line-clamp-4">{r.reply}</p>
+                </div>
+              )}
             </article>
           ))}
         </div>

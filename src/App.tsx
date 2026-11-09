@@ -42,6 +42,7 @@ import AdminBookings from "./pages/admin/AdminBookings";
 import AdminPartnerBookings from "./pages/admin/AdminPartnerBookings";
 import AdminReservations from "./pages/admin/AdminReservations";
 import AdminReviews from "./pages/admin/AdminReviews";
+import AdminGuides from "./pages/admin/AdminGuides";
 import { AdminAddons, AdminDateChanges } from "./pages/admin/AdminExtras";
 import AdminBankTransfers from "./pages/admin/AdminBankTransfers";
 import TransferPay from "./pages/client/TransferPay";
@@ -205,6 +206,7 @@ const App = () => (
                     <Route path="/admin/partner-bookings" element={<AdminPartnerBookings />} />
                     <Route path="/admin/reservations" element={<AdminReservations />} />
                     <Route path="/admin/reviews" element={<AdminReviews />} />
+                    <Route path="/admin/guides" element={<AdminGuides />} />
                     <Route path="/admin/addons" element={<AdminAddons />} />
                     <Route path="/admin/payments" element={<AdminPayments />} />
                     <Route path="/admin/bank-transfers" element={<AdminBankTransfers />} />

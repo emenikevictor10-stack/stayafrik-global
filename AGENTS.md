@@ -31,3 +31,4 @@
 - `listing_private` read by guests only via `trip_access`. Why: `listings` is public.
 - Blocks: `user_status` via `staff_user_action`; `private.is_blocked` gates inserts, `paystack-init` refuses. Why: one switch.
 - Guides: `help_guides`; replies: `staff_review_reply`. Why: no code change.
+- App alert emails are built only by `send_branded_email` / `email_layout` (SQL); booking-stage, bank-details and refund-paid emails fire from database triggers, and scheduled ticks run through `run_scheduled_ticks`, which logs each run to `cron_runs`. Why: one look for every email and a visible run history.

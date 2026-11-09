@@ -33,6 +33,10 @@ Deno.serve(async (req) => {
         const support = await getSetting<string>("support_email", "support@stayglobal.app");
         return json(403, { error: blockedMessage(support), code: "blocked" });
       }
+      // Rate limit: at most 10 payment starts per guest per 10 minutes.
+      const since = new Date(Date.now() - 10 * 60_000).toISOString();
+      const { count } = await svcEarly.from("bookings").select("id", { count: "exact", head: true }).eq("guest_id", userId).gte("created_at", since);
+      if ((count ?? 0) >= 10) return json(429, { error: "Too many payment attempts. Please wait a few minutes and try again.", code: "rate_limited" });
     }
     const startPaystack = async (amount: number, reference: string, cb: string, metadata: Record<string, unknown>) => {
       const k = Deno.env.get("PAYSTACK_SECRET_KEY")?.trim();

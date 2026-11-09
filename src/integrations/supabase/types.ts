@@ -495,6 +495,30 @@ export type Database = {
           },
         ]
       }
+      cron_runs: {
+        Row: {
+          id: number
+          job: string
+          ok: boolean
+          started_at: string
+          summary: Json | null
+        }
+        Insert: {
+          id?: number
+          job: string
+          ok: boolean
+          started_at?: string
+          summary?: Json | null
+        }
+        Update: {
+          id?: number
+          job?: string
+          ok?: boolean
+          started_at?: string
+          summary?: Json | null
+        }
+        Relationships: []
+      }
       email_send_log: {
         Row: {
           created_at: string
@@ -2163,6 +2187,11 @@ export type Database = {
         Args: { message_id: number; queue_name: string }
         Returns: boolean
       }
+      email_esc: { Args: { t: string }; Returns: string }
+      email_layout: {
+        Args: { _body: string; _button: string; _heading: string; _url: string }
+        Returns: string
+      }
       email_queue_dispatch: { Args: never; Returns: undefined }
       enqueue_email: {
         Args: { payload: Json; queue_name: string }
@@ -2420,6 +2449,7 @@ export type Database = {
       }
       refresh_location_counts: { Args: never; Returns: undefined }
       retag_local_listings: { Args: never; Returns: number }
+      run_scheduled_ticks: { Args: never; Returns: undefined }
       search_locations: {
         Args: { _include_empty?: boolean; _limit?: number; q: string }
         Returns: {
@@ -2448,6 +2478,19 @@ export type Database = {
           _link: string
           _subject: string
           _user_id: string
+        }
+        Returns: undefined
+      }
+      send_branded_email: {
+        Args: {
+          _body: string
+          _button: string
+          _heading: string
+          _key: string
+          _label: string
+          _link: string
+          _subject: string
+          _to: string
         }
         Returns: undefined
       }

@@ -372,6 +372,13 @@
       "when": 1794242791140,
       "tag": "0052_plain_rayprop_listing_code",
       "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1794243270698,
+      "tag": "0053_branded_emails_cron_runs_rate_limits",
+      "breakpoints": true
     }
   ]
 }

@@ -81,3 +81,19 @@ export const isPaused = (blockedUntil: string | null | undefined, now = Date.now
 /** A full catalogue refresh is due when never done or older than the refresh window, and not paused. */
 export const catalogueRefreshDue = (lastRefresh: string | null | undefined, blockedUntil: string | null | undefined, now = Date.now()) =>
   !isPaused(blockedUntil, now) && (!lastRefresh || now - new Date(lastRefresh).getTime() >= CATALOGUE_REFRESH_HOURS * 3600_000);
+
+/** Reconcile: which status (if any) to move a stuck partner booking to, from RayProp's reservation status. */
+export const reconcileTarget = (current: string, raypropStatus: string): string | null => {
+  if (!["processing", "needs_attention"].includes(current)) return null;
+  const mapped = mapRayPropStatus(raypropStatus || "");
+  if (!mapped || mapped === current) return null;
+  if (mapped === "failed") return current === "needs_attention" ? null : "needs_attention";
+  return mapped;
+};
+
+/** Wallet low? Reads kobo from the common balance field names; null when unknown. */
+export const walletLow = (payload: any, thresholdKobo: number): boolean | null => {
+  const d = payload?.data ?? payload;
+  const v = Number(d?.balance_kobo ?? d?.available_balance_kobo ?? d?.balance ?? d?.available_balance);
+  return Number.isFinite(v) ? v < thresholdKobo : null;
+};

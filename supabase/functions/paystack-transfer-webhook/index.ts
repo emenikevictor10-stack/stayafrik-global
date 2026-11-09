@@ -52,6 +52,17 @@ Deno.serve(async (req) => {
     }
   }
 
+  // Refund finished or failed at Paystack: update our record (a database trigger emails the guest when paid).
+  if (event.event === "refund.processed" || event.event === "refund.failed") {
+    const ref = String(event?.data?.id ?? "");
+    if (ref) {
+      await svc.from("refunds").update(event.event === "refund.processed"
+        ? { status: "processed" }
+        : { status: "failed", failure_reason: "Paystack refund failed" }).eq("paystack_reference", ref).neq("status", "processed");
+    }
+    return json({ ok: true });
+  }
+
   const transferCode: string | undefined = event?.data?.transfer_code;
   if (!transferCode) return json({ ok: true, ignored: true });
 

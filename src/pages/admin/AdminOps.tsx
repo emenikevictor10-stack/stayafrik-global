@@ -105,18 +105,30 @@ export const AdminMessages = () => {
 type Health = { jobs: { name: string; schedule: string; active: boolean; last_run: string | null; last_status: string | null; fails_24h: number }[]; emails_failed_24h: number; emails_sent_24h: number; needs_attention: number; refunds_failed: number; partner: { blocked_until: string | null; blocked_reason: string | null; last_refresh: string | null } | null };
 const JOB_NAMES: Record<string, string> = {
   "booking-lifecycle-hourly": "Bookings: holds, releases, reminders (every 5 min)", "booking-requests-refunds": "Refunds for declined requests and unfinished splits",
-  "expire-reservations": "Viewing holds", "ical-sync-hourly": "Calendar imports", "queue-review-prompts": "Review prompts", "refresh-location-counts": "Place counts",
+  "expire-reservations": "Viewing holds", "ical-sync-hourly": "Calendar imports", "queue-review-prompts": "Review prompts", "refresh-location-counts": "Place counts", "rayprop-reconcile": "Partner bookings + wallet check (every 15 min)", "purge-cron-history": "Old job history clean-up",
 };
+const RUN_NAMES: Record<string, string> = {
+  booking_lifecycle_tick: "Holds, releases, request timeouts", booking_reminders_tick: "Reminders and thank-yous",
+  support_issue_tick: "Support reply checks", rayprop_reconcile: "Partner bookings + wallet",
+};
+type Run = { id: number; job: string; started_at: string; ok: boolean; summary: Record<string, unknown> | null };
+const summaryText = (s: Record<string, unknown> | null) =>
+  s ? Object.entries(s).filter(([, v]) => v !== 0 && v !== false && v !== null).map(([k, v]) => `${k.replace(/_/g, " ")}: ${typeof v === "object" ? JSON.stringify(v) : v}`).join(" · ") || "nothing to do" : "";
 
 /** /admin/health — scheduled jobs, email delivery, stuck money, partner link. */
 export const AdminHealth = () => {
   const [h, setH] = useState<Health | null>(null);
+  const [runs, setRuns] = useState<Run[]>([]);
   const [err, setErr] = useState(false);
   const load = useCallback(async () => {
     setErr(false);
-    const { data, error } = await supabase.rpc("admin_health");
+    const [{ data, error }, r] = await Promise.all([
+      supabase.rpc("admin_health"),
+      supabase.from("cron_runs").select("id,job,started_at,ok,summary").order("id", { ascending: false }).limit(20),
+    ]);
     if (error) return setErr(true);
     setH(data as unknown as Health);
+    setRuns((r.data ?? []) as Run[]);
   }, []);
   useEffect(() => { void load(); }, [load]);
   if (err) return <ErrorState onRetry={load} />;
@@ -136,7 +148,7 @@ export const AdminHealth = () => {
       </div>
       {blocked ? <Notice tone="danger">Partner stays are paused until {new Date(h.partner!.blocked_until!).toLocaleString("en-NG")}: {h.partner!.blocked_reason}</Notice>
         : <Notice>Partner stays are connected. Last full catalogue refresh: {h.partner?.last_refresh ? new Date(h.partner.last_refresh).toLocaleString("en-NG") : "not yet"}.</Notice>}
-      <p className="text-xs text-muted-foreground">The partner wallet balance isn't shown here — the partner doesn't offer a way to read it yet.</p>
+      <p className="text-xs text-muted-foreground">Partner wallet: checked every 15 minutes; admins get an alert when it drops below the level set in Settings.</p>
       <section>
         <h2 className="text-[15px] font-semibold mb-2">Scheduled jobs</h2>
         <div className="rounded-xl border border-border divide-y divide-border text-[13px]">
@@ -147,6 +159,19 @@ export const AdminHealth = () => {
             </div>
           ))}
         </div>
+      </section>
+      <section>
+        <h2 className="text-[15px] font-semibold mb-2">Recent runs</h2>
+        {runs.length === 0 ? <p className="text-[13px] text-muted-foreground">No runs recorded yet.</p> : (
+          <div className="rounded-xl border border-border divide-y divide-border text-[13px]">
+            {runs.map((r) => (
+              <div key={r.id} className="p-3 flex flex-wrap justify-between gap-2">
+                <div className="min-w-0"><p className="font-semibold">{RUN_NAMES[r.job] || r.job}</p><p className="text-muted-foreground break-words">{new Date(r.started_at).toLocaleString("en-NG")} · {summaryText(r.summary)}</p></div>
+                <Tag tone={r.ok ? "done" : "broken"}>{r.ok ? "ok" : "failed"}</Tag>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </div>
   );

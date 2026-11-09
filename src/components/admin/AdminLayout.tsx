@@ -4,14 +4,17 @@ import { LogOut, Home, Menu, PanelLeftClose, PanelLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/contexts/AuthContext";
 import { useAdminCounts } from "@/hooks/useAdminCounts";
-import { ADMIN_NAV, adminTitleFor, type AdminCountKey } from "./adminNav";
+import { navFor, adminTitleFor, type AdminCountKey } from "./adminNav";
+import { useStaffRoles, RequireSection } from "./RequireAdmin";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 const RAIL_KEY = "sg-admin-rail";
 
-const Nav = ({ rail, counts, overdue, onPick }: { rail?: boolean; counts: Record<AdminCountKey, number>; overdue: number; onPick?: () => void }) => (
+const Nav = ({ rail, counts, overdue, onPick }: { rail?: boolean; counts: Record<AdminCountKey, number>; overdue: number; onPick?: () => void }) => {
+  const roles = useStaffRoles();
+  return (
   <nav className="flex-1 overflow-y-auto p-2" aria-label="Admin sections">
-    {ADMIN_NAV.map(({ group, items }) => (
+    {navFor(roles).map(({ group, items }) => (
       <div key={group} className="mb-3">
         {!rail && <p className="px-3 pt-2 pb-1 text-xs font-semibold text-muted-foreground">{group}</p>}
         {rail && <div className="mx-3 my-2 border-t border-border" />}
@@ -36,7 +39,8 @@ const Nav = ({ rail, counts, overdue, onPick }: { rail?: boolean; counts: Record
       </div>
     ))}
   </nav>
-);
+  );
+};
 
 const Account = ({ rail, email, signOut }: { rail?: boolean; email?: string | null; signOut: () => void }) => (
   <div className="p-2 border-t border-border space-y-1">
@@ -91,7 +95,7 @@ export const AdminLayout = () => {
 
       <main className="flex-1 min-w-0 pt-[52px] md:pt-0">
         <div className="max-w-[1240px] mx-auto px-5 md:px-8 py-6 md:py-8">
-          <Outlet />
+          <RequireSection><Outlet /></RequireSection>
         </div>
       </main>
     </div>

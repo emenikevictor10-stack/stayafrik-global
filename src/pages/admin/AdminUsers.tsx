@@ -2,7 +2,7 @@ import { Tag } from "@/ui/kit";
 import { ErrorState } from "@/ui/kit";
 import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
-import { Search, ShieldCheck, ShieldOff, ChevronRight, Mail, Phone, MessageCircle, BadgeCheck } from "lucide-react";
+import { Search, ChevronRight, Mail, Phone, MessageCircle, BadgeCheck } from "lucide-react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/seo/Seo";
@@ -24,7 +24,8 @@ type Row = {
   bookings: number;
 };
 
-const FILTERS = ["all", "guests", "hosts", "admins"] as const;
+const FILTERS = ["all", "guests", "hosts"] as const;
+const TEAM = ["admin", "support", "finance", "listings"];
 
 const AdminUsers = () => {
   const [rows, setRows] = useState<Row[]>([]);
@@ -32,7 +33,6 @@ const AdminUsers = () => {
   const [filter, setFilter] = useState<(typeof FILTERS)[number]>("all");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
-  const [pendingId, setPendingId] = useState<string | null>(null);
 
   const load = async () => {
     setLoading(true);
@@ -59,26 +59,14 @@ const AdminUsers = () => {
     const byRole = new Map<string, string[]>();
     (roles || []).forEach((r: any) => byRole.set(r.user_id, [...(byRole.get(r.user_id) || []), r.role]));
     const lc = count(lst, "host_id"), bc = count(bks, "guest_id");
+    // Team members live on the Team page, not here.
     setRows((profs || []).map((p: any) => ({
       ...p, roles: byRole.get(p.user_id) || [], listings: lc.get(p.user_id) || 0, bookings: bc.get(p.user_id) || 0,
-    })));
+    })).filter((r: Row) => !r.roles.some((x) => TEAM.includes(x))));
     setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
-
-  const toggleAdmin = async (row: Row) => {
-    const isAdmin = row.roles.includes("admin");
-    if (!confirm(`${isAdmin ? "Revoke admin from" : "Grant admin to"} ${row.full_name || row.email}?`)) return;
-    setPendingId(row.user_id);
-    const { data, error } = await supabase.functions.invoke("admin-set-role", {
-      body: { user_id: row.user_id, role: "admin", action: isAdmin ? "revoke" : "grant" },
-    });
-    setPendingId(null);
-    if (error || (data as any)?.error) return toast.error((data as any)?.error || error?.message || "Failed");
-    toast.success(isAdmin ? "Admin revoked" : "Admin granted");
-    load();
-  };
 
   const isHost = (r: Row) => r.is_host || r.roles.includes("agent");
   const shown = useMemo(() => {
@@ -87,7 +75,6 @@ const AdminUsers = () => {
     return rows.filter((r) => {
       if (filter === "hosts" && !isHost(r)) return false;
       if (filter === "guests" && isHost(r)) return false;
-      if (filter === "admins" && !r.roles.includes("admin")) return false;
       if (!s) return true;
       return [r.full_name, r.email, r.user_id, ...r.roles].some((v) => (v || "").toLowerCase().includes(s))
         || (digits.length >= 3 && [r.phone, r.whatsapp].some((v) => (v || "").replace(/\D/g, "").includes(digits)));
@@ -98,12 +85,11 @@ const AdminUsers = () => {
     all: rows.length,
     guests: rows.filter((r) => !isHost(r)).length,
     hosts: rows.filter(isHost).length,
-    admins: rows.filter((r) => r.roles.includes("admin")).length,
   };
 
   return (
     <>
-      <Seo title="Users | Stay admin" description="Manage users and roles." noindex />
+      <Seo title="Users | Stay admin" description="People who signed up to Stay." noindex />
       <header className="mb-5 flex items-end justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-extrabold">Users</h1>
@@ -131,7 +117,6 @@ const AdminUsers = () => {
       ) : (
         <div className="space-y-2">
           {shown.map((r) => {
-            const admin = r.roles.includes("admin");
             const host = isHost(r);
             const hostIncomplete = host && (!r.whatsapp || !r.phone);
             return (
@@ -144,7 +129,6 @@ const AdminUsers = () => {
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <span className="font-semibold truncate">{r.full_name || "—"}</span>
                       <span className={`text-xs font-bold px-2 py-0.5 rounded-full ${host ? "bg-accent/20 text-foreground" : "bg-secondary text-muted-foreground"}`}>{host ? "Host" : "Guest"}</span>
-                      {admin && <Tag tone="done">Admin</Tag>}
                       {hostIncomplete && <Tag tone="act">Profile incomplete</Tag>}
                     </div>
                     <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs text-muted-foreground mt-0.5">
@@ -158,10 +142,6 @@ const AdminUsers = () => {
                   </div>
                 </div>
                 <div className="flex items-center gap-1.5 md:justify-end">
-                  <button onClick={() => toggleAdmin(r)} disabled={pendingId === r.user_id}
-                    className={`text-xs font-semibold inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border disabled:opacity-50 ${admin ? "border-destructive/40 text-destructive hover:bg-destructive/10" : "border-primary/40 text-primary hover:bg-primary/10"}`}>
-                    {pendingId === r.user_id ? "Working…" : admin ? <><ShieldOff className="w-3.5 h-3.5" /> Revoke admin</> : <><ShieldCheck className="w-3.5 h-3.5" /> Make admin</>}
-                  </button>
                   <Link to={`/admin/users/${r.user_id}`} className="text-xs font-semibold inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-border hover:bg-secondary">
                     View more <ChevronRight className="w-3.5 h-3.5" />
                   </Link>

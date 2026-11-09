@@ -1671,6 +1671,39 @@ export type Database = {
         }
         Relationships: []
       }
+      team_invites: {
+        Row: {
+          accepted_at: string | null
+          accepted_user_id: string | null
+          created_at: string
+          email: string
+          id: string
+          invited_by: string
+          roles: Database["public"]["Enums"]["app_role"][]
+          status: string
+        }
+        Insert: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          email: string
+          id?: string
+          invited_by: string
+          roles: Database["public"]["Enums"]["app_role"][]
+          status?: string
+        }
+        Update: {
+          accepted_at?: string | null
+          accepted_user_id?: string | null
+          created_at?: string
+          email?: string
+          id?: string
+          invited_by?: string
+          roles?: Database["public"]["Enums"]["app_role"][]
+          status?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -1776,6 +1809,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      accept_team_invites: { Args: never; Returns: number }
       admin_health: { Args: never; Returns: Json }
       admin_insights: { Args: { _from: string; _to: string }; Returns: Json }
       auto_release_due_bookings: { Args: never; Returns: number }
@@ -2203,6 +2237,33 @@ export type Database = {
         }
         Returns: undefined
       }
+      staff_team_cancel_invite: { Args: { _id: string }; Returns: undefined }
+      staff_team_invite: {
+        Args: {
+          _email: string
+          _roles: Database["public"]["Enums"]["app_role"][]
+        }
+        Returns: string
+      }
+      staff_team_list: {
+        Args: never
+        Returns: {
+          email: string
+          full_name: string
+          roles: Database["public"]["Enums"]["app_role"][]
+          since: string
+          user_id: string
+        }[]
+      }
+      staff_team_remove: { Args: { _user_id: string }; Returns: undefined }
+      staff_team_resend_invite: { Args: { _id: string }; Returns: undefined }
+      staff_team_set_roles: {
+        Args: {
+          _roles: Database["public"]["Enums"]["app_role"][]
+          _user_id: string
+        }
+        Returns: undefined
+      }
       support_issue_tick: { Args: never; Returns: Json }
       tag_partner_locations: {
         Args: { _force?: boolean; _rows: Json }
@@ -2210,7 +2271,13 @@ export type Database = {
       }
     }
     Enums: {
-      app_role: "client" | "agent" | "admin"
+      app_role:
+        | "client"
+        | "agent"
+        | "admin"
+        | "support"
+        | "finance"
+        | "listings"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -2338,7 +2405,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
-      app_role: ["client", "agent", "admin"],
+      app_role: ["client", "agent", "admin", "support", "finance", "listings"],
     },
   },
 } as const

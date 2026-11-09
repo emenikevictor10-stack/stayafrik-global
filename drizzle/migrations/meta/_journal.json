@@ -274,6 +274,20 @@
       "when": 1794216223535,
       "tag": "0038_wishlist_members",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1794216996577,
+      "tag": "0039_team_roles_enum",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1794217051068,
+      "tag": "0040_team_invites_and_scoped_roles",
+      "breakpoints": true
     }
   ]
 }

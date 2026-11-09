@@ -221,30 +221,4 @@ export const AdminInsights = () => {
   );
 };
 
-type Member = { user_id: string; role: string; full_name: string | null; email: string | null };
-
-/** /admin/team — who has admin access. Granting/removing stays on the Users page (server-checked). */
-export const AdminTeam = () => {
-  const [rows, setRows] = useState<Member[] | null>(null);
-  const [err, setErr] = useState(false);
-  const load = useCallback(async () => {
-    setErr(false);
-    const { data: r, error } = await supabase.from("user_roles").select("user_id,role").eq("role", "admin");
-    if (error) return setErr(true);
-    const ids = (r || []).map((x) => x.user_id);
-    const { data: p } = ids.length ? await supabase.from("profiles").select("user_id,full_name,email").in("user_id", ids) : { data: [] };
-    setRows((r || []).map((x) => ({ ...x, ...(p || []).find((y) => y.user_id === x.user_id) } as Member)));
-  }, []);
-  useEffect(() => { void load(); }, [load]);
-  return (
-    <div className="space-y-4">
-      <h1 className="text-xl font-semibold">Team</h1>
-      <p className="text-[13px] text-muted-foreground">People with admin access. To add or remove someone, open them on the <Link to="/admin/users" className="underline">Users</Link> page.</p>
-      {err ? <ErrorState onRetry={load} /> : rows === null ? <ListSkeleton /> : !rows.length ? <EmptyState title="No admins" /> : (
-        <div className="rounded-xl border border-border divide-y divide-border text-[13px]">
-          {rows.map((m) => <div key={m.user_id} className="p-3 flex justify-between gap-2"><div><p className="font-semibold">{m.full_name || "—"}</p><p className="text-muted-foreground break-all">{m.email}</p></div><Tag tone="done">Admin</Tag></div>)}
-        </div>
-      )}
-    </div>
-  );
-};
+export { AdminTeam } from "./AdminTeam";

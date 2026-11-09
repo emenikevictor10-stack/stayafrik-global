@@ -1,3 +1,4 @@
+import { idAllowsPayment } from "@/lib/guest-id";
 import { useSettings } from "@/hooks/useSettings";
 import { serviceFee } from "@/lib/settings";
 import { recallSearch } from "@/lib/search-state";
@@ -185,7 +186,7 @@ const BookProperty = () => {
     if (!user) return setSignInOpen(true);
     if (features.id_required) {
       const { data: k } = await supabase.from("kyc_submissions").select("status").eq("user_id", user.id).maybeSingle();
-      if (!k) { toast.message("Add your ID to book"); return navigate(`/details?next=${encodeURIComponent(`/property/${id}/book?resume=1`)}`); }
+      if (!idAllowsPayment(k?.status, true)) { toast.message("Add your ID to book"); return navigate(`/details?next=${encodeURIComponent(`/property/${id}/book?resume=1`)}`); }
     }
     if (!datesValid) return toast.error("Pick valid dates");
     if (isPartner && (!quote || !hold)) return toast.error("Get a price first");
@@ -215,6 +216,7 @@ const BookProperty = () => {
       if (error) {
         const ctx: any = (error as any).context;
         const msg = ctx?.json ? (await ctx.json().catch(() => null))?.error : null;
+        if (msg === "Add your ID to book") { toast.message(msg); navigate(`/details?next=${encodeURIComponent(`/property/${id}/book?resume=1`)}`); return; }
         throw new Error(msg || error.message);
       }
       if (data?.bank_transfer?.id) { try { sessionStorage.removeItem(draftKey); } catch { /* */ } navigate(`/pay/transfer/${data.bank_transfer.id}`); return; }

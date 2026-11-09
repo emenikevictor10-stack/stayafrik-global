@@ -186,6 +186,7 @@ const App = () => (
                     <Route path="/trips/:id/guests" element={<TripGuests />} />
                     <Route path="/trips/:id/invoice" element={<TripInvoice />} />
                     <Route path="/details" element={<GuestDetails />} />
+                    <Route path="/details/passport" element={<GuestDetails passport />} />
                     <Route path="/issues" element={<MyIssues />} />
                     <Route path="/issues/:id" element={<IssueThread />} />
                     

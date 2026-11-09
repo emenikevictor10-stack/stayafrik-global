@@ -1,4 +1,5 @@
 import { getSetting } from "../_shared/settings.ts";
+import { idAllowsPayment } from "../_shared/guest-id-core.ts";
 import { expiresAt, nightlyBreakdown, quoteLocalStay, splitShares, validateCustomShares, SPLIT_MAX_PEOPLE } from "../_shared/booking-core.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
@@ -134,6 +135,15 @@ Deno.serve(async (req) => {
 
     if (!listing_id || !check_in || !check_out || (!callback_url && !isBank)) {
       return json(400, { error: "Missing required fields" });
+    }
+
+    // ---------- ID switch (PRD §3): checked on the server for every stay payment ----------
+    {
+      const feats = await getSetting<Record<string, boolean>>("features", {} as any);
+      if (feats.id_required) {
+        const { data: k } = await svcEarly.from("kyc_submissions").select("status").eq("user_id", userId).maybeSingle();
+        if (!idAllowsPayment(k?.status, true)) return json(403, { error: "Add your ID to book", code: "id_required" });
+      }
     }
 
     // ---------- Partner (RayProp) stays: charge the server-verified quote total ----------

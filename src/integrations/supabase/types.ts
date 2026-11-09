@@ -664,7 +664,9 @@ export type Database = {
       }
       kyc_submissions: {
         Row: {
+          country: string | null
           created_at: string
+          full_name: string | null
           id: string
           id_image_url: string
           id_number: string
@@ -676,7 +678,9 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          country?: string | null
           created_at?: string
+          full_name?: string | null
           id?: string
           id_image_url: string
           id_number: string
@@ -688,7 +692,9 @@ export type Database = {
           user_id: string
         }
         Update: {
+          country?: string | null
           created_at?: string
+          full_name?: string | null
           id?: string
           id_image_url?: string
           id_number?: string
@@ -2396,6 +2402,10 @@ export type Database = {
         }
         Returns: undefined
       }
+      staff_kyc_action: {
+        Args: { _action: string; _id: string; _reason: string }
+        Returns: undefined
+      }
       staff_offer_credit: {
         Args: { _amount: number; _issue_id: string; _reason: string }
         Returns: undefined
@@ -2439,6 +2449,16 @@ export type Database = {
       submit_bank_transfer: {
         Args: { _id: string; _receipt_path: string; _sender: string }
         Returns: undefined
+      }
+      submit_guest_id: {
+        Args: {
+          _country: string
+          _full_name: string
+          _number: string
+          _path: string
+          _type: string
+        }
+        Returns: string
       }
       support_issue_tick: { Args: never; Returns: Json }
       tag_partner_locations: {

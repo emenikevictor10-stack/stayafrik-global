@@ -9,11 +9,13 @@ import { CheckCircle2, XCircle, Search } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/seo/Seo";
 import { Input } from "@/components/ui/input";
-import { logAdminAction } from "@/lib/admin-audit";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from "@/components/ui/button";
 
 type Row = {
   id: string; user_id: string; status: string; id_type: string; id_number: string; id_image_url: string;
-  reviewer_notes: string | null; reviewed_at: string | null; created_at: string;
+  reviewer_notes: string | null; country?: string | null; full_name?: string | null; reviewed_at: string | null; created_at: string;
 };
 type Person = { name: string; email: string | null; phone: string | null; is_host: boolean };
 
@@ -28,6 +30,10 @@ const AdminKyc = () => {
   const [q, setQ] = useState("");
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [nextStay, setNextStay] = useState<Record<string, string>>({});
+  const [ask, setAsk] = useState<{ r: Row; action: "approve" | "reject" } | null>(null);
+  const [reason, setReason] = useState("");
+  const [busy, setBusy] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -41,6 +47,12 @@ const AdminKyc = () => {
     const ids = [...new Set(list.map((r) => r.user_id))];
     if (ids.length) {
       const { data: profs } = await supabase.from("profiles").select("user_id, full_name, email, phone, is_host").in("user_id", ids);
+      const today = new Date().toISOString().slice(0, 10);
+      const { data: bs } = await supabase.from("bookings").select("guest_id, check_in_date").in("guest_id", ids)
+        .in("status", ["held", "awaiting_host", "confirmed"]).gte("check_in_date", today).order("check_in_date");
+      const ns: Record<string, string> = {};
+      (bs || []).forEach((b: any) => { if (!ns[b.guest_id]) ns[b.guest_id] = b.check_in_date; });
+      setNextStay(ns);
       setPeople(Object.fromEntries((profs || []).map((p: any) => [p.user_id, { name: p.full_name || p.email || "User", email: p.email, phone: p.phone, is_host: p.is_host }])));
     }
     // ID images live in a private bucket — sign short-lived links.
@@ -56,35 +68,24 @@ const AdminKyc = () => {
 
   useEffect(() => { load(); }, [filter]);
 
-  const decide = async (r: Row, status: "approved" | "rejected") => {
-    let notes: string | null = null;
-    if (status === "rejected") {
-      const v = window.prompt("Reason for rejecting (shown to the host):", "");
-      if (v === null) return;
-      notes = v.trim() || null;
-    } else if (!confirm(`Approve ID for ${people[r.user_id]?.name || "this user"}?`)) return;
-    const { error } = await supabase.from("kyc_submissions")
-      .update({ status, reviewer_notes: notes, reviewed_at: new Date().toISOString() }).eq("id", r.id);
+  const decide = async (r: Row, action: "approve" | "reject", reason = "") => {
+    setBusy(true);
+    const { error } = await supabase.rpc("staff_kyc_action" as any, { _id: r.id, _action: action, _reason: reason || null });
+    setBusy(false);
     if (error) return toast.error(error.message);
-    await supabase.from("notifications").insert({
-      user_id: r.user_id, type: "kyc",
-      title: status === "approved" ? "ID verified ✅" : "ID verification declined",
-      body: status === "approved" ? "Your identity has been verified." : `Your ID was not accepted.${notes ? ` Reason: ${notes}` : ""} Please resubmit.`,
-      link: "/profile/verification",
-    });
-    await logAdminAction({ action: `kyc_${status}`, entityType: "kyc", entityId: r.id, metadata: { user_id: r.user_id, reason: notes } });
-    toast.success(`ID ${status}`);
-    load();
+    toast.success(action === "approve" ? "ID approved" : "ID rejected");
+    setAsk(null); setReason(""); load();
   };
 
   const shown = useMemo(() => {
     const t = q.trim().toLowerCase();
-    if (!t) return rows;
-    return rows.filter((r) => {
+    const byStay = [...rows].sort((a, b) => (nextStay[a.user_id] || "9999").localeCompare(nextStay[b.user_id] || "9999"));
+    if (!t) return byStay;
+    return byStay.filter((r) => {
       const p = people[r.user_id];
       return [r.id_type, r.id_number, r.user_id, p?.name, p?.email, p?.phone].some((v) => (v || "").toLowerCase().includes(t));
     });
-  }, [rows, q, people]);
+  }, [rows, q, people, nextStay]);
 
   return (
     <>
@@ -92,7 +93,7 @@ const AdminKyc = () => {
       <header className="mb-4 flex items-end justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-extrabold">ID checks (KYC)</h1>
-          <p className="text-sm text-muted-foreground">Host identity documents waiting for review.</p>
+          <p className="text-sm text-muted-foreground">Guest and host IDs waiting for review — soonest stay first.</p>
         </div>
         <div className="relative w-full sm:w-80">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" />
@@ -131,16 +132,19 @@ const AdminKyc = () => {
                       {reveal[r.id] ? r.id_number : mask(r.id_number)}{" "}
                       <button onClick={() => setReveal((v) => ({ ...v, [r.id]: !v[r.id] }))} className="text-primary font-sans text-xs">{reveal[r.id] ? "Hide" : "Show"}</button>
                     </dd>
+                    {r.full_name && (<><dt className="text-muted-foreground">Name on ID</dt><dd>{r.full_name}</dd></>)}
+                    {r.country && (<><dt className="text-muted-foreground">Country</dt><dd>{r.country}</dd></>)}
+                    <dt className="text-muted-foreground">Next stay</dt><dd>{nextStay[r.user_id] ? new Date(nextStay[r.user_id]).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" }) : "None booked"}</dd>
                     <dt className="text-muted-foreground">Submitted</dt><dd>{new Date(r.created_at).toLocaleString()}</dd>
                     {r.reviewed_at && (<><dt className="text-muted-foreground">Reviewed</dt><dd>{new Date(r.reviewed_at).toLocaleString()}</dd></>)}
                     {r.reviewer_notes && (<><dt className="text-muted-foreground">Notes</dt><dd>{r.reviewer_notes}</dd></>)}
                   </dl>
                   {r.status === "pending" && (
                     <div className="flex gap-2">
-                      <button onClick={() => decide(r, "rejected")} className="flex-1 text-xs font-semibold px-3 py-2 rounded-lg border border-destructive/40 text-destructive hover:bg-destructive/10 inline-flex items-center justify-center gap-1">
+                      <button onClick={() => setAsk({ r, action: "reject" })} className="flex-1 text-xs font-semibold px-3 py-2 rounded-lg border border-destructive/40 text-destructive hover:bg-destructive/10 inline-flex items-center justify-center gap-1">
                         <XCircle className="w-3.5 h-3.5" /> Reject
                       </button>
-                      <button onClick={() => decide(r, "approved")} className="flex-1 text-xs font-semibold px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center gap-1">
+                      <button onClick={() => setAsk({ r, action: "approve" })} className="flex-1 text-xs font-semibold px-3 py-2 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 inline-flex items-center justify-center gap-1">
                         <CheckCircle2 className="w-3.5 h-3.5" /> Approve
                       </button>
                     </div>
@@ -151,6 +155,17 @@ const AdminKyc = () => {
           })}
         </div>
       )}
+      <Dialog open={!!ask} onOpenChange={(o) => { if (!o) { setAsk(null); setReason(""); } }}>
+        <DialogContent>
+          <DialogHeader><DialogTitle>{ask?.action === "approve" ? "Approve this ID?" : "Reject this ID?"}</DialogTitle></DialogHeader>
+          <p className="text-sm text-muted-foreground">{ask?.action === "approve" ? `Check the name matches ${people[ask?.r.user_id || ""]?.name || "the account"}.` : "The guest sees this reason and can send their ID again."}</p>
+          {ask?.action === "reject" && <Textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} placeholder="e.g. Photo is blurry" />}
+          <div className="flex gap-2 justify-end">
+            <Button variant="outline" onClick={() => setAsk(null)}>Cancel</Button>
+            <Button disabled={busy || (ask?.action === "reject" && !reason.trim())} variant={ask?.action === "reject" ? "destructive" : "default"} onClick={() => ask && decide(ask.r, ask.action, reason.trim())}>{ask?.action === "approve" ? "Approve" : "Reject"}</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </>
   );
 };

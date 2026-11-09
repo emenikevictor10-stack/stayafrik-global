@@ -38,14 +38,8 @@ const PropertyDetail = () => {
 
 
 
-  const handleBook = () => {
-    if (!session) {
-      toast.message("Sign in to book this stay");
-      navigate(`/auth?mode=signin`, { state: { from: `/property/${id}/book` } });
-      return;
-    }
-    navigate(`/property/${id}/book`);
-  };
+  // No sign-in here: checkout asks for it only at Pay.
+  const handleBook = () => navigate(`/property/${id}/book`);
 
   if (loading) {
     return (

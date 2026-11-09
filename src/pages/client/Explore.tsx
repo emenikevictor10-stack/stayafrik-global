@@ -3,6 +3,7 @@ import { TopBar } from "@/components/shell/TopBar";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { type Property } from "@/data/properties";
 import { Map as MapIcon, List as ListIcon, X, Wallet, Star, Users, Zap, BadgeCheck, SlidersHorizontal, type LucideIcon } from "lucide-react";
+import { HomeExtras } from "@/components/home/HomeExtras";
 import { FiltersSheet } from "@/components/search/FiltersSheet";
 import { Skeleton, EmptyState, Button } from "@/ui/kit";
 import { supabase } from "@/integrations/supabase/client";
@@ -241,6 +242,8 @@ const Explore = () => {
             📍 Sorted by distance · clear <X className="w-3 h-3" />
           </button>
         )}
+
+        {!hasSearch && <HomeExtras />}
 
         {/* Filters, quick shortcuts and sort */}
         <div className="flex flex-wrap items-center gap-2 mt-4">

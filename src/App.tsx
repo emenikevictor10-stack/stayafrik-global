@@ -68,7 +68,6 @@ import PinSettings from "./pages/shared/PinSettings";
 import DeleteAccount from "./pages/shared/DeleteAccount";
 import { PinGate } from "@/components/auth/PinGate";
 import { usePushNotifications } from "@/hooks/usePushNotifications";
-import { SplashSequence, hasSeenSplash } from "@/components/splash/SplashSequence";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -80,12 +79,6 @@ const ThirdTab = () => {
 
 const PushBridge = () => { usePushNotifications(); return null; };
 
-const SplashGate = ({ children }: { children: React.ReactNode }) => {
-  const [seen, setSeen] = useState(() => hasSeenSplash());
-  if (!seen) return <SplashSequence onDone={() => setSeen(true)} />;
-  return <>{children}</>;
-};
-
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
@@ -94,7 +87,6 @@ const App = () => (
         <RoleProvider>
           <PushBridge />
           <BrowserRouter>
-            <SplashGate>
               <Routes>
                 <Route path="/auth" element={<Auth />} />
                 <Route path="/reset-password" element={<ResetPassword />} />
@@ -102,7 +94,7 @@ const App = () => (
                 <Route path="/.lovable/oauth/consent" element={<OAuthConsent />} />
 
                 {/* Public routes — explore is the default page, browsable without login */}
-                <Route element={<PinGate><MobileShell /></PinGate>}>
+                <Route element={<MobileShell />}>
                   <Route path="/" element={<Index />} />
                   <Route path="/explore" element={<Explore />} />
                   <Route path="/results" element={<Explore />} />
@@ -114,6 +106,8 @@ const App = () => (
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                   <Route path="/terms" element={<TermsConditions />} />
                   <Route path="/list-your-place" element={<ListYourPlace />} />
+                  {/* Checkout is open to everyone; sign-in is asked only when pressing Pay. */}
+                  <Route path="/property/:id/book" element={<PinGate><BookProperty /></PinGate>} />
                 </Route>
 
                 {/* Authenticated routes */}
@@ -148,7 +142,6 @@ const App = () => (
                     <Route path="/profile/payments" element={<PaymentMethods />} />
                     <Route path="/profile/pin" element={<PinSettings />} />
                     <Route path="/notifications" element={<Navigate to="/home?notifications=1" replace />} />
-                    <Route path="/property/:id/book" element={<BookProperty />} />
                     <Route path="/booking/confirm" element={<BookingConfirm />} />
                     <Route path="/reservations" element={<Reservations />} />
                     <Route path="/profile/delete" element={<DeleteAccount />} />
@@ -181,7 +174,6 @@ const App = () => (
                 </Route>
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </SplashGate>
           </BrowserRouter>
         </RoleProvider>
       </AuthProvider>

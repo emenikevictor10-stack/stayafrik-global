@@ -1,8 +1,9 @@
 import { useSettings } from "@/hooks/useSettings";
 import { serviceFee } from "@/lib/settings";
 import { recallSearch } from "@/lib/search-state";
-import { useParams, useNavigate, Link } from "react-router-dom";
-import { useEffect, useMemo, useState } from "react";
+import { useParams, useNavigate, Link, useSearchParams } from "react-router-dom";
+import { SignInSheet } from "@/components/auth/SignInSheet";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { quoteRayProp, holdRayProp, type RayPropQuote } from "@/lib/rayprop";
 import { koboToNaira } from "@/lib/rayprop-map";
 import { format, differenceInCalendarDays, addDays } from "date-fns";
@@ -33,9 +34,14 @@ const BookProperty = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const { data: p, loading } = useListing(id);
+  const [qs, setQs] = useSearchParams();
+  const draftKey = `sg-checkout:${id}`;
+  const draft = useMemo(() => { try { return JSON.parse(sessionStorage.getItem(draftKey) || "null"); } catch { return null; } }, [draftKey]);
+  const [signInOpen, setSignInOpen] = useState(false);
 
-  const [step, setStep] = useState<Step>(1);
+  const [step, setStep] = useState<Step>(() => (draft?.step as Step) || 1);
   const [range, setRange] = useState<DateRange | undefined>(() => {
+    if (draft?.checkIn && draft?.checkOut) return { from: new Date(draft.checkIn + "T00:00:00"), to: new Date(draft.checkOut + "T00:00:00") };
     const s = recallSearch();
     if (s?.checkIn && s?.checkOut && s.checkIn >= format(new Date(), "yyyy-MM-dd")) return { from: new Date(s.checkIn + "T00:00:00"), to: new Date(s.checkOut + "T00:00:00") };
     return { from: addDays(new Date(), 2), to: addDays(new Date(), 5) };
@@ -43,11 +49,11 @@ const BookProperty = () => {
   const [calOpen, setCalOpen] = useState(false);
   const checkIn = range?.from;
   const checkOut = range?.to;
-  const [guests, setGuests] = useState(() => { const s = recallSearch(); return s ? Math.max(1, (s.adults || 0) + (s.children || 0)) || 2 : 2; });
+  const [guests, setGuests] = useState(() => { if (draft?.guests) return draft.guests as number; const s = recallSearch(); return s ? Math.max(1, (s.adults || 0) + (s.children || 0)) || 2 : 2; });
   const [paying, setPaying] = useState(false);
-  const [guestName, setGuestName] = useState<string>(user?.user_metadata?.full_name || "");
-  const [guestEmail, setGuestEmail] = useState<string>(user?.email || "");
-  const [guestPhone, setGuestPhone] = useState<string>("+234");
+  const [guestName, setGuestName] = useState<string>(draft?.name || user?.user_metadata?.full_name || "");
+  const [guestEmail, setGuestEmail] = useState<string>(draft?.email || user?.email || "");
+  const [guestPhone, setGuestPhone] = useState<string>(draft?.phone || "+234");
   const [quote, setQuote] = useState<RayPropQuote | null>(null);
   const [hold, setHold] = useState<{ id: string; expiresAt: string } | null>(null);
   const [preparing, setPreparing] = useState(false);
@@ -61,6 +67,27 @@ const BookProperty = () => {
       if (data?.phone) setGuestPhone((v) => (v === "+234" ? data.phone! : v));
     });
   }, [user?.id]);
+  // Keep the checkout draft so it survives the Google sign-in round trip.
+  useEffect(() => {
+    try {
+      sessionStorage.setItem(draftKey, JSON.stringify({
+        step: step === 3 && p?.source === "rayprop" ? 2 : step,
+        checkIn: range?.from ? format(range.from, "yyyy-MM-dd") : null,
+        checkOut: range?.to ? format(range.to, "yyyy-MM-dd") : null,
+        guests, name: guestName, email: guestEmail, phone: guestPhone,
+      }));
+    } catch { /* storage off */ }
+  }, [draftKey, step, range, guests, guestName, guestEmail, guestPhone, p?.source]);
+
+  // Back from Google sign-in: carry on where the guest pressed Pay.
+  const resumeRef = useRef<() => void>(() => {});
+  useEffect(() => {
+    if (!user || !p || qs.get("resume") !== "1") return;
+    const next = new URLSearchParams(qs); next.delete("resume"); setQs(next, { replace: true });
+    const t = setTimeout(() => resumeRef.current(), 300);
+    return () => clearTimeout(t);
+  }, [user, p]); // eslint-disable-line react-hooks/exhaustive-deps
+
   useEffect(() => {
     if (!hold) return;
     const t = setInterval(() => setNowMs(Date.now()), 1000);
@@ -111,7 +138,7 @@ const BookProperty = () => {
   const holdExpired = isPartner && !!hold && holdSecsLeft === 0;
 
   const preparePartner = async () => {
-    if (!user) return toast.error("Please sign in");
+    if (!user) return setSignInOpen(true);
     const phone = guestPhone.replace(/[\s-]/g, "");
     if (guestName.trim().length < 2) return toast.error("Enter your full name");
     if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(guestEmail)) return toast.error("Enter a valid email");
@@ -162,7 +189,7 @@ const BookProperty = () => {
     });
 
   const pay = async () => {
-    if (!user) return toast.error("Please sign in");
+    if (!user) return setSignInOpen(true);
     if (!datesValid) return toast.error("Pick valid dates");
     if (isPartner && (!quote || !hold)) return toast.error("Get a price first");
     if (holdExpired) return toast.error("Your hold expired — get a new price");
@@ -217,8 +244,11 @@ const BookProperty = () => {
     step === 2 ? "Who's coming?" :
     "Review & pay";
 
+  resumeRef.current = () => { if (step === 3 && !isPartner) void pay(); else if (step === 2 && isPartner) void preparePartner(); };
+
   return (
     <main className="pb-36 min-h-screen bg-background">
+      <SignInSheet open={signInOpen} onOpenChange={setSignInOpen} returnPath={`/property/${id}/book?resume=1`} title={step === 2 ? "Sign in to hold this stay" : "Sign in to pay"} />
       {/* Header */}
       <header className="sticky top-0 z-20 bg-background/95 backdrop-blur-xl border-b border-border">
         <div className="px-5 py-3 flex items-center gap-3">

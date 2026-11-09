@@ -5,7 +5,7 @@ import { join } from "node:path";
 const SIZES = new Set(["12px", "13px", "15px", "16px", "20px", "24px", "30px"]);
 const RADII = new Set(["4px", "6px", "8px", "10px", "12px", "14px", "16px", "20px", "inherit"]);
 // Third-party brand marks and map canvas styling are allowed raw colours.
-const HEX_ALLOW = ["src/lib/google-icon.tsx", "src/components/map/PropertyMap.tsx", "src/components/ui/chart.tsx"];
+const HEX_ALLOW = ["src/lib/google-icon.tsx", "src/components/auth/SignInSheet.tsx", "src/components/map/PropertyMap.tsx", "src/components/ui/chart.tsx"];
 
 const walk = (d) => readdirSync(d).flatMap((f) => {
   const p = join(d, f);

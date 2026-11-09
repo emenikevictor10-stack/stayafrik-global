@@ -47,7 +47,12 @@ Deno.serve(async (req) => {
       booking_id: b.id, amount, reason, initiated_by: u.user.id, status: amount > 0 ? "pending" : "none",
     }).select("id").single();
 
-    if (amount > 0 && b.payment_reference) {
+    const isBankTransfer = String(b.payment_reference || "").startsWith("STAYBT_");
+    if (amount > 0 && isBankTransfer) {
+      // Paid by bank transfer: Paystack can't refund it; staff send it back by transfer.
+      await admin.from("refunds").update({ status: "manual", failure_reason: "Paid by bank transfer — send the refund to the guest's bank account" }).eq("id", refund!.id);
+      await admin.rpc("notify_admins", { _title: "Bank transfer refund to send", _body: `Refund ₦${amount.toLocaleString()} for ref ${b.payment_reference} by bank transfer.`, _link: "/admin/payments" });
+    } else if (amount > 0 && b.payment_reference) {
       const r = await fetch("https://api.paystack.co/refund", {
         method: "POST",
         headers: { Authorization: `Bearer ${Deno.env.get("PAYSTACK_SECRET_KEY")}`, "Content-Type": "application/json" },

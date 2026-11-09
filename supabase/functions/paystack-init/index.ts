@@ -204,7 +204,15 @@ Deno.serve(async (req) => {
       if (!acct) return json(400, { error: "Bank transfer is not available right now." });
       const svcB = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
       await svcB.rpc("expire_stale_holds", { _listing_id: listing_id });
-      await svcB.from("bookings").update({ status: "cancelled" }).eq("guest_id", userId).eq("listing_id", listing_id).eq("status", "held");
+      {
+      // Replace this guest's own unpaid hold, but never one whose transfer receipt is being checked.
+      const { data: mine } = await svcB.from("bookings").select("id").eq("guest_id", userId).eq("listing_id", listing_id).eq("status", "held");
+      const ids = (mine ?? []).map((r: any) => r.id);
+      const { data: busy } = ids.length ? await svcB.from("bank_transfers").select("booking_id").in("booking_id", ids).eq("status", "submitted") : { data: [] };
+      const keep = new Set((busy ?? []).map((r: any) => r.booking_id));
+      const drop = ids.filter((i: string) => !keep.has(i));
+      if (drop.length) await svcB.from("bookings").update({ status: "cancelled" }).in("id", drop).eq("status", "held");
+    }
       const ref = `STAYBT_${Date.now()}_${crypto.randomUUID().slice(0, 6).toUpperCase()}`;
       const expires = expiresAt(new Date(), await bankMinutes()).toISOString();
       const { data: hb, error: he } = await svcB.from("bookings").insert({
@@ -243,8 +251,15 @@ Deno.serve(async (req) => {
     // Free nights whose hold ran out (the hourly job also does this), so they never block a new guest.
     await svc.rpc("expire_stale_holds", { _listing_id: listing_id });
     // A retry by the same guest replaces their own earlier hold on this stay.
-    await svc.from("bookings").update({ status: "cancelled" })
-      .eq("guest_id", userId).eq("listing_id", listing_id).eq("status", "held");
+{
+      // Replace this guest's own unpaid hold, but never one whose transfer receipt is being checked.
+      const { data: mine } = await svc.from("bookings").select("id").eq("guest_id", userId).eq("listing_id", listing_id).eq("status", "held");
+      const ids = (mine ?? []).map((r: any) => r.id);
+      const { data: busy } = ids.length ? await svc.from("bank_transfers").select("booking_id").in("booking_id", ids).eq("status", "submitted") : { data: [] };
+      const keep = new Set((busy ?? []).map((r: any) => r.booking_id));
+      const drop = ids.filter((i: string) => !keep.has(i));
+      if (drop.length) await svc.from("bookings").update({ status: "cancelled" }).in("id", drop).eq("status", "held");
+    }
     const now = new Date();
     const holdMin = await getSetting<number>("hold_minutes", 15);
     const payMin = await getSetting<number>("payment_window_minutes", 60);

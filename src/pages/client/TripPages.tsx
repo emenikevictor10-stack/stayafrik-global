@@ -220,7 +220,7 @@ export const TripInvoice = () => {
             </div>
             <p className="mt-4 text-[13px]">{titleOf(trip!)} · {trip!.check_in_date} → {trip!.check_out_date}{trip!.listing_code ? ` · ${trip!.listing_code}` : ""}</p>
             <table className="w-full mt-3 text-[13px]"><tbody>
-              {inv.lines.map((l) => <tr key={l.label} className="border-t border-border"><td className="py-1.5">{l.label}</td><td className="py-1.5 text-right">{fmt(l.kobo / 100)}</td></tr>)}
+              {inv.lines.filter(Boolean).map((l) => <tr key={l.label} className="border-t border-border"><td className="py-1.5">{l.label}</td><td className="py-1.5 text-right">{fmt(l.kobo / 100)}</td></tr>)}
               <tr className="border-t border-border font-semibold"><td className="py-1.5">Total</td><td className="py-1.5 text-right">{fmt(inv.amount)}</td></tr>
             </tbody></table>
             {inv.kind === "proforma" && <p className="mt-3 text-xs text-muted-foreground">Not a receipt. Becomes a paid invoice once payment is confirmed.</p>}

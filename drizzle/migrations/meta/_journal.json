@@ -225,6 +225,13 @@
       "when": 1794208542705,
       "tag": "0031_trips_invoices_changes",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1794208832420,
+      "tag": "0032_fix_invoice_lines",
+      "breakpoints": true
     }
   ]
 }

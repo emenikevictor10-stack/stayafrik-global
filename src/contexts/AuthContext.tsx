@@ -97,6 +97,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Team sign-in return: go back to the admin page asked for, once the session exists.
+  useEffect(() => {
+    if (!session) return;
+    const back = sessionStorage.getItem("sg-admin-return");
+    if (!back) return;
+    sessionStorage.removeItem("sg-admin-return");
+    if (back.startsWith("/admin") && window.location.pathname !== back) window.location.assign(back);
+  }, [session]);
+
   useEffect(() => {
     refreshProfile();
   }, [session?.user?.id]);

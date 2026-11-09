@@ -1,8 +1,9 @@
 import { createContext, useContext, useEffect, useState } from "react";
-import { Link, Navigate, Outlet, useLocation } from "react-router-dom";
+import { Link, Outlet, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { canOpen, isTeamRole } from "./adminNav";
+import { AdminSignIn } from "./AdminSignIn";
 
 const StaffRolesCtx = createContext<string[]>([]);
 /** Team roles of the signed-in staff member (admin, support, finance, listings). */
@@ -33,8 +34,8 @@ export const RequireAdmin = () => {
       </main>
     );
   }
-  if (!user) return <Navigate to="/auth" state={{ from: location }} replace />;
-  if (!roles.length) return <Navigate to="/" replace />;
+  if (!user) return <AdminSignIn path={location.pathname + location.search} />;
+  if (!roles.length) return <AdminSignIn path={location.pathname + location.search} noAccessEmail={user.email} />;
   return (
     <StaffRolesCtx.Provider value={roles}>
       <Outlet />

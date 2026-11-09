@@ -42,6 +42,8 @@ import AdminBookings from "./pages/admin/AdminBookings";
 import AdminPartnerBookings from "./pages/admin/AdminPartnerBookings";
 import AdminReservations from "./pages/admin/AdminReservations";
 import AdminReviews from "./pages/admin/AdminReviews";
+import { AdminAddons, AdminDateChanges } from "./pages/admin/AdminExtras";
+import { AdminPayments, AdminMessages, AdminHealth, AdminInsights, AdminTeam } from "./pages/admin/AdminOps";
 import AdminHosts from "./pages/admin/AdminHosts";
 import AdminPayouts from "./pages/admin/AdminPayouts";
 import AdminKyc from "./pages/admin/AdminKyc";
@@ -75,6 +77,7 @@ import Compare from "./pages/client/Compare";
 import AreaPage from "./pages/client/AreaPage";
 import { TripDetail, TripCancel, TripReview, TripInvoice, FindBooking } from "./pages/client/TripPages";
 import GuestDetails from "./pages/client/GuestDetails";
+import { PayShare } from "./pages/client/SplitAddons";
 import { GuidesIndex, GuidePage } from "./pages/client/Guides";
 import { syncWishlist } from "@/hooks/useWishlist";
 import { useAuth } from "@/contexts/AuthContext";
@@ -124,6 +127,7 @@ const App = () => (
                   <Route path="/stays-in/:slug" element={<AreaPage />} />
                   <Route path="/guides" element={<GuidesIndex />} />
                   <Route path="/find-booking" element={<FindBooking />} />
+                  <Route path="/pay/share/:token" element={<PayShare />} />
                   <Route path="/guides/:slug" element={<GuidePage />} />
                   <Route path="/property/:id" element={<PropertyDetail />} />
                   <Route path="/privacy-policy" element={<PrivacyPolicy />} />
@@ -192,6 +196,13 @@ const App = () => (
                     <Route path="/admin/partner-bookings" element={<AdminPartnerBookings />} />
                     <Route path="/admin/reservations" element={<AdminReservations />} />
                     <Route path="/admin/reviews" element={<AdminReviews />} />
+                    <Route path="/admin/addons" element={<AdminAddons />} />
+                    <Route path="/admin/payments" element={<AdminPayments />} />
+                    <Route path="/admin/messages" element={<AdminMessages />} />
+                    <Route path="/admin/health" element={<AdminHealth />} />
+                    <Route path="/admin/insights" element={<AdminInsights />} />
+                    <Route path="/admin/team" element={<AdminTeam />} />
+                    <Route path="/admin/date-changes" element={<AdminDateChanges />} />
                     <Route path="/admin/payouts" element={<AdminPayouts />} />
                     <Route path="/admin/hosts" element={<AdminHosts />} />
                     <Route path="/admin/kyc" element={<AdminKyc />} />

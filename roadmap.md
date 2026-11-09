@@ -41,13 +41,13 @@ Keep (clashes): Paystack (not Payaza), Google sign-in + PIN (not email codes), 3
 - [x] P11 Map & Explore (§3): /explore opens on a free OSM map, price pins at approximate points (stable ~300–700m offset), nearby pins merge into "N stays" bubbles, PC list beside map with hover highlight, phone list under map. Note: many local stays share near-identical coordinates (data) — pins cluster around Yaba.
 - [x] P12 Stay page (§3): factual title + source title, listing ID, price for searched dates (nightly, discount, cleaning, fee, total), power/water/security, rules, cancellation policy, area-only map, /stays/:id/media gallery
 - [x] P13 Saved lists + compare (§3): hearts sync to account on sign-in, named lists, share links (/saved/shared/:token, read-only), /compare up to 3
-- [ ] P14 Trips (§3): /trips/:id with next-step sentence, cancel preview page, review page, find-booking, guarantee/move request
-- [ ] P15 Invoices (§3): proforma + paid invoice, company name/tax ID, invoice numbers
-- [ ] P16 Split payments (§3): co-travellers, invite links, shares, each pays via Paystack, confirm when fully paid
-- [ ] P17 Add-ons (§5): catalogue + orders + Paystack pay + admin arrange
-- [ ] P18 Guest details & ID (§3): /details name/phone, optional NIN last-4 / passport, id_required switch, admin ID review w/ signed URLs
-- [ ] P19 Admin sections: Payments list (flags, CSV), Messages log + resend, Team, Health (cron runs, webhook errors, RayProp wallet), Reviews reply, Guides CMS, Users pagination/block
-- [ ] P20 Insights dashboard (§5): period compare, funnel, exact earnings, SVG charts with table view
-- [ ] P21 Emails + scheduler (§12): full template set with listing ID, message log, 5-min cron (holds, host deadlines, reminders, thank-yous, payouts, wallet check, overdue problem alerts)
+- [x] P14 Trips (§3): /trips/:id with next-step sentence, cancel preview page, review page, find-booking, move-dates request (+ admin /admin/date-changes; agreeing does not auto-move dates — staff update with host)
+- [x] P15 Invoices (§3): proforma + paid invoice, company name/tax ID, invoice numbers (SG-INV-YYYY-NNNNNN), print/save as PDF
+- [x] P16 Split payments (§3): local stays, 2–6 people, /pay/share/:token links, confirm when all paid, hourly refund of paid shares if time runs out. Real Paystack payment untested.
+- [x] P17 Add-ons (§5): catalogue (3 starter extras, placeholder prices) + orders + Paystack pay + /admin/addons arrange. Real payment untested.
+- [x] P18 Guest details & ID (§3): /details name/phone, optional NIN last-4 / passport, id_required switch, admin ID review w/ signed URLs
+- [x] P19 Admin sections: /admin/payments (flags, search, CSV), /admin/messages (email log; failed retry automatically — no manual resend), /admin/team, /admin/health (jobs, emails, stuck money, partner pause), /admin/addons, /admin/date-changes. NOT built: reviews reply, guides editor (guides are fixed text), users block, partner wallet balance (no partner API for it).
+- [x] P20 Insights (§5): /admin/insights 7/30/90 days vs previous period, checkout funnel, saved fee+markup earnings, daily chart with table view
+- [~] P21 Emails + scheduler (§12): lifecycle job now every 5 min incl. check-in reminders (with listing ID), thank-yous, host 4h deadline nudges, support overdue checks; nightly job-history purge. NOT done: full branded template set (alerts still use the one simple layout), wallet check.
 - [x] P22 SEO (§10): per-page meta (client), /stays-in/:slug area pages (135 in sitemap), /guides (placeholder copy to review), robots disallows private pages, structured data, llms.txt, site meta updated. Crawler-visible per-page meta needs server rendering (not in this setup).
-- [ ] P23 Hardening + launch checklist (§14): RLS audit, rate limits, idempotency, 360/1440 checks, Lighthouse, test-mode journeys
+- [~] P23 Hardening (§14): closed public access to email-sending and internal database helpers (anyone could previously trigger emails); trigger helpers locked. NOT done: rate limits, Lighthouse, full test-mode payment journeys (need Paystack test keys).

@@ -116,3 +116,10 @@ export const quoteLocalStay = (checkIn: string, checkOut: string, plan: RatePlan
   return { ok: true, nights, nights_kobo, discount_kobo, discount_pct, cleaning_kobo, subtotal_kobo, fee_kobo,
     total_kobo: subtotal_kobo + fee_kobo, host_payout_kobo: subtotal_kobo };
 };
+
+/** Split a total (kobo) into n shares; any remainder goes on the first (lead) share so shares always add up exactly. */
+export function splitShares(totalKobo: number, n: number): number[] {
+  if (!Number.isInteger(n) || n < 2 || n > 8) throw new Error("Split between 2 and 8 people");
+  const each = Math.floor(totalKobo / n);
+  return Array.from({ length: n }, (_, i) => (i === 0 ? totalKobo - each * (n - 1) : each));
+}

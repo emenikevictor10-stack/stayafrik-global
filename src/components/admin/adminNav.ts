@@ -1,6 +1,6 @@
 import {
   LayoutDashboard, Building2, Users, CalendarDays, Banknote, ShieldCheck, ScrollText,
-  Handshake, MapPinned, Star, LifeBuoy, Eye, Settings, Home,
+  Handshake, MapPinned, Star, LifeBuoy, Eye, Settings, Home, Gift, CalendarClock, Wallet, Mail, Activity, BarChart3, UserCog,
 } from "lucide-react";
 
 export type AdminCountKey = "support" | "listings" | "kyc" | "payouts" | "viewings" | "partner";
@@ -14,6 +14,8 @@ export const ADMIN_NAV: { group: string; items: AdminNavItem[] }[] = [
     { to: "/admin/support", label: "Support", Icon: LifeBuoy, count: "support" },
     { to: "/admin/bookings", label: "Bookings", Icon: CalendarDays },
     { to: "/admin/reservations", label: "Viewings", Icon: Eye, count: "viewings" },
+    { to: "/admin/date-changes", label: "Date changes", Icon: CalendarClock },
+    { to: "/admin/addons", label: "Add-ons", Icon: Gift },
   ] },
   { group: "Stays", items: [
     { to: "/admin/listings", label: "Listings", Icon: Building2, count: "listings" },
@@ -25,9 +27,16 @@ export const ADMIN_NAV: { group: string; items: AdminNavItem[] }[] = [
     { to: "/admin/users", label: "Users", Icon: Users },
     { to: "/admin/hosts", label: "Hosts", Icon: Home },
     { to: "/admin/kyc", label: "ID review", Icon: ShieldCheck, count: "kyc" },
+    { to: "/admin/team", label: "Team", Icon: UserCog },
+  ] },
+  { group: "Money", items: [
+    { to: "/admin/payments", label: "Payments", Icon: Wallet },
     { to: "/admin/payouts", label: "Payouts", Icon: Banknote, count: "payouts" },
+    { to: "/admin/insights", label: "Insights", Icon: BarChart3 },
   ] },
   { group: "System", items: [
+    { to: "/admin/health", label: "Health", Icon: Activity },
+    { to: "/admin/messages", label: "Messages", Icon: Mail },
     { to: "/admin/audit", label: "Audit log", Icon: ScrollText },
     { to: "/admin/settings", label: "Settings", Icon: Settings },
   ] },

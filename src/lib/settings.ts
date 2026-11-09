@@ -1,16 +1,17 @@
 /** App settings (admin-editable). Defaults apply when a key is missing or the wrong type. */
-export const FEATURE_KEYS = ["search_fields", "card_payments", "holds", "report_problem", "id_required", "map", "whatsapp", "phone_signin", "mapbox"] as const;
+export const FEATURE_KEYS = ["search_fields", "card_payments", "holds", "report_problem", "id_required", "map", "whatsapp", "phone_signin", "mapbox", "split_payments", "addons"] as const;
 export type FeatureKey = (typeof FEATURE_KEYS)[number];
 
 export const DEFAULT_FEATURES: Record<FeatureKey, boolean> = {
   search_fields: true, card_payments: true, holds: true, report_problem: true, id_required: false,
-  map: true, whatsapp: false, phone_signin: false, mapbox: false,
+  map: true, whatsapp: false, phone_signin: false, mapbox: false, split_payments: true, addons: true,
 };
 
 export const DEFAULTS = {
   service_fee_bps: 800,
   guest_service_fee_bps: 0,
   hold_minutes: 15,
+  split_hold_hours: 6,
   payment_window_minutes: 60,
   host_accept_hours: 24,
   support_email: "support@stayglobal.app",

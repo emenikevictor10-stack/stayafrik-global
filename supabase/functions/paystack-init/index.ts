@@ -1,5 +1,5 @@
 import { getSetting } from "../_shared/settings.ts";
-import { expiresAt, nightlyBreakdown, quoteLocalStay } from "../_shared/booking-core.ts";
+import { expiresAt, nightlyBreakdown, quoteLocalStay, splitShares } from "../_shared/booking-core.ts";
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
 import { raypropGetHold, raypropGetQuote, unwrapRayProp } from "../_shared/rayprop.ts";
@@ -24,6 +24,57 @@ Deno.serve(async (req) => {
     const email = (claims.claims.email as string | undefined) ?? "guest@stay.app";
 
     const body = await req.json().catch(() => ({}));
+    const svcEarly = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
+    const startPaystack = async (amount: number, reference: string, cb: string, metadata: Record<string, unknown>) => {
+      const k = Deno.env.get("PAYSTACK_SECRET_KEY")?.trim();
+      if (!k) return { error: "Paystack is not configured" } as const;
+      const r = await fetch("https://api.paystack.co/transaction/initialize", {
+        method: "POST", headers: { Authorization: `Bearer ${k}`, "Content-Type": "application/json" },
+        body: JSON.stringify({ email, amount, currency: "NGN", reference, callback_url: cb, metadata: { user_id: userId, ...metadata } }),
+      }).catch(() => null);
+      const j = r ? await r.json().catch(() => ({} as any)) : {};
+      if (!r?.ok || !j?.status) return { error: j?.message || "Paystack could not start this payment" } as const;
+      return { access_code: j.data.access_code as string, reference: j.data.reference as string, authorization_url: j.data.authorization_url as string };
+    };
+    const okCb = (u: unknown) => typeof u === "string" && /^https?:\/\//.test(u);
+
+    // ---------- Add-on for a confirmed trip (price from the catalogue, never the client) ----------
+    if (body.mode === "addon") {
+      const qty = Math.min(20, Math.max(1, Math.floor(Number(body.qty) || 1)));
+      if (!okCb(body.callback_url)) return json(400, { error: "Missing callback" });
+      const { data: b } = await svcEarly.from("bookings").select("id,guest_id,status").eq("id", String(body.booking_id || "")).maybeSingle();
+      if (!b || b.guest_id !== userId) return json(404, { error: "Trip not found" });
+      if (!["confirmed", "awaiting_host"].includes(b.status)) return json(400, { error: "Add-ons are for confirmed trips" });
+      const { data: a } = await svcEarly.from("addons").select("id,name,price_kobo,active").eq("id", String(body.addon_id || "")).maybeSingle();
+      if (!a?.active) return json(404, { error: "That add-on isn't available" });
+      const amount = Number(a.price_kobo) * qty;
+      const reference = `STAYADD_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
+      const { error: oe } = await svcEarly.from("addon_orders").insert({
+        booking_id: b.id, guest_id: userId, addon_id: a.id, addon_name: a.name, qty, amount_kobo: amount, reference,
+        note: body.note ? String(body.note).slice(0, 300) : null,
+      });
+      if (oe) return json(500, { error: "Could not save your order" });
+      const p = await startPaystack(amount, reference, body.callback_url, { kind: "addon", booking_id: b.id });
+      if ("error" in p) { await svcEarly.from("addon_orders").update({ status: "cancelled" }).eq("reference", reference); return json(400, p); }
+      return json(200, { ...p, total: amount / 100 });
+    }
+
+    // ---------- A friend paying their share of a split booking ----------
+    if (body.mode === "share") {
+      if (!okCb(body.callback_url)) return json(400, { error: "Missing callback" });
+      const { data: s } = await svcEarly.from("payment_shares").select("id,booking_id,amount_kobo,status,payer_user_id").eq("token", String(body.token || "")).maybeSingle();
+      if (!s) return json(404, { error: "This payment link isn't valid" });
+      if (s.status !== "pending") return json(409, { error: "This share is already paid" });
+      if (s.payer_user_id && s.payer_user_id !== userId) return json(403, { error: "Someone else is paying this share" });
+      const { data: b } = await svcEarly.from("bookings").select("status,hold_expires_at").eq("id", s.booking_id).maybeSingle();
+      if (!b || b.status !== "held" || new Date(b.hold_expires_at).getTime() < Date.now()) return json(409, { error: "This booking is no longer waiting for payment" });
+      const reference = `STAYSHR_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
+      await svcEarly.from("payment_shares").update({ reference, payer_user_id: userId }).eq("id", s.id).eq("status", "pending");
+      const p = await startPaystack(Number(s.amount_kobo), reference, body.callback_url, { kind: "share", booking_id: s.booking_id });
+      if ("error" in p) return json(400, p);
+      return json(200, { ...p, total: Number(s.amount_kobo) / 100 });
+    }
+
     const listing_id = String(body.listing_id || "");
     const check_in = String(body.check_in || "");
     const check_out = String(body.check_out || "");
@@ -144,6 +195,33 @@ Deno.serve(async (req) => {
     const now = new Date();
     const holdMin = await getSetting<number>("hold_minutes", 15);
     const payMin = await getSetting<number>("payment_window_minutes", 60);
+    const splitCount = Math.floor(Number(body.split_count) || 0);
+    if (splitCount >= 2) {
+      if (splitCount > 8) return json(400, { error: "Split between at most 8 people" });
+      const splitHours = Math.max(1, await getSetting<number>("split_hold_hours", 6));
+      const groupRef = `STAYSPLIT_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
+      const { data: hb, error: he } = await svc.from("bookings").insert({
+        guest_id: userId, listing_id, host_id: listing.host_id, source: "stayglobal", status: "held", is_split: true,
+        check_in_date: check_in, check_out_date: check_out, guest_count: guests, total_price: total, payment_reference: groupRef,
+        hold_expires_at: expiresAt(now, splitHours * 60).toISOString(), payment_expires_at: expiresAt(now, splitHours * 60).toISOString(),
+        nightly_breakdown: breakdown, subtotal_kobo: split.subtotal_kobo, fee_kobo: split.fee_kobo,
+        host_payout_kobo: split.host_payout_kobo, cleaning_fee_kobo: split.cleaning_kobo, discount_kobo: split.discount_kobo,
+      }).select("id, hold_expires_at").single();
+      if (he) return json(he.code === "23P01" ? 409 : 500, { error: he.code === "23P01" ? "Those dates were just booked — please pick different dates." : "Could not hold your dates." });
+      const amounts = splitShares(amountKobo, splitCount);
+      const shares = amounts.map((amt, i) => ({
+        booking_id: hb.id, share_no: i + 1, amount_kobo: amt,
+        token: crypto.randomUUID().replace(/-/g, "") + crypto.randomUUID().slice(0, 8),
+        payer_user_id: i === 0 ? userId : null, label: i === 0 ? "You" : `Person ${i + 1}`,
+      }));
+      const { error: se } = await svc.from("payment_shares").insert(shares);
+      if (se) { await svc.from("bookings").update({ status: "cancelled" }).eq("id", hb.id); return json(500, { error: "Could not set up the split" }); }
+      const ref = `STAYSHR_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
+      await svc.from("payment_shares").update({ reference: ref }).eq("booking_id", hb.id).eq("share_no", 1);
+      const p = await startPaystack(shares[0].amount_kobo, ref, callback_url, { kind: "share", booking_id: hb.id });
+      if ("error" in p) { await svc.from("bookings").update({ status: "cancelled" }).eq("id", hb.id); return json(400, p); }
+      return json(200, { ...p, total: shares[0].amount_kobo / 100, booking_id: hb.id, hold_expires_at: hb.hold_expires_at, split: true });
+    }
     const { data: held, error: herr } = await svc.from("bookings").insert({
       guest_id: userId, listing_id, host_id: listing.host_id, source: "stayglobal", status: "held",
       check_in_date: check_in, check_out_date: check_out, guest_count: guests,

@@ -9,6 +9,7 @@ import { toneFor, statusLabel } from "@/lib/status-tone";
 import { tripNextStep, canCancel, canReview, canMoveDates, hasInvoice } from "@/lib/trip-next-step";
 import { ReviewForm, type BookingRow } from "./Bookings";
 import { toast } from "sonner";
+import { SplitPanel, AddonsPanel } from "./SplitAddons";
 
 const fmt = (n: number) => "₦" + Math.round(Number(n || 0)).toLocaleString();
 const today = () => new Date().toISOString().slice(0, 10);
@@ -97,6 +98,8 @@ export const TripDetail = () => {
               {canMoveDates(t.status, d, t.check_in_date) && <button type="button" onClick={() => setMove((m) => ({ ...m, open: !m.open }))} className="min-h-11 rounded-lg border border-border text-[13px] font-semibold">Ask to move dates</button>}
               {canCancel(t.status, d, t.check_in_date) && <Link to={`/trips/${t.id}/cancel`} className="min-h-11 rounded-lg border border-destructive/40 text-destructive flex items-center justify-center text-[13px] font-semibold">Cancel booking</Link>}
             </div>
+            {(t as any).is_split && t.status === "held" && <SplitPanel bookingId={t.id} onChange={load} />}
+            {["confirmed", "awaiting_host"].includes(t.status) && t.check_in_date >= d && <AddonsPanel bookingId={t.id} />}
             {move.open && (
               <div className="rounded-xl border border-border p-3 space-y-2">
                 <p className="text-[13px] font-semibold">New dates</p>

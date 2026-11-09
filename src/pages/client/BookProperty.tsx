@@ -22,6 +22,7 @@ import {
   ChevronLeft, Calendar as CalIcon, Users, ShieldCheck, CreditCard,
   Minus, Plus, Star, Loader2,
 } from "lucide-react";
+import { loadPaystackInline } from "@/lib/paystack-inline";
 import { toast } from "sonner";
 
 type Step = 1 | 2 | 3;
@@ -94,6 +95,7 @@ const BookProperty = () => {
     return () => clearInterval(t);
   }, [hold]);
 
+  const [splitCount, setSplitCount] = useState(0);
   const isPartnerListing = p?.source === "rayprop";
   const { blocked, loaded: blockedLoaded } = useBlockedDates(
     isPartnerListing ? p?.raypropListingId || p?.id : p?.id,
@@ -170,23 +172,6 @@ const BookProperty = () => {
     }
   };
 
-  const loadPaystackInline = () =>
-    new Promise<void>((resolve, reject) => {
-      if ((window as any).PaystackPop) return resolve();
-      const existing = document.querySelector<HTMLScriptElement>('script[data-paystack-inline]');
-      if (existing) {
-        existing.addEventListener("load", () => resolve());
-        existing.addEventListener("error", () => reject(new Error("Failed to load Paystack")));
-        return;
-      }
-      const s = document.createElement("script");
-      s.src = "https://js.paystack.co/v2/inline.js";
-      s.async = true;
-      s.dataset.paystackInline = "true";
-      s.onload = () => resolve();
-      s.onerror = () => reject(new Error("Failed to load Paystack"));
-      document.head.appendChild(s);
-    });
 
   const pay = async () => {
     if (!user) return setSignInOpen(true);
@@ -212,7 +197,7 @@ const BookProperty = () => {
             source: "rayprop", quote_id: quote!.id, hold_id: hold!.id,
             title: p.title, image: p.image, city: p.city || p.location,
             guest: { name: guestName.trim(), email: guestEmail.trim(), phone: guestPhone.replace(/[\s-]/g, "") },
-          } : {}),
+          } : splitCount >= 2 ? { split_count: splitCount } : {}),
         },
       });
       if (error) throw new Error(error.message);
@@ -225,6 +210,7 @@ const BookProperty = () => {
       const popup = new PaystackPop();
       popup.resumeTransaction(data.access_code, {
         onSuccess: (tx: { reference: string }) => {
+          if (data.split) { void supabase.functions.invoke("paystack-verify", { body: { reference: tx.reference || data.reference } }).finally(() => navigate(`/trips/${data.booking_id}`)); return; }
           window.location.href = `/booking/confirm?reference=${encodeURIComponent(tx.reference || data.reference)}`;
         },
         onCancel: () => {
@@ -454,6 +440,22 @@ const BookProperty = () => {
               </div>
               )}
             </div>
+
+            {!isPartner && features.split_payments && (
+              <div className="rounded-2xl bg-card border border-border p-4">
+                <h3 className="font-bold text-sm mb-1">Split the cost</h3>
+                <p className="text-xs text-muted-foreground mb-2">Each person pays their part. Your dates are held for a few hours while everyone pays; if anyone doesn't, everyone is refunded.</p>
+                <div className="flex flex-wrap gap-2">
+                  {[0, 2, 3, 4, 5, 6].map((n) => (
+                    <button key={n} type="button" aria-pressed={splitCount === n} onClick={() => setSplitCount(n)}
+                      className={cn("min-h-11 px-3 rounded-lg border text-[13px] font-semibold", splitCount === n ? "border-foreground bg-surface" : "border-border")}>
+                      {n === 0 ? "Pay it all" : `${n} people`}
+                    </button>
+                  ))}
+                </div>
+                {splitCount >= 2 && <p className="text-[13px] mt-2">You pay about {fmt(Math.ceil(total / splitCount))} now, then send links to the others.</p>}
+              </div>
+            )}
 
             <div className="rounded-2xl bg-card border border-border p-4">
               <div className="flex items-center gap-2 mb-1">

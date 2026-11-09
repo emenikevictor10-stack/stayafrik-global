@@ -21,3 +21,7 @@
 
 - Results sort/filters/paging and the link format for them live only in `src/lib/results.ts` (tested); quick chips are shortcuts into the same filters, and partner date checks run only for the stays on screen plus the next page. Why: one rule set for chips, sheet and link, and fewer RayProp calls.
 - Sign-in is asked only at the point it is needed: browsing, stay pages and checkout (`/property/:id/book`) are public; Pay/hold opens `SignInSheet` and returns with `?resume=1`, restoring the draft from sessionStorage. No splash screens; `/` is the stays list. PIN gate wraps only checkout and signed-in routes. Why: Airbnb-style browse-first; `paystack-init` still requires a session.
+
+- Split payments (local stays only) live in `payment_shares`; a split booking is `held` with `is_split` and confirms only via `record_share_payment` → `confirm_local_payment` once every share is paid; unpaid splits expire and paid shares are refunded by the `booking-requests` sweep. Share math is `splitShares` in `_shared/booking-core.ts` (tested). Why: one confirm path and exact totals.
+- Add-ons: catalogue `addons`, orders `addon_orders`, paid via `paystack-init` mode `addon` and confirmed by `confirm_addon_payment`; staff move orders only with `staff_addon_action`. Paystack metadata `kind` (share/addon) routes verify + webhook. Why: price set server-side, one webhook URL.
+- Email-sending and queue database functions are service-role only; never grant them to anon/authenticated. Why: otherwise anyone could send email as us.

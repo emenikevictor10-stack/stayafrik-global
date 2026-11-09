@@ -46,6 +46,14 @@ Deno.serve(async (req) => {
     // Use service role to insert the booking and bypass any future schema constraints
     const admin = createClient(Deno.env.get("SUPABASE_URL")!, Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!);
 
+    if (meta.kind === "share" || meta.kind === "addon") {
+      const { data, error } = meta.kind === "share"
+        ? await admin.rpc("record_share_payment", { _reference: reference, _amount_kobo: Number(tx.amount), _payer: userId })
+        : await admin.rpc("confirm_addon_payment", { _reference: reference, _amount_kobo: Number(tx.amount) });
+      if (error) return json(500, { error: error.message });
+      return json(200, { booking: meta.kind === "share" ? data : null, order: meta.kind === "addon" ? data : null, kind: meta.kind });
+    }
+
     if (meta.source === "rayprop") {
       try {
         const booking = await fulfilPartnerBooking(admin, tx);

@@ -19,6 +19,8 @@ const FEATURE_LABELS: Record<FeatureKey, [string, string]> = {
   whatsapp: ["WhatsApp", "Not built yet: stays off"],
   phone_signin: ["Phone sign-in", "Not built yet: stays off"],
   mapbox: ["Mapbox tiles", "Off uses free map tiles"],
+  split_payments: ["Split payments", "Guests can split a local stay's cost with friends"],
+  addons: ["Add-ons", "Guests can buy extras (airport pickup, groceries…) for confirmed trips"],
 };
 
 type Field = { key: string; label: string; kind: "naira" | "percent" | "int" | "text" | "long" | "bool"; unit?: string; help?: string };
@@ -32,6 +34,7 @@ const SECTIONS: { title: string; fields: Field[] }[] = [
   ] },
   { title: "Time limits", fields: [
     { key: "hold_minutes", label: "Hold dates for", kind: "int", unit: "min" },
+    { key: "split_hold_hours", label: "Split payment: everyone pays within", kind: "int", unit: "hours" },
     { key: "payment_window_minutes", label: "Time to pay after reserving", kind: "int", unit: "min" },
     { key: "reply_target_urgent_minutes", label: "Reply target, urgent problems", kind: "int", unit: "min" },
     { key: "reply_target_normal_minutes", label: "Reply target, other problems", kind: "int", unit: "min" },

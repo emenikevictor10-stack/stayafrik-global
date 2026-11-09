@@ -41,12 +41,36 @@ async function refundDeclined(admin: ReturnType<typeof svc>, onlyId?: string) {
   return done;
 }
 
+// Split bookings whose hold ran out (or were cancelled) before everyone paid: refund each paid share in full.
+async function refundOrphanShares(admin: ReturnType<typeof svc>) {
+  const { data: rows } = await admin.from("payment_shares")
+    .select("id, reference, amount_kobo, booking_id, bookings!inner(status)")
+    .eq("status", "paid").in("bookings.status", ["expired", "cancelled"]).limit(50);
+  let done = 0;
+  for (const s of (rows ?? []) as any[]) {
+    const { data: won } = await admin.from("payment_shares").update({ status: "refunded", refunded_at: new Date().toISOString() })
+      .eq("id", s.id).eq("status", "paid").select("id");
+    if (!won?.length) continue;
+    const r = await fetch("https://api.paystack.co/refund", {
+      method: "POST", headers: { Authorization: `Bearer ${Deno.env.get("PAYSTACK_SECRET_KEY")}`, "Content-Type": "application/json" },
+      body: JSON.stringify({ transaction: s.reference, amount: Number(s.amount_kobo) }),
+    }).catch(() => null);
+    const pj = r ? await r.json().catch(() => ({})) : {};
+    if (r?.ok && (pj as any).status) { done++; await admin.rpc("log_booking_event", { _booking_id: s.booking_id, _type: "share_refunded", _actor: "system", _data: { share_id: s.id } }); }
+    else {
+      await admin.from("payment_shares").update({ status: "refund_failed" }).eq("id", s.id);
+      await admin.rpc("notify_admins", { _title: "Split share refund failed", _body: "A paid share on an unfinished split booking could not be refunded automatically.", _link: "/admin/bookings" });
+    }
+  }
+  return done;
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: corsHeaders });
   try {
     const body = await req.json().catch(() => ({}));
     const admin = svc();
-    if (body.sweep === true) return json({ refunded: await refundDeclined(admin) });
+    if (body.sweep === true) return json({ refunded: await refundDeclined(admin), shares_refunded: await refundOrphanShares(admin) });
 
     const auth = req.headers.get("Authorization") ?? "";
     if (!auth.startsWith("Bearer ")) return json({ error: "Please sign in again" }, 401);

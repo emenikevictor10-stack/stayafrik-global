@@ -1750,9 +1750,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      admin_health: { Args: never; Returns: Json }
+      admin_insights: { Args: { _from: string; _to: string }; Returns: Json }
       auto_release_due_bookings: { Args: never; Returns: number }
       booking_actor: { Args: never; Returns: string }
       booking_lifecycle_tick: { Args: never; Returns: Json }
+      booking_reminders_tick: { Args: never; Returns: Json }
       confirm_addon_payment: {
         Args: { _amount_kobo: number; _reference: string }
         Returns: {

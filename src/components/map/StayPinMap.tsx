@@ -24,26 +24,57 @@ export const StayPinMap = ({ list, activeId, onSelect, height = 520 }: {
     return () => { map.current?.remove(); map.current = null; };
   }, []);
 
-  useEffect(() => {
+  // Pins close together on screen merge into a "N stays" bubble that zooms in when tapped.
+  const draw = () => {
     const m = map.current, g = layer.current;
     if (!m || !g) return;
     g.clearLayers(); markers.current.clear();
-    const pts: L.LatLngExpression[] = [];
+    const cells = new Map<string, { pts: [number, number][]; items: Property[] }>();
     list.forEach((p) => {
       if (!p.lat || !p.lng) return;
-      const [lat, lng] = approxPoint(p.id, p.lat, p.lng);
-      pts.push([lat, lng]);
-      const mk = L.marker([lat, lng], {
-        icon: L.divIcon({ className: "sg-pin-wrap", html: `<span class="sg-pin" data-id="${p.id}">${shortPrice(p.priceNum)}</span>`, iconSize: undefined }),
-        keyboard: true, title: `${shortPrice(p.priceNum)} per night`,
-      }).on("click", () => onSelect?.(p));
-      mk.addTo(g); markers.current.set(p.id, mk);
+      const ll = approxPoint(p.id, p.lat, p.lng);
+      const pt = m.latLngToLayerPoint(ll);
+      const key = `${Math.round(pt.x / 56)}:${Math.round(pt.y / 32)}`;
+      const c = cells.get(key) || { pts: [], items: [] };
+      c.pts.push(ll); c.items.push(p); cells.set(key, c);
     });
+    cells.forEach((c) => {
+      if (c.items.length === 1) {
+        const p = c.items[0];
+        const mk = L.marker(c.pts[0], {
+          icon: L.divIcon({ className: "sg-pin-wrap", html: `<span class="sg-pin">${shortPrice(p.priceNum)}</span>` }),
+          keyboard: true, title: `${shortPrice(p.priceNum)} per night`,
+        }).on("click", () => onSelect?.(p));
+        mk.addTo(g); markers.current.set(p.id, mk);
+      } else {
+        const bounds = L.latLngBounds(c.pts);
+        L.marker(bounds.getCenter(), {
+          icon: L.divIcon({ className: "sg-pin-wrap", html: `<span class="sg-pin">${c.items.length} stays</span>` }),
+          keyboard: true, title: `${c.items.length} stays here — zoom in`,
+        }).on("click", () => {
+          if (m.getZoom() >= 16) onSelect?.(c.items[0]);
+          else m.flyToBounds(bounds.pad(0.5), { maxZoom: Math.min(17, m.getZoom() + 3) });
+        }).addTo(g);
+        c.items.forEach((p) => markers.current.set(p.id, null as unknown as L.Marker));
+      }
+    });
+  };
+  const drawRef = useRef(draw); drawRef.current = draw;
+
+  useEffect(() => {
+    const m = map.current;
+    if (!m) return;
+    const pts = list.filter((p) => p.lat && p.lng).map((p) => approxPoint(p.id, p.lat, p.lng));
     if (pts.length) m.fitBounds(L.latLngBounds(pts), { padding: [30, 30], maxZoom: 14 });
-  }, [list]); // eslint-disable-line react-hooks/exhaustive-deps
+    drawRef.current();
+    const on = () => drawRef.current();
+    m.on("zoomend", on);
+    return () => { m.off("zoomend", on); };
+  }, [list]);
 
   useEffect(() => {
     markers.current.forEach((mk, id) => {
+      if (!mk) return;
       const el = mk.getElement()?.querySelector(".sg-pin");
       el?.classList.toggle("sg-pin-active", id === activeId);
       if (id === activeId) mk.setZIndexOffset(1000); else mk.setZIndexOffset(0);

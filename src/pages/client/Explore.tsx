@@ -74,7 +74,7 @@ const ExploreSearch = ({ mapToggle, filters }: { mapToggle: React.ReactNode; fil
   const openFloating = (s: Segment) => { setFloating(true); setActive(s); };
   return (
     <>
-      <div ref={anchor} className="grid grid-cols-[3.5rem_minmax(0,1fr)_3.5rem] items-center gap-3">
+      <div ref={anchor} className="grid grid-cols-[6.5rem_minmax(0,1fr)_6.5rem] items-center gap-3">
         <div className="flex justify-start">{filters}</div>
         <SearchBar panels={!floating} className="min-w-0" />
         <div className="flex justify-end">{mapToggle}</div>
@@ -222,21 +222,22 @@ const Explore = () => {
       <main className="px-5 pt-5 pb-8">
         <SearchProvider places={places} hints={hints} onLocate={(c) => { setNearMe(c); if (features.map) setView("map"); }}>
           <ExploreSearch
-            filters={
+            filters={null}
+            mapToggle={
+              <div className="flex items-center gap-2">
               <button type="button" onClick={() => setFiltersOpen(true)} aria-label={nFilters ? `Filters, ${nFilters} on` : "Filters"}
                 className="relative shrink-0 w-12 h-12 rounded-full bg-search-surface border border-border shadow-search flex items-center justify-center text-primary">
                 <SlidersHorizontal className="w-4 h-4" aria-hidden />
                 {nFilters > 0 && <span className="absolute -top-1 -right-1 min-w-5 h-5 px-1 rounded-full bg-foreground text-background text-xs flex items-center justify-center">{nFilters}</span>}
               </button>
-            }
-            mapToggle={!features.map ? null :
-              <button
+                {features.map && (              <button
                 onClick={() => setView(view === "list" ? "map" : "list")}
                 className="shrink-0 w-12 h-12 rounded-full bg-search-surface border border-border shadow-search flex items-center justify-center text-primary"
                 aria-label="Toggle map view"
               >
                 {view === "list" ? <MapIcon className="w-4 h-4" /> : <ListIcon className="w-4 h-4" />}
-              </button>
+              </button>)}
+              </div>
             }
           />
         </SearchProvider>

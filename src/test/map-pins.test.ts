@@ -38,3 +38,24 @@ describe("stay page area map", () => {
     expect(_areaView("a", 6.45, 3.47, false)).toEqual({ center: [6.45, 3.47], radius: 0 });
   });
 });
+
+import { isDefaultPoint, pinFor, trimOutliers, AREA_ONLY_CIRCLE_M } from "@/lib/map-pins";
+describe("map pin placement", () => {
+  it("the old central-Lagos default counts as no location", () => {
+    expect(isDefaultPoint(6.5244, 3.3792)).toBe(true);
+    expect(hasCoords({ lat: 6.5244, lng: 3.3792 })).toBe(false);
+  });
+  it("fallback order: own pin, then area point, then unmapped", () => {
+    expect(pinFor({ id: "a", lat: 9.07, lng: 7.49 }, { a: { lat: 6.4, lng: 3.4 } })?.kind).toBe("exact");
+    expect(pinFor({ id: "a", lat: 6.5244, lng: 3.3792 }, { a: { lat: 4.82, lng: 7.03 } })?.kind).toBe("area");
+    expect(pinFor({ id: "a", lat: null, lng: null }, {})).toBeNull();
+  });
+  it("area pins stay inside the wider area circle", () => {
+    const p = pinFor({ id: "rp_1" }, { rp_1: { lat: 4.82, lng: 7.03 } })!;
+    expect(metres(p.point, [4.82, 7.03])).toBeLessThan(AREA_ONLY_CIRCLE_M);
+  });
+  it("opening view ignores a far-away stray", () => {
+    const pts: [number, number][] = [[6.45, 3.4], [6.46, 3.41], [6.44, 3.42], [6.47, 3.43], [6.45, 3.44], [12, 8.5]];
+    expect(trimOutliers(pts)).toHaveLength(5);
+  });
+});

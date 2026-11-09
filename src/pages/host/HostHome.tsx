@@ -8,6 +8,7 @@ import { useMyListings } from "@/hooks/useListings";
 import { useHostBookings } from "@/hooks/useHostBookings";
 import { HostBookingCard } from "@/components/host/HostBookingCard";
 import { NextStep, ListSkeleton, Notice } from "@/ui/kit";
+import { hasCoords } from "@/lib/map-pins";
 import { groupBookings, payoutTotals, timeLeft } from "@/lib/host-portal";
 
 const fmt = (n: number) => "₦" + Math.round(n).toLocaleString();
@@ -39,6 +40,7 @@ const HostHome = () => {
   const leaving = rows.filter((r) => ["released", "confirmed"].includes(r.status) && r.check_out_date === today);
   const money = payoutTotals(rows);
   const pending = listings.filter((l) => !l.verified).length;
+  const noPin = listings.filter((l) => !hasCoords(l as any));
 
   return (
     <>
@@ -49,6 +51,7 @@ const HostHome = () => {
           {requests.length > 0 && <NextStep tone="act" status={`${requests.length} request${requests.length > 1 ? "s" : ""} waiting`} sentence={`Reply before the time runs out (${timeLeft(requests[0].host_respond_by)}) or the guest is refunded.`} action={<Link to="/host/requests" className="underline font-semibold text-sm">Answer</Link>} />}
           {hasAccount === false && <NextStep tone="act" status="No payout account" sentence="Add your bank account so we can pay you after check-in." action={<Link to="/profile/payout" className="underline font-semibold text-sm">Add payout account</Link>} />}
           {profileOk === false && <NextStep tone="act" status="Profile not finished" sentence="Add your full name and WhatsApp number." action={<Link to="/profile/edit" className="underline font-semibold text-sm">Finish your profile</Link>} />}
+          {noPin.length > 0 && <NextStep tone="act" status={`Set your stay's location${noPin.length > 1 ? ` (${noPin.length} stays)` : ""}`} sentence="Place a pin on your building so guests find your stay in the right area on the map." action={<Link to={`/host/location/${noPin[0].id}`} className="underline font-semibold text-sm">Set location</Link>} />}
           {pending > 0 && <NextStep tone="fact" status={`${pending} listing${pending > 1 ? "s" : ""} waiting for approval`} sentence="Our team checks every new stay before guests can see it." />}
           {listings.length === 0 && <NextStep tone="act" status="No stays yet" sentence="List your first place to start getting bookings." action={<Link to="/listings/new" className="underline font-semibold text-sm">List your place</Link>} />}
         </div>

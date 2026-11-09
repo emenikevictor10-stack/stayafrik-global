@@ -24,6 +24,7 @@ import NewListing from "./pages/agent/NewListing";
 import EditListing from "./pages/agent/EditListing";
 import HostHome from "./pages/host/HostHome";
 import HostRequests from "./pages/host/HostRequests";
+import HostLocation from "./pages/host/HostLocation";
 import HostBookings from "./pages/host/HostBookings";
 import HostPayouts from "./pages/host/HostPayouts";
 import HostCalendar from "./pages/host/HostCalendar";
@@ -152,6 +153,7 @@ const App = () => (
                     <Route path="/host/listings" element={<Listings />} />
                     <Route path="/host/calendar" element={<HostCalendar />} />
                     <Route path="/host/requests" element={<HostRequests />} />
+                    <Route path="/host/location/:id" element={<HostLocation />} />
                     <Route path="/host/bookings" element={<HostBookings />} />
                     <Route path="/host/payouts" element={<HostPayouts />} />
                     <Route path="/become-host" element={<BecomeHost />} />

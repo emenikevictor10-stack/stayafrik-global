@@ -139,6 +139,16 @@
   box-shadow: 0 1px 4px hsl(var(--foreground) / 0.25); border: 1px solid hsl(var(--border));
   transition: transform .15s;
 }
+.sg-pin-area { border-style: dashed; border-color: hsl(var(--muted-foreground)); }
+.sg-bubble {
+  display: inline-flex; align-items: center; justify-content: center; transform: translate(-50%, -50%);
+  border-radius: 999px; font: 700 13px/1 inherit; background: hsl(var(--primary)); color: hsl(var(--primary-foreground));
+  box-shadow: 0 0 0 4px hsl(var(--primary) / 0.25); transition: transform .15s;
+}
+.sg-bubble-sm { width: 32px; height: 32px; }
+.sg-bubble-md { width: 40px; height: 40px; }
+.sg-bubble-lg { width: 48px; height: 48px; }
+.sg-bubble.sg-pin-active { background: hsl(var(--foreground)); color: hsl(var(--background)); transform: translate(-50%, -50%) scale(1.12); }
 .sg-pin-active { background: hsl(var(--foreground)); color: hsl(var(--background)); transform: translate(-50%, -50%) scale(1.12); }
 
 /* Approximate area circle on the Explore map */

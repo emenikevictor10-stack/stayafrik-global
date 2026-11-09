@@ -3,23 +3,13 @@ import { useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { ChevronLeft, ImagePlus, Home, Sparkles, X, Loader2, MapPin, Video } from "lucide-react";
 import { toast } from "sonner";
-import { LocationPicker, loadMaps } from "@/components/map/PropertyMap";
+import { PinPicker, findAddress } from "@/components/map/PinPicker";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRole } from "@/contexts/RoleContext";
 import { toWebp, inferUpload } from "@/lib/media";
 
 const AMENITIES = ["Wi-Fi", "AC", "Generator", "Pool", "Gym", "Parking", "Security", "Kitchen", "Hot water", "Pet-friendly"];
-
-const geocode = async (address: string) => {
-  const g = await loadMaps();
-  const geocoder = new g.maps.Geocoder();
-  const res = await geocoder.geocode({ address });
-  const r = res.results?.[0];
-  if (!r) throw new Error("No result");
-  const loc = r.geometry.location;
-  return { lat: loc.lat(), lng: loc.lng(), formatted: r.formatted_address as string };
-};
 
 const NewListing = () => {
   const nav = useNavigate();
@@ -46,7 +36,7 @@ const NewListing = () => {
   const [uploadingVideo, setUploadingVideo] = useState(false);
   const [publishing, setPublishing] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
-  const [coords, setCoords] = useState<{ lat: number; lng: number }>({ lat: 6.5244, lng: 3.3792 });
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [pinned, setPinned] = useState(false);
 
   const findOnMap = async () => {
@@ -54,7 +44,7 @@ const NewListing = () => {
     if (!q) return toast.error("Enter an address or city first");
     setGeocoding(true);
     try {
-      const r = await geocode(q);
+      const r = await findAddress(q);
       setCoords({ lat: r.lat, lng: r.lng });
       setPinned(true);
       toast.success("Pinned on map");
@@ -76,7 +66,7 @@ const NewListing = () => {
       if (!city.trim()) return "Add the city";
       if (!placeOk) return "Pick the city from the list";
       if (!address.trim()) return "Add the full address";
-      // Map pin is optional — we'll geocode from the address if not set
+      if (!pinned) return "Place your stay on the map: tap \"Find on map\" or tap the map";
       return null;
     }
     if (s === 2) {
@@ -206,8 +196,8 @@ const NewListing = () => {
         bathrooms: baths,
         area,
         amenities: amen,
-        lat: coords.lat,
-        lng: coords.lng,
+        lat: coords?.lat ?? null,
+        lng: coords?.lng ?? null,
         is_available: false, // hidden until admin approves
         verified: false,     // admin approval required
       }).select("id").single();
@@ -264,13 +254,8 @@ const NewListing = () => {
               {geocoding ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <MapPin className="w-3.5 h-3.5" />}
               {geocoding ? "Locating…" : "Find on map"}
             </button>
-            <LocationPicker
-              lat={coords.lat}
-              lng={coords.lng}
-              onChange={(lat, lng) => { setCoords({ lat, lng }); setPinned(true); }}
-              height={220}
-            />
-            <p className="text-xs text-muted-foreground">Optional: tap "Find on map" or drag the pin for an exact location. Full address only shown to guests after booking.</p>
+            <PinPicker value={coords} onChange={(lat, lng) => { setCoords({ lat, lng }); setPinned(true); }} height={240} />
+            <p className="text-xs text-muted-foreground">{pinned ? "Pin placed. Drag it if it isn't quite right." : "Required: tap \"Find on map\", then drag the pin onto your building."} Guests only see the area until they've paid.</p>
           </div>
         )}
 

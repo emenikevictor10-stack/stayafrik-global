@@ -5,7 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/seo/Seo";
 import { useLocations } from "@/hooks/useLocations";
 import { LocationCombobox } from "@/components/location/LocationCombobox";
-import { sharedLocations } from "@/lib/map-pins";
+import { sharedLocations, isDefaultPoint } from "@/lib/map-pins";
 import { breadcrumb, type Location, type LocationType } from "@/lib/locations";
 
 type Totals = { total: number; with_state: number; with_city: number; with_neighbourhood: number; neighbourhood_applicable_missing: number; complete: number; review: number };
@@ -240,7 +240,7 @@ const SharedLocations = () => {
         <div className="space-y-2">
           {groups.map((g) => (
             <details key={g[0].id} className="rounded-xl border border-border p-3">
-              <summary className="cursor-pointer text-sm font-semibold min-h-11 flex items-center">{g.length} stays at {g[0].lat?.toFixed(4)}, {g[0].lng?.toFixed(4)}</summary>
+              <summary className="cursor-pointer text-sm font-semibold min-h-11 flex items-center">{g.length} stays {isDefaultPoint(g[0].lat, g[0].lng) ? "still on the old default spot (hosts never set a pin — they now see a prompt)" : `at ${g[0].lat?.toFixed(4)}, ${g[0].lng?.toFixed(4)}`}</summary>
               <ul className="mt-2 space-y-1 text-[13px]">
                 {g.map((x) => (
                   <li key={x.id} className="flex justify-between gap-2">

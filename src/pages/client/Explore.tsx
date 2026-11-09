@@ -2,7 +2,8 @@ import { useLocations } from "@/hooks/useLocations";
 import { TopBar } from "@/components/shell/TopBar";
 import { PropertyCard } from "@/components/property/PropertyCard";
 import { type Property } from "@/data/properties";
-import { hasCoords } from "@/lib/map-pins";
+import { pinFor } from "@/lib/map-pins";
+import { useAreaPoints } from "@/hooks/useAreaPoints";
 import { Map as MapIcon, List as ListIcon, X, Wallet, Star, Users, Zap, BadgeCheck, SlidersHorizontal, type LucideIcon } from "lucide-react";
 import { FiltersSheet } from "@/components/search/FiltersSheet";
 import { Skeleton, EmptyState, Button } from "@/ui/kit";
@@ -180,8 +181,9 @@ const Explore = () => {
   const hints = usePriceHints(useMemo(() => (q ? list.filter((p) => p.source === "rayprop") : []), [list, q]), q);
   const available = useMemo(() => list.filter((p) => !unavailable.has(p.id)), [list, unavailable]);
   const visible = useMemo(() => available.slice(0, shown), [available, shown]);
-  const mapList = useMemo(() => available.filter(hasCoords), [available]);
-  const unmapped = useMemo(() => available.filter((p) => !hasCoords(p)), [available]);
+  const areas = useAreaPoints(available);
+  const mapList = useMemo(() => available.filter((p) => pinFor(p, areas)), [available, areas]);
+  const unmapped = useMemo(() => available.filter((p) => !pinFor(p, areas)), [available, areas]);
   const listForMap = onlyUnmapped ? unmapped : visible;
   const moreLocal = available.length > shown;
   const showMore = () => { if (moreLocal) setShown((n) => n + PAGE_SIZE); else if (hasMore) loadMore(); };
@@ -272,7 +274,7 @@ const Explore = () => {
               {(moreLocal || hasMore) && <div className="col-span-2 text-center"><Button variant="secondary" onClick={showMore}>More stays</Button></div>}
             </div>
             <div className="lg:order-2 lg:sticky lg:top-24 lg:self-start relative">
-            <StayPinMap list={mapList} height={520} activeId={hoverId || selected?.id} onSelect={(p) => { setPicker(null); setSelected(p); }} onCluster={(items) => { setSelected(null); setPicker(items); }} />
+            <StayPinMap list={mapList} areas={areas} height={520} activeId={hoverId || selected?.id} onSelect={(p) => { setPicker(null); setSelected(p); }} onCluster={(items) => { setSelected(null); setPicker(items); }} />
             {unmapped.length > 0 && (
               <button type="button" onClick={() => setOnlyUnmapped((v) => !v)} className="mt-2 min-h-11 text-[13px] text-muted-foreground underline">
                 {onlyUnmapped ? "Show all stays in the list" : `${unmapped.length} ${unmapped.length === 1 ? "stay isn't" : "stays aren't"} on the map yet — show ${unmapped.length === 1 ? "it" : "them"}`}

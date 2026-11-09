@@ -1014,6 +1014,7 @@ export type Database = {
         Row: {
           aliases: string[]
           created_at: string
+          geo_status: string | null
           id: string
           is_active: boolean
           lat: number | null
@@ -1027,6 +1028,7 @@ export type Database = {
         Insert: {
           aliases?: string[]
           created_at?: string
+          geo_status?: string | null
           id?: string
           is_active?: boolean
           lat?: number | null
@@ -1040,6 +1042,7 @@ export type Database = {
         Update: {
           aliases?: string[]
           created_at?: string
+          geo_status?: string | null
           id?: string
           is_active?: boolean
           lat?: number | null
@@ -2548,6 +2551,15 @@ export type Database = {
       staff_user_action: {
         Args: { _action: string; _reason: string; _user_id: string }
         Returns: undefined
+      }
+      stay_area_points: {
+        Args: { _local_ids: string[]; _partner_ids: string[] }
+        Returns: {
+          lat: number
+          level: string
+          lng: number
+          stay_id: string
+        }[]
       }
       submit_bank_transfer: {
         Args: { _id: string; _receipt_path: string; _sender: string }

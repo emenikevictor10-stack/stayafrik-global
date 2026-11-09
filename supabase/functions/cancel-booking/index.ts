@@ -68,6 +68,33 @@ Deno.serve(async (req) => {
       }
     }
 
+    // Extras go with the stay: unpaid ones are cancelled, paid ones refunded in full.
+    const { data: extras } = await admin.from("addon_orders").select("id,status,amount_kobo,reference,addon_name")
+      .eq("booking_id", b.id).in("status", ["pending_payment", "paid", "needs_attention", "confirmed"]);
+    let extrasRefundDue = 0;
+    for (const o of extras ?? []) {
+      if (o.status === "pending_payment") {
+        await admin.from("addon_orders").update({ status: "cancelled" }).eq("id", o.id);
+        await admin.from("bank_transfers").update({ status: "expired" }).eq("reference", o.reference).eq("status", "awaiting_proof");
+        continue;
+      }
+      let done = false;
+      if (String(o.reference || "").startsWith("STAYADD_")) {
+        const r = await fetch("https://api.paystack.co/refund", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${Deno.env.get("PAYSTACK_SECRET_KEY")}`, "Content-Type": "application/json" },
+          body: JSON.stringify({ transaction: o.reference, amount: Number(o.amount_kobo) }),
+        }).catch(() => null);
+        const pj = r ? await r.json().catch(() => ({})) : {};
+        done = !!(r?.ok && (pj as any).status);
+      }
+      await admin.from("addon_orders").update({ status: done ? "refunded" : "refund_due", staff_note: done ? "Refunded with the stay" : "Stay cancelled — send this refund" }).eq("id", o.id);
+      if (!done) extrasRefundDue += Number(o.amount_kobo);
+    }
+    if (extrasRefundDue > 0) {
+      await admin.rpc("notify_admins", { _title: "Extras refund to send", _body: `₦${(extrasRefundDue / 100).toLocaleString()} for extras on a cancelled stay.`, _link: "/admin/addons" });
+    }
+
     if (isAdmin) {
       await admin.from("admin_audit_log").insert({ actor_id: u.user.id, action: "booking_cancel_refund", entity_type: "booking", entity_id: b.id, metadata: { amount, reason } });
     }

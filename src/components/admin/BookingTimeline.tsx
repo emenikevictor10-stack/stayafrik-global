@@ -2,6 +2,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { statusLabel } from "@/lib/status-tone";
+import { ADDON_STATUS_LABEL } from "@/lib/addons";
 
 type Ev = { id: string; type: string; actor: string; data: Record<string, any>; created_at: string };
 type Money = { subtotal_kobo?: number | null; fee_kobo?: number | null; markup_kobo?: number | null; host_payout_kobo?: number | null };
@@ -27,6 +28,7 @@ export const BookingTimeline = ({ bookingId, money }: { bookingId: string; money
   const [note, setNote] = useState("");
   const [saving, setSaving] = useState(false);
   const [shares, setShares] = useState<any[]>([]);
+  const [extras, setExtras] = useState<any[]>([]);
 
   const load = async () => {
     const { data, error } = await supabase.from("booking_events").select("id,type,actor,data,created_at")
@@ -36,6 +38,8 @@ export const BookingTimeline = ({ bookingId, money }: { bookingId: string; money
     const { data: sh } = await supabase.from("payment_shares").select("id,share_no,amount_kobo,status,label,name,phone,email,pay_method,paid_at,refunded_at,token")
       .eq("booking_id", bookingId).order("share_no");
     setShares(sh || []);
+    const { data: ex } = await supabase.from("addon_orders").select("id,addon_name,qty,amount_kobo,status,pay_method").eq("booking_id", bookingId).order("created_at");
+    setExtras(ex || []);
   };
   const toggle = () => { setOpen(!open); if (!events) load(); };
   const addNote = async () => {
@@ -64,6 +68,17 @@ export const BookingTimeline = ({ bookingId, money }: { bookingId: string; money
                 <div key={x.id} className="flex flex-wrap justify-between gap-2">
                   <span>{x.share_no === 1 ? "Organiser" : x.name || x.label || `Person ${x.share_no}`}{x.email ? ` · ${x.email}` : ""}{x.phone ? ` · ${x.phone}` : ""}</span>
                   <span>{naira(Number(x.amount_kobo))} · {x.pay_method === "bank_transfer" ? "Transfer" : x.pay_method === "card" ? "Card" : "—"} · <b>{x.status === "void" ? "Removed" : statusLabel(x.status)}</b>{x.status === "pending" ? " (link open)" : ""}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          {extras.length > 0 && (
+            <div className="rounded-lg border border-border p-2 text-xs space-y-1">
+              <p className="font-semibold">Extras · <a href="/admin/addons" className="underline">manage</a></p>
+              {extras.map((x) => (
+                <div key={x.id} className="flex flex-wrap justify-between gap-2">
+                  <span>{x.addon_name} × {x.qty}</span>
+                  <span>{naira(Number(x.amount_kobo))} · {x.pay_method === "bank_transfer" ? "Transfer" : "Card"} · <b>{ADDON_STATUS_LABEL[x.status] ?? x.status}</b></span>
                 </div>
               ))}
             </div>

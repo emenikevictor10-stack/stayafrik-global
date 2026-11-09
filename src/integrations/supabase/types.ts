@@ -27,6 +27,7 @@ export type Database = {
           id: string
           note: string | null
           paid_at: string | null
+          pay_method: string | null
           qty: number
           reference: string | null
           staff_note: string | null
@@ -44,6 +45,7 @@ export type Database = {
           id?: string
           note?: string | null
           paid_at?: string | null
+          pay_method?: string | null
           qty: number
           reference?: string | null
           staff_note?: string | null
@@ -61,6 +63,7 @@ export type Database = {
           id?: string
           note?: string | null
           paid_at?: string | null
+          pay_method?: string | null
           qty?: number
           reference?: string | null
           staff_note?: string | null
@@ -86,6 +89,7 @@ export type Database = {
       addons: {
         Row: {
           active: boolean
+          city_id: string | null
           created_at: string
           description: string | null
           id: string
@@ -96,6 +100,7 @@ export type Database = {
         }
         Insert: {
           active?: boolean
+          city_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -106,6 +111,7 @@ export type Database = {
         }
         Update: {
           active?: boolean
+          city_id?: string | null
           created_at?: string
           description?: string | null
           id?: string
@@ -114,7 +120,15 @@ export type Database = {
           sort?: number
           unit?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "addons_city_id_fkey"
+            columns: ["city_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       admin_audit_log: {
         Row: {
@@ -1963,6 +1977,7 @@ export type Database = {
           id: string
           note: string | null
           paid_at: string | null
+          pay_method: string | null
           qty: number
           reference: string | null
           staff_note: string | null
@@ -2098,6 +2113,7 @@ export type Database = {
           name: string
         }[]
       }
+      guest_addon_cancel: { Args: { _order_id: string }; Returns: string }
       guest_confirm_checkin: {
         Args: { _booking_id: string }
         Returns: undefined

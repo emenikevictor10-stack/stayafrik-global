@@ -154,7 +154,7 @@ export const AdminHealth = () => {
 };
 
 type Ins = { current: Totals; previous: Totals; funnel: { started: number; paid: number; cancelled: number; abandoned: number }; by_day: { day: string; bookings: number; gross: number }[]; by_source: Record<string, number> };
-type Totals = { bookings: number; gross: number; fees: number; host_payouts: number; nights: number };
+type Totals = { bookings: number; gross: number; fees: number; addons?: number; host_payouts: number; nights: number };
 
 /** /admin/insights — period totals vs the period before, funnel, daily chart with a table view. */
 export const AdminInsights = () => {
@@ -180,8 +180,8 @@ export const AdminInsights = () => {
       </div>
       {err ? <ErrorState onRetry={load} /> : !d ? <ListSkeleton /> : (
         <>
-          <div className="grid gap-2 grid-cols-2 lg:grid-cols-5">
-            {([["Paid bookings", "bookings", false], ["Guest payments", "gross", true], ["Our earnings", "fees", true], ["Host payouts", "host_payouts", true], ["Nights", "nights", false]] as const).map(([label, k, money]) => (
+          <div className="grid gap-2 grid-cols-2 lg:grid-cols-6">
+            {([["Paid bookings", "bookings", false], ["Guest payments", "gross", true], ["Our earnings", "fees", true], ["Extras income", "addons", true], ["Host payouts", "host_payouts", true], ["Nights", "nights", false]] as const).map(([label, k, money]) => (
               <div key={k} className="rounded-xl border border-border p-3">
                 <p className="text-xs text-muted-foreground">{label}</p>
                 <p className="text-xl font-semibold">{money ? naira(d.current[k]) : d.current[k]}</p>
@@ -189,7 +189,7 @@ export const AdminInsights = () => {
               </div>
             ))}
           </div>
-          <p className="text-xs text-muted-foreground">Our earnings = service fees on local stays plus our markup on partner stays, as saved on each booking.</p>
+          <p className="text-xs text-muted-foreground">Our earnings = service fees on local stays plus our markup on partner stays, as saved on each booking. Extras income = paid extras (airport pickup etc.) by payment date.</p>
           <section className="rounded-xl border border-border p-3">
             <h2 className="text-[15px] font-semibold mb-2">From checkout to paid</h2>
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[13px]">

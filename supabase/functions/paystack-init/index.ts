@@ -50,19 +50,40 @@ Deno.serve(async (req) => {
     // ---------- Add-on for a confirmed trip (price from the catalogue, never the client) ----------
     if (body.mode === "addon") {
       const qty = Math.min(20, Math.max(1, Math.floor(Number(body.qty) || 1)));
-      if (!okCb(body.callback_url)) return json(400, { error: "Missing callback" });
-      const { data: b } = await svcEarly.from("bookings").select("id,guest_id,status").eq("id", String(body.booking_id || "")).maybeSingle();
+      if (!isBank && !okCb(body.callback_url)) return json(400, { error: "Missing callback" });
+      const { data: b } = await svcEarly.from("bookings").select("id,guest_id,status,check_in_date,listing_id,rayprop_listing_id,partner_title,listings(title,city_id)").eq("id", String(body.booking_id || "")).maybeSingle();
       if (!b || b.guest_id !== userId) return json(404, { error: "Trip not found" });
-      if (!["confirmed", "awaiting_host"].includes(b.status)) return json(400, { error: "Add-ons are for confirmed trips" });
-      const { data: a } = await svcEarly.from("addons").select("id,name,price_kobo,active").eq("id", String(body.addon_id || "")).maybeSingle();
+      const today = new Date(Date.now() + 3600_000).toISOString().slice(0, 10); // Lagos (UTC+1)
+      if (!["confirmed", "awaiting_host"].includes(b.status) || b.check_in_date < today) return json(400, { error: "Extras can only be added to confirmed trips before check-in" });
+      const { data: a } = await svcEarly.from("addons").select("id,name,price_kobo,active,city_id").eq("id", String(body.addon_id || "")).maybeSingle();
       if (!a?.active) return json(404, { error: "That add-on isn't available" });
+      if (a.city_id) {
+        let cityId: string | null = (b as any).listings?.city_id ?? null;
+        if (!cityId && b.rayprop_listing_id) {
+          const { data: m } = await svcEarly.from("partner_location_map").select("city_id").eq("rayprop_listing_id", b.rayprop_listing_id).maybeSingle();
+          cityId = m?.city_id ?? null;
+        }
+        if (cityId !== a.city_id) return json(400, { error: "That extra isn't offered in this city" });
+      }
       const amount = Number(a.price_kobo) * qty;
-      const reference = `STAYADD_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
-      const { error: oe } = await svcEarly.from("addon_orders").insert({
+      const reference = isBank ? `STAYBT_${Date.now()}_${crypto.randomUUID().slice(0, 6).toUpperCase()}` : `STAYADD_${Date.now()}_${crypto.randomUUID().slice(0, 8)}`;
+      const acct = isBank ? await bankDetails() : null;
+      if (isBank && !acct) return json(400, { error: "Bank transfer is not available right now" });
+      const { data: ord, error: oe } = await svcEarly.from("addon_orders").insert({
         booking_id: b.id, guest_id: userId, addon_id: a.id, addon_name: a.name, qty, amount_kobo: amount, reference,
-        note: body.note ? String(body.note).slice(0, 300) : null,
-      });
+        note: body.note ? String(body.note).slice(0, 300) : null, pay_method: isBank ? "bank_transfer" : "card",
+      }).select("id").single();
       if (oe) return json(500, { error: "Could not save your order" });
+      if (isBank) {
+        const exp = expiresAt(new Date(), await bankMinutes()).toISOString();
+        const { data: bt, error: be } = await svcEarly.from("bank_transfers").insert({
+          booking_id: b.id, guest_id: userId, amount_kobo: amount, reference, source: "stayglobal", // extras are approved by staff directly, even on partner stays
+          title: `${a.name} × ${qty} — ${(b as any).listings?.title ?? b.partner_title ?? "your stay"}`, check_in: b.check_in_date,
+          expires_at: exp, meta: { account: acct, addon_order_id: ord.id },
+        }).select("id").single();
+        if (be) { await svcEarly.from("addon_orders").update({ status: "cancelled" }).eq("id", ord.id); return json(500, { error: "Could not start the bank transfer." }); }
+        return json(200, { bank_transfer: { id: bt.id, reference, amount: amount / 100, expires_at: exp, account: acct } });
+      }
       const p = await startPaystack(amount, reference, body.callback_url, { kind: "addon", booking_id: b.id });
       if ("error" in p) { await svcEarly.from("addon_orders").update({ status: "cancelled" }).eq("reference", reference); return json(400, p); }
       return json(200, { ...p, total: amount / 100 });

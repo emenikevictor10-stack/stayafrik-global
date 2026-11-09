@@ -26,7 +26,7 @@
 - Add-ons: `addons`/`addon_orders`, paid via `paystack-init` mode `addon` (card or `bank_transfers.meta.addon_order_id`), confirmed by `confirm_addon_payment`; stages via `staff_addon_action`/`guest_addon_cancel` (mirror `src/lib/addons.ts`). Why: server price, one confirm path.
 - Bank transfer: `paystack-init` method `bank_transfer` → `bank_transfers`; guest `submit_bank_transfer`, staff `staff_bank_transfer_action` (local → `confirm_local_payment`) or `bank-transfer-approve` (partner). Why: one confirm path.
 - Email-sending and queue database functions are service-role only; never grant them to anon/authenticated. Why: otherwise anyone could send email as us.
-- Maps use Leaflet + OSM (not MapLibre); pins/circles use `approxPoint`/`AREA_CIRCLE_M` from `src/lib/map-pins.ts`, never exact coords. Why: free; privacy in one place.
+- Maps: Leaflet + OSM; pins via `src/lib/map-pins.ts`, never exact coords. Why: free; privacy.
 - Shared lists: `wishlist_members` via `join_wishlist`, checked by `private.is_wishlist_member`; compare links via `src/lib/compare.ts`. Why: no recursive policies.
 - `listing_private` read by guests only via `trip_access`. Why: `listings` is public.
 - Blocks: `user_status` via `staff_user_action`; `private.is_blocked` gates inserts, `paystack-init` refuses. Why: one switch.

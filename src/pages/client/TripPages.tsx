@@ -146,22 +146,17 @@ export const TripCancel = () => {
   const [reason, setReason] = useState("");
   const partner = trip?.source === "rayprop";
   useEffect(() => {
-    if (!trip || partner) return;
+    if (!trip) return;
     supabase.functions.invoke("cancel-booking", { body: { booking_id: trip.id, preview: true } })
       .then(({ data }) => { if (data && typeof data.amount === "number") setPreview({ amount: data.amount, percent: data.percent }); });
-  }, [trip, partner]);
+  }, [trip]);
   const confirm = async () => {
     if (!trip) return;
     setBusy(true);
     try {
-      if (partner) {
-        const { cancelRayPropBooking } = await import("@/lib/rayprop");
-        await cancelRayPropBooking(trip.id, reason.trim() || undefined);
-      } else {
-        const { data, error } = await supabase.functions.invoke("cancel-booking", { body: { booking_id: trip.id, reason: reason.trim() || undefined } });
-        if (error || data?.error) throw new Error(data?.error || "Could not cancel right now");
-      }
-      toast.success("Booking cancelled.");
+      const { data, error } = await supabase.functions.invoke("cancel-booking", { body: { booking_id: trip.id, reason: reason.trim() || undefined } });
+      if (error || data?.error) throw new Error(data?.error || "Could not cancel right now");
+      toast.success(data?.amount > 0 ? `Booking cancelled. ${fmt(data.amount)} refund is on its way.` : "Booking cancelled.");
       navigate(`/trips/${trip.id}`, { replace: true });
     } catch (e) { toast.error((e as Error).message); } finally { setBusy(false); }
   };
@@ -170,8 +165,7 @@ export const TripCancel = () => {
       <Gate state={trip} err={err} retry={load}>{() => (
         <div className="space-y-4">
           <h1 className="text-xl font-semibold">Cancel {titleOf(trip!)}?</h1>
-          {partner ? <Notice>Refunds for partner stays follow the partner's terms. We'll confirm the amount after cancelling.</Notice>
-            : preview ? <Notice>You'll get back <b>{fmt(preview.amount)}</b> ({preview.percent}% of {fmt(trip!.total_price)}). Refunds take a few days to reach your bank.</Notice>
+          {preview ? <Notice>You'll get back <b>{fmt(preview.amount)}</b> ({preview.percent}% of {fmt(trip!.total_price)}). Refunds take a few days to reach your bank.</Notice>
             : <ListSkeleton rows={1} />}
           <ul className="text-[13px] text-muted-foreground space-y-1">
             <li>• Full refund 48 hours or more before check-in.</li><li>• 50% refund less than 48 hours before check-in.</li><li>• No refund after check-in.</li>
@@ -180,7 +174,7 @@ export const TripCancel = () => {
             <textarea value={reason} onChange={(e) => setReason(e.target.value)} maxLength={500} rows={2} className="mt-1 w-full rounded-lg border border-border bg-background p-2 text-[13px]" /></label>
           <div className="flex gap-2">
             <Button variant="secondary" onClick={() => navigate(-1)}>Keep booking</Button>
-            <Button variant="danger" loading={busy} onClick={confirm} disabled={!partner && !preview}>Cancel booking</Button>
+            <Button variant="danger" loading={busy} onClick={confirm} disabled={!preview}>Cancel booking</Button>
           </div>
         </div>
       )}</Gate>

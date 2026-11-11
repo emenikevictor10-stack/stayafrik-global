@@ -288,17 +288,7 @@ Deno.serve(async (req) => {
       return json(200, { data: unwrapRayProp(await raypropHold({ quote_id, guest_name, guest_phone, guest_email })) });
     }
 
-    if (action === "cancel") {
-      const booking_id = text(body?.booking_id, 64);
-      if (!booking_id) return json(400, { error: "Missing booking" });
-      const db = admin();
-      const { data: b } = await db.from("bookings").select("id,guest_id,source,rayprop_reservation_id,status").eq("id", booking_id).maybeSingle();
-      if (!b || b.guest_id !== userId || b.source !== "rayprop" || !b.rayprop_reservation_id) return json(404, { error: "Booking not found" });
-      if (b.status === "cancelled") return json(200, { data: { status: "cancelled" } });
-      const result = unwrapRayProp(await raypropCancel(b.rayprop_reservation_id, String(body?.reason || "Guest requested cancellation").slice(0, 500)));
-      await db.from("bookings").update({ status: "cancelled" }).eq("id", b.id);
-      return json(200, { data: result });
-    }
+    if (action === "cancel") return json(410, { error: "Please cancel from your trip page" });
 
     if (action === "status") {
       const booking_id = text(body?.booking_id, 64);

@@ -1,5 +1,6 @@
 import { createClient } from "npm:@supabase/supabase-js@2";
 import { corsHeaders } from "npm:@supabase/supabase-js@2/cors";
+import { runCancelRefund } from "../_shared/cancel-refund.ts";
 import { mapRayPropStatus, verifyRayPropSignature } from "../_shared/rayprop-core.ts";
 
 const json = (status: number, body: unknown) =>
@@ -33,6 +34,16 @@ Deno.serve(async (req) => {
     const status = mapRayPropStatus(type) || mapRayPropStatus(String(data?.status || ""));
     if (!status) return json(200, { ok: true, ignored: true });
 
+    if (status === "cancelled") {
+      // RayProp cancelled a stay we sold: refund the guest in full and tell staff.
+      const { data: locked } = await db.from("bookings").update({ status: "cancelled", cancelled_reason: "Cancelled by partner" })
+        .eq("source", "rayprop").eq("rayprop_reservation_id", reservationId).eq("status", "confirmed").select("*").maybeSingle();
+      if (locked) {
+        await runCancelRefund(db, locked, Math.round(Number(locked.total_price)), "Cancelled by partner", locked.guest_id);
+        await db.rpc("notify_admins", { _title: "RayProp cancelled a booking", _body: `${locked.listing_code ?? reservationId} from ${locked.check_in_date} — guest refunded in full.`, _link: "/admin/partner-bookings" });
+        return json(200, { ok: true, refunded: true });
+      }
+    }
     const { error } = await db.from("bookings").update({ status }).eq("source", "rayprop").eq("rayprop_reservation_id", reservationId);
     if (error) return json(500, { error: "Could not update booking" });
     return json(200, { ok: true });

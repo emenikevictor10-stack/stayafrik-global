@@ -66,7 +66,13 @@ export const holdRayProp = async (body: { quote_id: string; guest_name: string; 
   return { id, expiresAt: h?.expires_at ? String(h.expires_at) : new Date(Date.now() + 15 * 60_000).toISOString() };
 };
 
-export const cancelRayPropBooking = (booking_id: string, reason?: string) => call<RayPropRecord>({ action: "cancel", booking_id, reason });
+/** Partner cancels go through cancel-booking so the guest is refunded by the same rules as own stays. */
+export const cancelRayPropBooking = async (booking_id: string, reason?: string) => {
+  const { supabase } = await import("@/integrations/supabase/client");
+  const { data, error } = await supabase.functions.invoke("cancel-booking", { body: { booking_id, reason } });
+  if (error || (data as { error?: string })?.error) throw new Error((data as { error?: string })?.error || "Could not cancel right now");
+  return data as { amount: number; percent: number };
+};
 export const refreshRayPropStatus = (booking_id: string) => call<RayPropRecord>({ action: "status", booking_id });
 export const raypropWallet = () => call<RayPropRecord | null>({ action: "wallet" });
 export const raypropRegisterWebhook = () => call<RayPropRecord>({ action: "register_webhook" });

@@ -10,9 +10,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, ShieldCheck, Clock, CheckCircle2, MapPin, Star } from "lucide-react";
 import { toast } from "sonner";
-import { cancelRayPropBooking } from "@/lib/rayprop";
 import { guestStatusText, type IssueStatus } from "@/lib/support";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 
 export type BookingRow = {
   id: string;
@@ -134,26 +132,6 @@ const Bookings = () => {
     load();
   };
 
-  const cancelPartner = async (b: BookingRow) => {
-    setReleasing(b.id);
-    try {
-      await cancelRayPropBooking(b.id);
-      toast.success("Booking cancelled. Any refund follows the partner's policy.");
-      load();
-    } catch (e: any) { toast.error(e.message || "Could not cancel"); }
-    setReleasing(null);
-  };
-
-  const cancelLocal = async (b: BookingRow) => {
-    setReleasing(b.id);
-    const { data, error } = await supabase.functions.invoke("cancel-booking", { body: { booking_id: b.id } });
-    setReleasing(null);
-    if (error || (data as any)?.error) return toast.error((data as any)?.error || "Could not cancel right now");
-    const amt = (data as any)?.amount || 0;
-    toast.success(amt > 0 ? `Booking cancelled. ${fmt(amt)} refund is on its way.` : "Booking cancelled.");
-    load();
-  };
-
   const todayStr = new Date().toISOString().slice(0, 10);
   const tabParam = params.get("tab");
   const tab: TripTab = tabParam === "past" || tabParam === "cancelled" ? tabParam : "upcoming";
@@ -221,39 +199,8 @@ const Bookings = () => {
               {partner && b.status === "needs_attention" && (
                 <p className="mt-3 text-xs text-muted-foreground">Payment received. We're finalising this stay with our partner — you'll be notified shortly.</p>
               )}
-              {partner && b.status === "confirmed" && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <button disabled={releasing === b.id} className="mt-3 w-full rounded-xl border border-border py-2.5 text-xs font-bold text-destructive disabled:opacity-50">Cancel booking</button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Cancel this stay?</AlertDialogTitle>
-                      <AlertDialogDescription>Refunds follow the partner's policy: a full refund if you cancel 48 hours or more before check-in, and a partial or no refund closer to the date.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Keep booking</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => cancelPartner(b)}>Cancel stay</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
-              )}
-              {!partner && b.status === "confirmed" && (
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <button disabled={releasing === b.id} className="mt-3 w-full rounded-xl border border-border py-2.5 text-xs font-bold text-destructive disabled:opacity-50">Cancel booking</button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>Cancel this stay?</AlertDialogTitle>
-                      <AlertDialogDescription>Full refund if you cancel 48 hours or more before check-in, 50% within 48 hours, and no refund after check-in. Refunds reach your account in 3–10 working days.</AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Keep booking</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => cancelLocal(b)}>Cancel stay</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+              {b.status === "confirmed" && (
+                <Link to={`/trips/${b.id}/cancel`} className="mt-3 w-full rounded-xl border border-border py-2.5 text-xs font-bold text-destructive flex items-center justify-center">Cancel booking</Link>
               )}
               {!partner && b.status === "confirmed" && (
                 <div className="mt-3 rounded-xl bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 p-3">

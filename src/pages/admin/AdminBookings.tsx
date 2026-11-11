@@ -8,11 +8,11 @@ import { toast } from "sonner";
 import { Search, List, Rows3, Copy, AlertTriangle } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Seo } from "@/components/seo/Seo";
-import { logAdminAction } from "@/lib/admin-audit";
 import { Input } from "@/components/ui/input";
 import { BookingTimeline } from "@/components/admin/BookingTimeline";
 import { useSettings } from "@/hooks/useSettings";
 import { showInvoice } from "@/lib/settings";
+import { CancelBookingDialog } from "@/components/booking/CancelBookingDialog";
 
 type Row = {
   id: string;
@@ -116,17 +116,7 @@ const AdminBookings = () => {
     load();
   };
 
-  const refund = async (r: Row) => {
-    const input = window.prompt(`Refund amount in ₦ (max ${Number(r.total_price)}). This cancels the booking and sends the money back via Paystack.`, String(Number(r.total_price)));
-    if (input === null) return;
-    const amount = Number(input.replace(/[^\d.]/g, ""));
-    if (!Number.isFinite(amount) || amount < 0 || amount > Number(r.total_price)) return toast.error("Invalid amount");
-    const { data, error } = await supabase.functions.invoke("cancel-booking", { body: { booking_id: r.id, amount, reason: "Admin refund" } });
-    if (error || (data as any)?.error) return toast.error((data as any)?.error || error?.message || "Refund failed");
-    await logAdminAction({ action: "booking_refund", entityType: "booking", entityId: r.id, metadata: { amount, listing_code: r.listing_code } });
-    toast.success("Refund started");
-    load();
-  };
+  const [cancelling, setCancelling] = useState<Row | null>(null);
 
   const invoicesOn = useSettings().features.invoices;
   const Actions = ({ r }: { r: Row }) => (
@@ -137,8 +127,8 @@ const AdminBookings = () => {
       {r.status === "confirmed" && r.source !== "rayprop" && (
         <button onClick={() => release(r)} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-success/40 text-success hover:bg-success/10">Release</button>
       )}
-      {r.status === "confirmed" && r.source !== "rayprop" && (
-        <button onClick={() => refund(r)} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-destructive/40 text-destructive hover:bg-destructive/10">Refund</button>
+      {r.status === "confirmed" && (
+        <button onClick={() => setCancelling(r)} className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-destructive/40 text-destructive hover:bg-destructive/10">Cancel & refund</button>
       )}
       {r.source === "rayprop" && r.status === "needs_attention" && (
         <Link to="/admin/partner-bookings" className="text-xs font-semibold px-2.5 py-1 rounded-lg border border-warning/40 text-warning hover:bg-warning/10">Resolve</Link>
@@ -153,6 +143,7 @@ const AdminBookings = () => {
   return (
     <>
       <Seo title="Bookings | Stay admin" description="Manage bookings and escrow." noindex />
+      {cancelling && <CancelBookingDialog as="admin" bookingId={cancelling.id} total={Number(cancelling.total_price)} open onOpenChange={(v) => { if (!v) setCancelling(null); }} onDone={load} />}
       <header className="mb-4 flex items-end justify-between gap-3 flex-wrap">
         <div>
           <h1 className="text-2xl font-extrabold">Bookings</h1>
